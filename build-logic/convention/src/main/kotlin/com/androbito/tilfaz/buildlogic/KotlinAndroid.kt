@@ -7,39 +7,39 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.HasConfigurableKotlinCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 /** Shared Android configuration for application and library modules. */
-internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension<*, *, *, *, *, *>) {
+internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
     commonExtension.apply {
         compileSdk = libs.versionInt("compileSdk")
 
-        defaultConfig {
-            minSdk = libs.versionInt("minSdk")
-        }
+        defaultConfig.minSdk = libs.versionInt("minSdk")
 
-        compileOptions {
+        compileOptions.apply {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
         }
 
-        lint {
+        lint.apply {
             abortOnError = true
             warningsAsErrors = false
             checkDependencies = false
         }
     }
 
-    extensions.configure<KotlinAndroidProjectExtension> {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-            allWarningsAsErrors.set(false)
-            freeCompilerArgs.addAll(
-                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-opt-in=kotlinx.coroutines.FlowPreview",
-            )
-        }
+    // AGP 9 built-in Kotlin registers the `kotlin` block itself (on the project, or nested in `android`).
+    val kotlinExtension = extensions.findByName("kotlin") ?: commonExtension.extensions.findByName("kotlin")
+    @Suppress("UNCHECKED_CAST")
+    (kotlinExtension as? HasConfigurableKotlinCompilerOptions<KotlinJvmCompilerOptions>)?.compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+        allWarningsAsErrors.set(false)
+        freeCompilerArgs.addAll(
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlinx.coroutines.FlowPreview",
+        )
     }
 
     dependencies {

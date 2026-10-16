@@ -2,16 +2,13 @@ package com.androbito.tilfaz.buildlogic
 
 import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 
 /** Compose setup shared by the app and every UI module. */
-internal fun Project.configureAndroidCompose(commonExtension: CommonExtension<*, *, *, *, *, *>) {
+internal fun Project.configureAndroidCompose(commonExtension: CommonExtension) {
     commonExtension.apply {
-        buildFeatures {
-            compose = true
-        }
+        buildFeatures.compose = true
     }
 
     dependencies {
@@ -26,7 +23,7 @@ internal fun Project.configureAndroidCompose(commonExtension: CommonExtension<*,
         add("androidTestImplementation", platform(bom))
     }
 
-    extensions.configure<ComposeCompilerGradlePluginExtension> {
+    extensions.findByType(ComposeCompilerGradlePluginExtension::class.java)?.apply {
         // Compose compiler metrics and reports: ./gradlew assembleRelease -PenableComposeCompilerReports=true
         if (project.providers.gradleProperty("enableComposeCompilerReports").isPresent) {
             val dir = project.layout.buildDirectory.dir("compose-reports")
