@@ -34,7 +34,7 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w1280dp-h720dp-land-xhdpi-television")
+@Config(sdk = [34], qualifiers = "w1280dp-h720dp-land-television-xhdpi")
 class ComponentScreenshotTest {
 
     @get:Rule
