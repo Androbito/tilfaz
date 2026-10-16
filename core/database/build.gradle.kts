@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     api(projects.core.model)
+    // TilfazDatabase extends RoomDatabase and is injected into :core:data, so the supertype must be visible there.
+    api(libs.androidx.room.runtime)
     implementation(libs.kotlinx.coroutines.core)
 
     androidTestImplementation(libs.androidx.room.testing)
