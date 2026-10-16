@@ -1,6 +1,6 @@
 [versions]
 # Build
-agp = "8.13.2"
+agp = "9.4.1"
 kotlin = "2.3.21"
 ksp = "2.3.12"
 kover = "0.9.9"
@@ -8,8 +8,8 @@ ktlint = "14.2.0"
 roborazzi = "1.76.0"
 
 # SDK
-compileSdk = "36"
-targetSdk = "36"
+compileSdk = "37"
+targetSdk = "37"
 minSdk = "26"
 jvmTarget = "17"
 
@@ -24,7 +24,7 @@ leanback = "1.2.0"
 media3 = "1.11.1"
 room = "2.8.5"
 datastore = "1.2.1"
-hilt = "2.58" # 2.59+ requires AGP 9, see docs/adr/0008
+hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 
 # Kotlinx
