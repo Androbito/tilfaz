@@ -9,6 +9,7 @@ import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.Movie
 import com.androbito.tilfaz.core.model.Series
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,13 +21,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 data class SearchUiState(
     val query: String = "",
     val channels: List<LiveChannel> = emptyList(),
     val movies: List<Movie> = emptyList(),
-    val series: List<Series> = emptyList(),
+    val series: List<Series> = emptyList()
 ) {
     val isTooShort: Boolean get() = query.trim().length < MIN_QUERY_LENGTH
     val isEmpty: Boolean get() = !isTooShort && channels.isEmpty() && movies.isEmpty() && series.isEmpty()
@@ -41,7 +41,7 @@ data class SearchUiState(
 class SearchViewModel @Inject constructor(
     liveRepository: LiveRepository,
     vodRepository: VodRepository,
-    seriesRepository: SeriesRepository,
+    seriesRepository: SeriesRepository
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")

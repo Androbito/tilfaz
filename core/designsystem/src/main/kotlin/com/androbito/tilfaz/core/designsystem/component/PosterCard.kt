@@ -46,14 +46,14 @@ fun PosterCard(
     ratingBadge: String? = null,
     isFavorite: Boolean = false,
     progress: Float? = null,
-    onLongClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null
 ) {
     FocusableSurface(
         onClick = onClick,
         onLongClick = onLongClick,
         modifier = modifier.width(Dimens.PosterWidth).height(Dimens.PosterHeight),
         corner = Dimens.CornerS,
-        focusedScale = 1.08f,
+        focusedScale = 1.08f
     ) {
         Box(Modifier.fillMaxSize()) {
             if (posterUrl != null) {
@@ -61,7 +61,7 @@ fun PosterCard(
                     model = posterUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize()
                 )
             } else {
                 Box(Modifier.fillMaxSize().background(TilfazColors.SurfaceVariant), contentAlignment = Alignment.Center) {
@@ -73,7 +73,7 @@ fun PosterCard(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(Brush.verticalGradient(listOf(Color.Transparent, TilfazColors.Scrim)))
-                    .padding(horizontal = Dimens.SpaceS, vertical = Dimens.SpaceS),
+                    .padding(horizontal = Dimens.SpaceS, vertical = Dimens.SpaceS)
             ) {
                 Text(
                     text = title,
@@ -82,7 +82,7 @@ fun PosterCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             if (ratingBadge != null) {
@@ -93,7 +93,7 @@ fun PosterCard(
                     Icons.Default.Favorite,
                     contentDescription = stringResource(R.string.ds_favorite),
                     tint = TilfazColors.Danger,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(Dimens.SpaceS).size(22.dp),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(Dimens.SpaceS).size(22.dp)
                 )
             }
             if (progress != null && progress > 0f) {
@@ -109,12 +109,12 @@ fun RatingBadge(text: String, modifier: Modifier = Modifier) {
         modifier
             .clip(RoundedCornerShape(4.dp))
             .background(TilfazColors.Badge)
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color.White,
+            color = Color.White
         )
     }
 }
@@ -126,7 +126,7 @@ fun ProgressBar(progress: Float, modifier: Modifier = Modifier, color: Color = T
             Modifier
                 .fillMaxWidth(progress.coerceIn(0f, 1f))
                 .fillMaxSize()
-                .background(color),
+                .background(color)
         )
     }
 }

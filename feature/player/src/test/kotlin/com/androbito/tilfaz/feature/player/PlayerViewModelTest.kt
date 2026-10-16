@@ -39,12 +39,16 @@ class PlayerViewModelTest {
                 PlayerRoute.ARG_ITEM_ID to route.itemId,
                 PlayerRoute.ARG_PARENT_ID to route.parentId,
                 PlayerRoute.ARG_CATEGORY_ID to route.categoryId,
-                PlayerRoute.ARG_START_POSITION to route.startPositionMs,
-            ),
+                PlayerRoute.ARG_START_POSITION to route.startPositionMs
+            )
         ),
-        live, vod, series, progress, settings,
+        live,
+        vod,
+        series,
+        progress,
+        settings,
         BuildStreamSourceUseCase(account, settings),
-        Fixtures.fixedClock,
+        Fixtures.fixedClock
     )
 
     @Test

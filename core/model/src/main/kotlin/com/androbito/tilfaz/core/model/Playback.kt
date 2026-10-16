@@ -2,7 +2,7 @@ package com.androbito.tilfaz.core.model
 
 enum class StreamFormat(val extension: String) {
     MPEG_TS("ts"),
-    HLS("m3u8"),
+    HLS("m3u8")
     ;
 
     companion object {
@@ -36,14 +36,14 @@ data class StreamSource(
     val playable: Playable,
     val isLive: Boolean,
     val userAgent: String,
-    val format: StreamFormat?,
+    val format: StreamFormat?
 )
 
 data class PlaybackSettings(
     val liveFormat: StreamFormat = StreamFormat.MPEG_TS,
     val userAgent: String = DEFAULT_USER_AGENT,
     val bufferProfile: BufferProfile = BufferProfile.BALANCED,
-    val resumePlayback: Boolean = true,
+    val resumePlayback: Boolean = true
 ) {
     companion object {
         const val DEFAULT_USER_AGENT = "TilfazTV/1.0 (Android TV)"
@@ -53,7 +53,7 @@ data class PlaybackSettings(
 enum class BufferProfile(val minBufferMs: Int, val maxBufferMs: Int, val playbackBufferMs: Int) {
     LOW_LATENCY(minBufferMs = 2_500, maxBufferMs = 15_000, playbackBufferMs = 1_000),
     BALANCED(minBufferMs = 15_000, maxBufferMs = 50_000, playbackBufferMs = 2_500),
-    STABLE(minBufferMs = 30_000, maxBufferMs = 90_000, playbackBufferMs = 5_000),
+    STABLE(minBufferMs = 30_000, maxBufferMs = 90_000, playbackBufferMs = 5_000)
 }
 
 data class WatchProgress(
@@ -65,7 +65,7 @@ data class WatchProgress(
     val durationMs: Long,
     val updatedAt: java.time.Instant,
     /** Opaque reference to reopen the item: movie id, or "seriesId:episodeId". */
-    val reference: String,
+    val reference: String
 ) {
     val fraction: Float get() = if (durationMs <= 0) 0f else (positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
     val isFinished: Boolean get() = fraction >= FINISHED_THRESHOLD

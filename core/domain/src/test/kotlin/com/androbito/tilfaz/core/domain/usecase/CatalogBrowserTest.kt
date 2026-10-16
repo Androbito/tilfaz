@@ -34,7 +34,7 @@ class CatalogBrowserTest {
         nameOf = { it.name },
         categoryOf = { it.categoryId },
         addedAtMillisOf = { it.addedAt?.toEpochMilli() },
-        favoriteKeyOf = ToggleFavoriteUseCase::vodKey,
+        favoriteKeyOf = ToggleFavoriteUseCase::vodKey
     )
 
     @Test
@@ -45,7 +45,7 @@ class CatalogBrowserTest {
                 CatalogBrowser.Section.Kind.ALL,
                 CatalogBrowser.Section.Kind.FAVORITES,
                 CatalogBrowser.Section.Kind.CONTINUE_WATCHING,
-                CatalogBrowser.Section.Kind.RECENTLY_ADDED,
+                CatalogBrowser.Section.Kind.RECENTLY_ADDED
             )
             assertThat(sections.first().count).isEqualTo(2)
             assertThat(sections.first { it.name == "Drama" }.count).isEqualTo(1)

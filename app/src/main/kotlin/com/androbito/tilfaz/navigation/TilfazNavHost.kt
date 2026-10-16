@@ -38,7 +38,7 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         signInScreen(
             onSignedIn = {
                 navController.navigate(HomeRoute) { popUpTo(SignInRoute) { inclusive = true } }
-            },
+            }
         )
 
         homeScreen(
@@ -49,8 +49,8 @@ fun TilfazNavHost(startSignedIn: Boolean) {
                 onOpenSearch = { navController.navigate(SearchRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenFavorites = { navController.navigate(LiveRoute(initialCategoryId = LiveRoute.FAVORITES)) },
-                onOpenContinueWatching = { navController.navigate(MoviesRoute(initialSectionId = MoviesRoute.CONTINUE_WATCHING)) },
-            ),
+                onOpenContinueWatching = { navController.navigate(MoviesRoute(initialSectionId = MoviesRoute.CONTINUE_WATCHING)) }
+            )
         )
 
         liveScreen(onPlayChannel = { channelId, categoryId -> navController.navigate(PlayerRoute.live(channelId, categoryId)) })
@@ -58,7 +58,7 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         moviesScreen(onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) })
         movieDetailsScreen(
             onPlayMovie = { movieId, start -> navController.navigate(PlayerRoute.movie(movieId, start)) },
-            onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
+            onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) }
         )
 
         seriesScreen(onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) })
@@ -68,8 +68,8 @@ fun TilfazNavHost(startSignedIn: Boolean) {
             SearchNavigation(
                 onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
                 onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
-                onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) },
-            ),
+                onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
+            )
         )
 
         playerScreen(onExit = { navController.popBackStack() })
@@ -77,7 +77,7 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         settingsScreen(
             onSignedOut = {
                 navController.navigate(SignInRoute) { popUpTo(0) { inclusive = true } }
-            },
+            }
         )
     }
 }

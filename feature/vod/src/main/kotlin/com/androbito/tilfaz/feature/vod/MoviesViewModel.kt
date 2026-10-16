@@ -11,15 +11,15 @@ import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Movie
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class MoviesUiState(
-    val browser: CatalogBrowser.Snapshot<Movie>? = null,
+    val browser: CatalogBrowser.Snapshot<Movie>? = null
 ) {
     val isLoading: Boolean get() = browser == null
 }
@@ -36,7 +36,7 @@ class MoviesViewModel @Inject constructor(
     vodRepository: VodRepository,
     favoritesRepository: FavoritesRepository,
     progressRepository: WatchProgressRepository,
-    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val toggleFavorite: ToggleFavoriteUseCase
 ) : ViewModel() {
 
     private val browser = CatalogBrowser(
@@ -48,7 +48,7 @@ class MoviesViewModel @Inject constructor(
         nameOf = { it.name },
         categoryOf = { it.categoryId },
         addedAtMillisOf = { it.addedAt?.toEpochMilli() },
-        favoriteKeyOf = ToggleFavoriteUseCase::vodKey,
+        favoriteKeyOf = ToggleFavoriteUseCase::vodKey
     )
 
     init {

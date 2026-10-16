@@ -41,7 +41,7 @@ fun List<LiveStreamDto>.toLiveEntities(): List<LiveChannelEntity> = mapIndexedNo
         epgChannelId = dto.epgChannelId,
         hasArchive = dto.tvArchive ?: false,
         archiveDays = dto.tvArchiveDuration ?: 0,
-        position = index,
+        position = index
     )
 }
 
@@ -53,7 +53,7 @@ fun LiveChannelEntity.toDomain() = LiveChannel(
     categoryId = categoryId,
     epgChannelId = epgChannelId,
     hasArchive = hasArchive,
-    archiveDays = archiveDays,
+    archiveDays = archiveDays
 )
 
 fun List<VodStreamDto>.toMovieEntities(): List<MovieEntity> = mapIndexedNotNull { index, dto ->
@@ -68,7 +68,7 @@ fun List<VodStreamDto>.toMovieEntities(): List<MovieEntity> = mapIndexedNotNull 
         year = dto.year ?: YearExtractor.fromTitle(name) ?: YearExtractor.fromDate(dto.releaseDate),
         addedAtMillis = dto.added?.toEpochMillis(),
         containerExtension = dto.containerExtension?.trim()?.trimStart('.').orEmpty(),
-        position = index,
+        position = index
     )
 }
 
@@ -80,7 +80,7 @@ fun MovieEntity.toDomain() = Movie(
     rating = ratingOutOfTen?.let(::Rating),
     year = year,
     addedAt = addedAtMillis?.let(Instant::ofEpochMilli),
-    containerExtension = containerExtension,
+    containerExtension = containerExtension
 )
 
 fun List<SeriesDto>.toSeriesEntities(): List<SeriesEntity> = mapIndexedNotNull { index, dto ->
@@ -96,7 +96,7 @@ fun List<SeriesDto>.toSeriesEntities(): List<SeriesEntity> = mapIndexedNotNull {
         lastModifiedMillis = dto.lastModified?.toEpochMillis(),
         plot = dto.plot,
         genre = dto.genre,
-        position = index,
+        position = index
     )
 }
 
@@ -109,14 +109,14 @@ fun SeriesEntity.toDomain() = Series(
     year = year,
     lastModifiedAt = lastModifiedMillis?.let(Instant::ofEpochMilli),
     plot = plot,
-    genre = genre,
+    genre = genre
 )
 
 fun SyncStatusEntity?.toDomain(type: ContentType, isSyncing: Boolean) = SyncStatus(
     contentType = type,
     lastSyncedAt = this?.lastSyncedAtMillis?.let(Instant::ofEpochMilli),
     itemCount = this?.itemCount ?: 0,
-    isSyncing = isSyncing,
+    isSyncing = isSyncing
 )
 
 /** Xtream timestamps are unix seconds; a few panels already send milliseconds. */

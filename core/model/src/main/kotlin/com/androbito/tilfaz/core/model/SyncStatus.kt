@@ -6,7 +6,7 @@ data class SyncStatus(
     val contentType: ContentType,
     val lastSyncedAt: Instant?,
     val itemCount: Int,
-    val isSyncing: Boolean = false,
+    val isSyncing: Boolean = false
 ) {
     val hasData: Boolean get() = itemCount > 0
 }

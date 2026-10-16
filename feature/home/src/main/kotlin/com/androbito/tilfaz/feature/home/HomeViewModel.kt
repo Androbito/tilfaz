@@ -12,6 +12,7 @@ import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.SyncStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,13 +21,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class HomeUiState(
     val accountName: String = "",
     val accountStatus: AccountStatus? = null,
     val syncStatuses: Map<ContentType, SyncStatus> = emptyMap(),
-    val syncErrors: Map<ContentType, DomainError> = emptyMap(),
+    val syncErrors: Map<ContentType, DomainError> = emptyMap()
 ) {
     fun status(type: ContentType): SyncStatus = syncStatuses[type] ?: SyncStatus(type, null, 0)
 }
@@ -43,7 +43,7 @@ class HomeViewModel @Inject constructor(
     liveRepository: LiveRepository,
     vodRepository: VodRepository,
     seriesRepository: SeriesRepository,
-    private val syncCatalog: SyncCatalogUseCase,
+    private val syncCatalog: SyncCatalogUseCase
 ) : ViewModel() {
 
     private val errors = MutableStateFlow<Map<ContentType, DomainError>>(emptyMap())
@@ -52,13 +52,13 @@ class HomeViewModel @Inject constructor(
         accountRepository.observeAccount(),
         accountRepository.observeStatus(),
         combine(liveRepository.observeSyncStatus(), vodRepository.observeSyncStatus(), seriesRepository.observeSyncStatus()) { l, v, s -> listOf(l, v, s) },
-        errors,
+        errors
     ) { account, status, syncs, errors ->
         HomeUiState(
             accountName = account?.displayName.orEmpty(),
             accountStatus = status,
             syncStatuses = syncs.associateBy { it.contentType },
-            syncErrors = errors,
+            syncErrors = errors
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 

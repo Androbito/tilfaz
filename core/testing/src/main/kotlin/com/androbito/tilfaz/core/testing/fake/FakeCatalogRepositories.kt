@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.update
 abstract class FakeCatalogRepository<T>(
     private val type: ContentType,
     private val categoryOf: (T) -> String?,
-    private val nameOf: (T) -> String,
+    private val nameOf: (T) -> String
 ) : CatalogRepository<T> {
     val categories = MutableStateFlow<List<Category>>(emptyList())
     val items = MutableStateFlow<List<T>>(emptyList())

@@ -36,17 +36,23 @@ fun EmptyState(
     title: String = stringResource(R.string.ds_empty_title),
     message: String? = null,
     actionLabel: String? = null,
-    onAction: (() -> Unit)? = null,
+    onAction: (() -> Unit)? = null
 ) {
     Column(
         modifier.fillMaxSize().padding(Dimens.SpaceXl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(Icons.Default.Inbox, contentDescription = null, tint = TilfazColors.OnSurfaceMuted, modifier = Modifier.size(64.dp))
         Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = Dimens.SpaceM), textAlign = TextAlign.Center)
         if (message != null) {
-            Text(message, style = MaterialTheme.typography.bodyLarge, color = TilfazColors.OnSurfaceMuted, modifier = Modifier.padding(top = Dimens.SpaceS), textAlign = TextAlign.Center)
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyLarge,
+                color = TilfazColors.OnSurfaceMuted,
+                modifier = Modifier.padding(top = Dimens.SpaceS),
+                textAlign = TextAlign.Center
+            )
         }
         if (actionLabel != null && onAction != null) {
             Button(onClick = onAction, modifier = Modifier.padding(top = Dimens.SpaceL)) { Text(actionLabel) }
@@ -59,12 +65,12 @@ fun ErrorState(
     message: String,
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
-    retryLabel: String = stringResource(R.string.ds_retry),
+    retryLabel: String = stringResource(R.string.ds_retry)
 ) {
     Column(
         modifier.fillMaxSize().padding(Dimens.SpaceXl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = TilfazColors.Danger, modifier = Modifier.size(64.dp))
         Text(message, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = Dimens.SpaceM), textAlign = TextAlign.Center)

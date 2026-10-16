@@ -10,7 +10,7 @@ data class Movie(
     val rating: Rating?,
     val year: Int?,
     val addedAt: Instant?,
-    val containerExtension: String,
+    val containerExtension: String
 )
 
 data class MovieDetails(
@@ -22,5 +22,5 @@ data class MovieDetails(
     val releaseDate: String?,
     val durationSeconds: Long?,
     val backdropUrls: List<String>,
-    val trailerUrl: String?,
+    val trailerUrl: String?
 )

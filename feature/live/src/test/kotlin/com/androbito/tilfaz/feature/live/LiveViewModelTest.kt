@@ -63,7 +63,7 @@ class LiveViewModelTest {
     @Test
     fun `focusing a channel loads its EPG once and resolves now and next`() = runTest {
         live.epg[Fixtures.alJazeera.id] = Result.success(
-            listOf(Fixtures.epg(101, "News Hour", -30, 60), Fixtures.epg(101, "The Debate", 30, 60)),
+            listOf(Fixtures.epg(101, "News Hour", -30, 60), Fixtures.epg(101, "The Debate", 30, 60))
         )
         viewModel.state.test {
             viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.alJazeera.id))

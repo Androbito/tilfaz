@@ -68,7 +68,7 @@ fun MovieDetailsRoute(onPlayMovie: (Int, Long) -> Unit, onOpenMovie: (Int) -> Un
         state = state,
         onEvent = viewModel::onEvent,
         onPlay = { position -> state.movie?.let { onPlayMovie(it.id, position) } },
-        onOpenMovie = onOpenMovie,
+        onOpenMovie = onOpenMovie
     )
 }
 
@@ -77,7 +77,7 @@ fun MovieDetailsScreen(
     state: MovieDetailsUiState,
     onEvent: (MovieDetailsEvent) -> Unit,
     onPlay: (startPositionMs: Long) -> Unit,
-    onOpenMovie: (Int) -> Unit,
+    onOpenMovie: (Int) -> Unit
 ) {
     val movie = state.movie
     if (movie == null) {
@@ -93,58 +93,75 @@ fun MovieDetailsScreen(
             TopBar(title = "Tilfaz", showClock = false)
             Column(
                 Modifier.fillMaxSize().padding(horizontal = Dimens.ScreenPadding).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
             ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXl)) {
-                Box(Modifier.width(280.dp).height(400.dp).clip(RoundedCornerShape(Dimens.CornerM))) {
-                    AsyncImage(model = movie.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                    movie.rating?.let { RatingBadge(it.badge, Modifier.align(Alignment.TopStart).padding(Dimens.SpaceS)) }
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                    Text(movie.name, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
-                    movie.rating?.let { ScoreLine(it) }
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXl)) {
+                    Box(Modifier.width(280.dp).height(400.dp).clip(RoundedCornerShape(Dimens.CornerM))) {
+                        AsyncImage(model = movie.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                        movie.rating?.let { RatingBadge(it.badge, Modifier.align(Alignment.TopStart).padding(Dimens.SpaceS)) }
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+                        Text(movie.name, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
+                        movie.rating?.let { ScoreLine(it) }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
-                        Button(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null)
-                            Text(
-                                if (state.canResume) stringResource(R.string.vod_resume, formatPlayerTime(state.progress!!.positionMs)) else stringResource(R.string.vod_play),
-                                modifier = Modifier.padding(start = Dimens.SpaceS),
-                            )
-                        }
-                        if (state.canResume) {
-                            OutlinedButton(onClick = { onEvent(MovieDetailsEvent.StartOver); onPlay(0L) }) {
-                                Icon(Icons.Default.Replay, contentDescription = null)
-                                Text(stringResource(R.string.vod_start_over), modifier = Modifier.padding(start = Dimens.SpaceS))
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+                            Button(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                Text(
+                                    if (state.canResume) {
+                                        stringResource(
+                                            R.string.vod_resume,
+                                            formatPlayerTime(state.progress!!.positionMs)
+                                        )
+                                    } else {
+                                        stringResource(R.string.vod_play)
+                                    },
+                                    modifier = Modifier.padding(start = Dimens.SpaceS)
+                                )
+                            }
+                            if (state.canResume) {
+                                OutlinedButton(onClick = { onEvent(MovieDetailsEvent.StartOver); onPlay(0L) }) {
+                                    Icon(Icons.Default.Replay, contentDescription = null)
+                                    Text(stringResource(R.string.vod_start_over), modifier = Modifier.padding(start = Dimens.SpaceS))
+                                }
+                            }
+                            OutlinedButton(onClick = { onEvent(MovieDetailsEvent.ToggleFavorite) }) {
+                                Icon(
+                                    if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                    tint = if (state.isFavorite) TilfazColors.Danger else MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    stringResource(if (state.isFavorite) R.string.vod_remove_favorite else R.string.vod_add_favorite),
+                                    modifier = Modifier.padding(start = Dimens.SpaceS)
+                                )
                             }
                         }
-                        OutlinedButton(onClick = { onEvent(MovieDetailsEvent.ToggleFavorite) }) {
-                            Icon(if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, contentDescription = null, tint = if (state.isFavorite) TilfazColors.Danger else MaterialTheme.colorScheme.onSurface)
-                            Text(stringResource(if (state.isFavorite) R.string.vod_remove_favorite else R.string.vod_add_favorite), modifier = Modifier.padding(start = Dimens.SpaceS))
+
+                        if (state.detailsFailed) {
+                            Text(stringResource(R.string.vod_details_error), color = TilfazColors.Danger, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        if (details != null) {
+                            InfoRow(stringResource(R.string.vod_directed_by), details.director)
+                            InfoRow(stringResource(R.string.vod_release_date), details.releaseDate)
+                            InfoRow(stringResource(R.string.vod_genre), details.genre)
+                            InfoRow(stringResource(R.string.vod_duration), formatDuration(details.durationSeconds))
+                            InfoRow(stringResource(R.string.vod_cast), details.cast)
+                            InfoRow(stringResource(R.string.vod_plot), details.plot, maxLines = 8)
                         }
                     }
-
-                    if (state.detailsFailed) {
-                        Text(stringResource(R.string.vod_details_error), color = TilfazColors.Danger, style = MaterialTheme.typography.bodyMedium)
-                    }
-                    if (details != null) {
-                        InfoRow(stringResource(R.string.vod_directed_by), details.director)
-                        InfoRow(stringResource(R.string.vod_release_date), details.releaseDate)
-                        InfoRow(stringResource(R.string.vod_genre), details.genre)
-                        InfoRow(stringResource(R.string.vod_duration), formatDuration(details.durationSeconds))
-                        InfoRow(stringResource(R.string.vod_cast), details.cast)
-                        InfoRow(stringResource(R.string.vod_plot), details.plot, maxLines = 8)
+                }
+                if (state.related.isNotEmpty()) {
+                    Text(stringResource(R.string.vod_related), style = MaterialTheme.typography.titleLarge, color = TilfazColors.Accent)
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                        contentPadding = PaddingValues(vertical = Dimens.SpaceS, horizontal = Dimens.SpaceS)
+                    ) {
+                        items(state.related, key = { it.id }) { related ->
+                            PosterCard(related.name, related.posterUrl, onClick = { onOpenMovie(related.id) }, ratingBadge = related.rating?.badge)
+                        }
                     }
                 }
-            }
-            if (state.related.isNotEmpty()) {
-                Text(stringResource(R.string.vod_related), style = MaterialTheme.typography.titleLarge, color = TilfazColors.Accent)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), contentPadding = PaddingValues(vertical = Dimens.SpaceS, horizontal = Dimens.SpaceS)) {
-                    items(state.related, key = { it.id }) { related ->
-                        PosterCard(related.name, related.posterUrl, onClick = { onOpenMovie(related.id) }, ratingBadge = related.rating?.badge)
-                    }
-                }
-            }
             }
         }
     }

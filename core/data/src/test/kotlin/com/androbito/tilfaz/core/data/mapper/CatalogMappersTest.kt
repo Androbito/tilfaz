@@ -16,7 +16,7 @@ class CatalogMappersTest {
         val entities = listOf(
             LiveStreamDto(streamId = 10, name = "A"),
             LiveStreamDto(streamId = null, name = "ghost"),
-            LiveStreamDto(streamId = 11, name = "B"),
+            LiveStreamDto(streamId = 11, name = "B")
         ).toLiveEntities()
 
         assertThat(entities).hasSize(2)

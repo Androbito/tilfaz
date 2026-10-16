@@ -23,7 +23,7 @@ private val colorScheme = darkColorScheme(
     surfaceVariant = TilfazColors.SurfaceVariant,
     onSurfaceVariant = TilfazColors.OnSurfaceMuted,
     error = TilfazColors.Danger,
-    border = TilfazColors.Accent,
+    border = TilfazColors.Accent
 )
 
 private val typography = Typography(
@@ -39,7 +39,7 @@ private val typography = Typography(
     bodySmall = TextStyle(fontSize = 14.sp, lineHeight = 20.sp),
     labelLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp),
     labelMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp),
-    labelSmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp),
+    labelSmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp)
 )
 
 @Composable

@@ -1,12 +1,12 @@
 package com.androbito.tilfaz.core.network
 
 import com.androbito.tilfaz.core.model.Account
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.Interceptor
-import okhttp3.Response
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.Interceptor
+import okhttp3.Response
 
 /** Supplies the account whose server every request must target. Implemented in the data layer. */
 fun interface ActiveAccountProvider {
@@ -23,7 +23,7 @@ class NotSignedInException : IOException("No active Xtream account")
 @Singleton
 class XtreamRequestInterceptor @Inject constructor(
     private val accountProvider: ActiveAccountProvider,
-    private val userAgentProvider: UserAgentProvider,
+    private val userAgentProvider: UserAgentProvider
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {

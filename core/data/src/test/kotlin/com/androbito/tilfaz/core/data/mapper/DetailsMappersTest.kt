@@ -27,7 +27,7 @@ class DetailsMappersTest {
                 ]
               }
             }
-            """.trimIndent(),
+            """.trimIndent()
         )
 
         val details = dto.toDomain(Fixtures.series, json)
@@ -45,7 +45,7 @@ class DetailsMappersTest {
     fun `movie info fills details and keeps the list row as fallback`() {
         val dto = json.decodeFromString<VodInfoResponseDto>(
             """{"info": {"plot": "A story.", "duration": "1h 50m", "backdrop_path": ["http://img/b1.jpg", "bad"], "youtube_trailer": "abc123"},
-                "movie_data": {"stream_id": 501, "container_extension": "mp4"}}""",
+                "movie_data": {"stream_id": 501, "container_extension": "mp4"}}"""
         )
 
         val details = dto.toDomain(Fixtures.movie)

@@ -29,14 +29,15 @@ class MovieDetailsViewModelTest {
     private val vod = FakeVodRepository().apply { items.value = listOf(Fixtures.movie) }
     private val favorites = FakeFavoritesRepository()
     private val progress = FakeWatchProgressRepository()
-    private val details = MovieDetails(Fixtures.movie.copy(containerExtension = "mp4"), "Plot", "Cast", "Director", "Drama", "2026-01-01", 6000, emptyList(), null)
+    private val details =
+        MovieDetails(Fixtures.movie.copy(containerExtension = "mp4"), "Plot", "Cast", "Director", "Drama", "2026-01-01", 6000, emptyList(), null)
 
     private fun viewModel() = MovieDetailsViewModel(
         SavedStateHandle(mapOf("movieId" to Fixtures.movie.id)),
         vod,
         favorites,
         progress,
-        ToggleFavoriteUseCase(favorites),
+        ToggleFavoriteUseCase(favorites)
     )
 
     @Test

@@ -66,8 +66,10 @@ fun SeriesScreen(state: SeriesUiState, onEvent: (SeriesEvent) -> Unit, onOpenSer
             items = browser.items,
             itemKey = { it.id },
             emptyContent = {
-                EmptyState(title = if (browser.query.isNotBlank()) stringResource(R.string.series_no_results, browser.query) else stringResource(R.string.series_empty))
-            },
+                EmptyState(
+                    title = if (browser.query.isNotBlank()) stringResource(R.string.series_no_results, browser.query) else stringResource(R.string.series_empty)
+                )
+            }
         ) { series ->
             PosterCard(
                 title = series.name,
@@ -76,7 +78,7 @@ fun SeriesScreen(state: SeriesUiState, onEvent: (SeriesEvent) -> Unit, onOpenSer
                 onLongClick = { onEvent(SeriesEvent.ToggleFavorite(series.id)) },
                 ratingBadge = series.rating?.badge,
                 isFavorite = series.id in browser.favoriteIds,
-                progress = browser.progressById[series.id]?.fraction,
+                progress = browser.progressById[series.id]?.fraction
             )
         }
     }

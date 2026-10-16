@@ -156,13 +156,21 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                     }
                     Key.MediaPlay -> { exo?.play(); true }
                     Key.MediaPause -> { exo?.pause(); true }
-                    Key.DirectionLeft, Key.MediaRewind -> if (!state.isLive && exo != null) { exo.seekTo((exo.currentPosition - SEEK_STEP_MS).coerceAtLeast(0)); showControls(); true } else false
-                    Key.DirectionRight, Key.MediaFastForward -> if (!state.isLive && exo != null) { exo.seekTo(exo.currentPosition + SEEK_STEP_MS); showControls(); true } else false
+                    Key.DirectionLeft, Key.MediaRewind -> if (!state.isLive &&
+                        exo != null
+                    ) { exo.seekTo((exo.currentPosition - SEEK_STEP_MS).coerceAtLeast(0)); showControls(); true } else {
+                        false
+                    }
+                    Key.DirectionRight, Key.MediaFastForward -> if (!state.isLive &&
+                        exo != null
+                    ) { exo.seekTo(exo.currentPosition + SEEK_STEP_MS); showControls(); true } else {
+                        false
+                    }
                     Key.DirectionUp, Key.ChannelUp -> if (state.isLive) { onEvent(PlayerEvent.ZapNext); true } else false
                     Key.DirectionDown, Key.ChannelDown -> if (state.isLive) { onEvent(PlayerEvent.ZapPrevious); true } else false
                     else -> false
                 }
-            },
+            }
     ) {
         player?.let { PlayerSurface(player = it, surfaceType = SURFACE_TYPE_SURFACE_VIEW, modifier = Modifier.fillMaxSize()) }
 
@@ -173,7 +181,12 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             }
         }
 
-        AnimatedVisibility(visible = controlsVisible && state.error == null, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.BottomCenter)) {
+        AnimatedVisibility(
+            visible = controlsVisible && state.error == null,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
             InfoOverlay(state, positionMs, durationMs, isPlaying)
         }
     }
@@ -186,18 +199,32 @@ private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long
             .fillMaxWidth()
             .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))))
             .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceL),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
             if (state.isLive) {
-                Text(stringResource(R.string.player_live), style = MaterialTheme.typography.labelLarge, color = Color.White, modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(TilfazColors.Danger).padding(horizontal = 8.dp, vertical = 2.dp))
+                Text(
+                    stringResource(R.string.player_live),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White,
+                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(TilfazColors.Danger).padding(horizontal = 8.dp, vertical = 2.dp)
+                )
             }
             Text(state.title, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = Color.White, maxLines = 1)
             if (!state.isLive && !isPlaying) Text("⏸", style = MaterialTheme.typography.headlineSmall, color = Color.White)
         }
         if (state.isLive) {
-            state.nowNext.now?.let { Text("${stringResource(R.string.player_now)}: ${it.title}", style = MaterialTheme.typography.titleMedium, color = Color.White, maxLines = 1) }
-            state.nowNext.next?.let { Text("${stringResource(R.string.player_next)}: ${it.title}", style = MaterialTheme.typography.bodyLarge, color = TilfazColors.OnSurfaceMuted, maxLines = 1) }
+            state.nowNext.now?.let {
+                Text("${stringResource(R.string.player_now)}: ${it.title}", style = MaterialTheme.typography.titleMedium, color = Color.White, maxLines = 1)
+            }
+            state.nowNext.next?.let {
+                Text(
+                    "${stringResource(R.string.player_next)}: ${it.title}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TilfazColors.OnSurfaceMuted,
+                    maxLines = 1
+                )
+            }
         } else if (durationMs > 0) {
             ProgressBar(positionMs.toFloat() / durationMs, Modifier.fillMaxWidth().height(6.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -205,7 +232,11 @@ private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long
                 Text(formatPlayerTime(durationMs), style = MaterialTheme.typography.bodyMedium, color = Color.White)
             }
         }
-        Text(stringResource(if (state.isLive) R.string.player_hint_live else R.string.player_hint_vod), style = MaterialTheme.typography.bodySmall, color = TilfazColors.OnSurfaceMuted)
+        Text(
+            stringResource(if (state.isLive) R.string.player_hint_live else R.string.player_hint_vod),
+            style = MaterialTheme.typography.bodySmall,
+            color = TilfazColors.OnSurfaceMuted
+        )
     }
 }
 
@@ -217,7 +248,7 @@ private fun ErrorOverlay(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, o
     Column(
         Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.8f)).padding(Dimens.ScreenPadding),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(stringResource(R.string.player_error_title), style = MaterialTheme.typography.headlineMedium, color = Color.White)
         Text(
@@ -230,7 +261,7 @@ private fun ErrorOverlay(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, o
             },
             style = MaterialTheme.typography.bodyLarge,
             color = TilfazColors.OnSurfaceMuted,
-            modifier = Modifier.padding(top = Dimens.SpaceS, bottom = Dimens.SpaceL),
+            modifier = Modifier.padding(top = Dimens.SpaceS, bottom = Dimens.SpaceL)
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
             Button(onClick = { onEvent(PlayerEvent.Retry) }, modifier = Modifier.focusRequester(retryFocus)) { Text(stringResource(R.string.player_retry)) }
@@ -241,7 +272,9 @@ private fun ErrorOverlay(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, o
             }
             OutlinedButton(onClick = onExit) { Text(stringResource(R.string.player_back)) }
         }
-        error.detail?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = TilfazColors.OnSurfaceMuted, modifier = Modifier.padding(top = Dimens.SpaceL)) }
+        error.detail?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall, color = TilfazColors.OnSurfaceMuted, modifier = Modifier.padding(top = Dimens.SpaceL))
+        }
     }
 }
 

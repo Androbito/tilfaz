@@ -33,10 +33,12 @@ object ServerUrlNormalizer {
         val host = uri.host ?: return Outcome.Invalid(Reason.MISSING_HOST)
 
         val port = uri.port.takeIf { it > 0 && it != defaultPort(scheme) }
-        return Outcome.Valid(buildString {
-            append(scheme).append("://").append(host.lowercase())
-            if (port != null) append(':').append(port)
-        })
+        return Outcome.Valid(
+            buildString {
+                append(scheme).append("://").append(host.lowercase())
+                if (port != null) append(':').append(port)
+            }
+        )
     }
 
     private fun defaultPort(scheme: String) = if (scheme == "https") 443 else 80

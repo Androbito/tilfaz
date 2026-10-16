@@ -6,9 +6,9 @@ import com.androbito.tilfaz.core.domain.repository.VodRepository
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.toDomainError
+import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import javax.inject.Inject
 
 /**
  * Refreshes one or all catalogs in parallel and reports the outcome per content type,
@@ -17,7 +17,7 @@ import javax.inject.Inject
 class SyncCatalogUseCase @Inject constructor(
     private val liveRepository: LiveRepository,
     private val vodRepository: VodRepository,
-    private val seriesRepository: SeriesRepository,
+    private val seriesRepository: SeriesRepository
 ) {
     data class Report(val failures: Map<ContentType, DomainError>) {
         val isFullSuccess: Boolean get() = failures.isEmpty()

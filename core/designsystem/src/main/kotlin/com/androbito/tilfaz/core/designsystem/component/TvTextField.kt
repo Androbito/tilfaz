@@ -41,7 +41,7 @@ fun TvTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {},
-    errorText: String? = null,
+    errorText: String? = null
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -59,7 +59,7 @@ fun TvTextField(
                 .background(TilfazColors.Surface, RoundedCornerShape(Dimens.CornerS))
                 .border(2.dp, borderColor, RoundedCornerShape(Dimens.CornerS))
                 .padding(horizontal = Dimens.SpaceM),
-            contentAlignment = Alignment.CenterStart,
+            contentAlignment = Alignment.CenterStart
         ) {
             if (value.isEmpty() && placeholder != null) {
                 Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = TilfazColors.OnSurfaceMuted)
@@ -74,7 +74,7 @@ fun TvTextField(
                 visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
                 keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }, onGo = { onImeAction() }),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
         if (errorText != null) {

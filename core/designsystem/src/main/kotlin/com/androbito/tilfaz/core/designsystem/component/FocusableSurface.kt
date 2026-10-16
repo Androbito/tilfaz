@@ -1,5 +1,6 @@
 package com.androbito.tilfaz.core.designsystem.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -13,7 +14,6 @@ import androidx.tv.material3.Glow
 import androidx.tv.material3.Surface
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
-import androidx.compose.foundation.BorderStroke
 
 /**
  * The one focus treatment used everywhere: slight scale, cyan border and glow when focused.
@@ -30,7 +30,7 @@ fun FocusableSurface(
     focusedContainerColor: Color = TilfazColors.SurfaceBright,
     selectedContainerColor: Color = TilfazColors.Accent,
     focusedScale: Float = 1.04f,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     val shape = RoundedCornerShape(corner)
     Surface(
@@ -43,15 +43,15 @@ fun FocusableSurface(
             focusedContainerColor = if (selected) selectedContainerColor else focusedContainerColor,
             pressedContainerColor = focusedContainerColor,
             contentColor = TilfazColors.OnBackground,
-            focusedContentColor = TilfazColors.OnBackground,
+            focusedContentColor = TilfazColors.OnBackground
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = focusedScale),
         border = ClickableSurfaceDefaults.border(
-            focusedBorder = Border(BorderStroke(3.dp, TilfazColors.OnBackground), shape = shape),
+            focusedBorder = Border(BorderStroke(3.dp, TilfazColors.OnBackground), shape = shape)
         ),
         glow = ClickableSurfaceDefaults.glow(
-            focusedGlow = Glow(elevationColor = TilfazColors.Accent, elevation = 12.dp),
+            focusedGlow = Glow(elevationColor = TilfazColors.Accent, elevation = 12.dp)
         ),
-        content = content,
+        content = content
     )
 }

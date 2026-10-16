@@ -13,6 +13,7 @@ import com.androbito.tilfaz.core.model.Series
 import com.androbito.tilfaz.core.model.SeriesDetails
 import com.androbito.tilfaz.core.model.WatchProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class SeriesDetailsUiState(
     val series: Series? = null,
@@ -30,7 +30,7 @@ data class SeriesDetailsUiState(
     val failed: Boolean = false,
     val isFavorite: Boolean = false,
     val selectedSeason: Int? = null,
-    val progressByEpisodeId: Map<String, WatchProgress> = emptyMap(),
+    val progressByEpisodeId: Map<String, WatchProgress> = emptyMap()
 ) {
     val episodes: List<Episode> get() = details?.seasons?.firstOrNull { it.number == selectedSeason }?.episodes.orEmpty()
 
@@ -54,20 +54,26 @@ class SeriesDetailsViewModel @Inject constructor(
     private val seriesRepository: SeriesRepository,
     favoritesRepository: FavoritesRepository,
     progressRepository: WatchProgressRepository,
-    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val toggleFavorite: ToggleFavoriteUseCase
 ) : ViewModel() {
 
     private val seriesId: Int = checkNotNull(savedStateHandle[SeriesDetailsRoute.ARG_SERIES_ID])
     private val loaded = MutableStateFlow(Loaded())
 
-    private data class Loaded(val series: Series? = null, val details: SeriesDetails? = null, val loading: Boolean = true, val failed: Boolean = false, val season: Int? = null)
+    private data class Loaded(
+        val series: Series? = null,
+        val details: SeriesDetails? = null,
+        val loading: Boolean = true,
+        val failed: Boolean = false,
+        val season: Int? = null
+    )
 
     val state: StateFlow<SeriesDetailsUiState> = combine(
         loaded,
         favoritesRepository.observeKeys(ContentType.SERIES).map { ToggleFavoriteUseCase.seriesKey(seriesId) in it },
         progressRepository.observeContinueWatching(ContentType.SERIES).map { list ->
             list.filter { it.playableKey.startsWith("series:$seriesId:") }.associateBy { it.playableKey.substringAfterLast(':') }
-        },
+        }
     ) { loaded, favorite, progress ->
         SeriesDetailsUiState(
             series = loaded.details?.series ?: loaded.series,
@@ -76,7 +82,7 @@ class SeriesDetailsViewModel @Inject constructor(
             failed = loaded.failed,
             isFavorite = favorite,
             selectedSeason = loaded.season ?: loaded.details?.seasons?.firstOrNull()?.number,
-            progressByEpisodeId = progress,
+            progressByEpisodeId = progress
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SeriesDetailsUiState())
 

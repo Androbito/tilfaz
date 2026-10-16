@@ -40,7 +40,7 @@ fun CategoryRow(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
+    icon: ImageVector? = null
 ) {
     FocusableSurface(
         onClick = onClick,
@@ -48,12 +48,12 @@ fun CategoryRow(
         modifier = modifier.fillMaxWidth().height(60.dp),
         corner = Dimens.CornerS,
         containerColor = Color.Transparent,
-        focusedScale = 1.0f,
+        focusedScale = 1.0f
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = Dimens.SpaceM).align(Alignment.CenterStart),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
         ) {
             if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
             Text(
@@ -61,10 +61,14 @@ fun CategoryRow(
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f)
             )
             if (count != null) {
-                Text(text = count.toString(), style = MaterialTheme.typography.titleMedium, color = if (selected) TilfazColors.OnBackground else TilfazColors.OnSurfaceMuted)
+                Text(
+                    text = count.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (selected) TilfazColors.OnBackground else TilfazColors.OnSurfaceMuted
+                )
             }
         }
     }
@@ -81,7 +85,7 @@ fun ChannelRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
-    isFavorite: Boolean = false,
+    isFavorite: Boolean = false
 ) {
     FocusableSurface(
         onClick = onClick,
@@ -90,12 +94,12 @@ fun ChannelRow(
         modifier = modifier.fillMaxWidth().height(84.dp),
         corner = Dimens.CornerS,
         containerColor = Color.Transparent,
-        focusedScale = 1.0f,
+        focusedScale = 1.0f
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = Dimens.SpaceM).align(Alignment.CenterStart),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
         ) {
             ChannelLogo(logoUrl, Modifier.size(Dimens.ChannelLogo))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -103,21 +107,26 @@ fun ChannelRow(
                     text = name,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = nowTitle ?: stringResource(R.string.ds_no_program),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (selected) TilfazColors.OnBackground else TilfazColors.OnSurfaceMuted,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (progress != null) {
                     ProgressBar(progress, Modifier.fillMaxWidth().height(3.dp).padding(top = 2.dp), color = if (selected) Color.White else TilfazColors.Accent)
                 }
             }
             if (isFavorite) {
-                Icon(Icons.Default.Favorite, contentDescription = stringResource(R.string.ds_favorite), tint = TilfazColors.Danger, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Default.Favorite,
+                    contentDescription = stringResource(R.string.ds_favorite),
+                    tint = TilfazColors.Danger,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
@@ -127,7 +136,7 @@ fun ChannelRow(
 fun ChannelLogo(logoUrl: String?, modifier: Modifier = Modifier) {
     Box(
         modifier.clip(RoundedCornerShape(Dimens.CornerS)).background(Color.White.copy(alpha = 0.08f)),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.Center
     ) {
         if (logoUrl != null) {
             AsyncImage(model = logoUrl, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.padding(4.dp).size(Dimens.ChannelLogo))

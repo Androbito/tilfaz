@@ -30,7 +30,7 @@ object AuthMapper {
             activeConnections = user.activeConnections ?: 0,
             allowedOutputFormats = user.allowedOutputFormats.mapNotNull(StreamFormat::fromExtension),
             serverTimeZone = response.serverInfo?.timezone,
-            checkedAt = now,
+            checkedAt = now
         )
     }
 }

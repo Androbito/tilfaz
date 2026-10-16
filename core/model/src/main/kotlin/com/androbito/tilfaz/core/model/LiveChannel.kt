@@ -8,5 +8,5 @@ data class LiveChannel(
     val categoryId: String?,
     val epgChannelId: String?,
     val hasArchive: Boolean = false,
-    val archiveDays: Int = 0,
+    val archiveDays: Int = 0
 )

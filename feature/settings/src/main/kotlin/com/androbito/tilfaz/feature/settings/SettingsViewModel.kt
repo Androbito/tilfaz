@@ -10,13 +10,13 @@ import com.androbito.tilfaz.core.model.BufferProfile
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class SettingsUiState(
     val settings: PlaybackSettings = PlaybackSettings(),
@@ -24,7 +24,7 @@ data class SettingsUiState(
     val status: AccountStatus? = null,
     val isRefreshingStatus: Boolean = false,
     val confirmSignOut: Boolean = false,
-    val signedOut: Boolean = false,
+    val signedOut: Boolean = false
 )
 
 sealed interface SettingsEvent {
@@ -42,7 +42,7 @@ sealed interface SettingsEvent {
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: PlaybackSettingsRepository,
-    private val accountRepository: AccountRepository,
+    private val accountRepository: AccountRepository
 ) : ViewModel() {
 
     private val transient = MutableStateFlow(Transient())
@@ -53,7 +53,7 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.observe(),
         accountRepository.observeAccount(),
         accountRepository.observeStatus(),
-        transient,
+        transient
     ) { settings, account, status, t ->
         SettingsUiState(settings, account, status, t.refreshing, t.confirmSignOut, t.signedOut)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())

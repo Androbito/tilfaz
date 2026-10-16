@@ -6,7 +6,7 @@ import java.time.Instant
 data class Account(
     val serverUrl: String,
     val username: String,
-    val password: String,
+    val password: String
 ) {
     val displayName: String get() = username
 }
@@ -19,5 +19,5 @@ data class AccountStatus(
     val activeConnections: Int,
     val allowedOutputFormats: List<StreamFormat>,
     val serverTimeZone: String?,
-    val checkedAt: Instant,
+    val checkedAt: Instant
 )

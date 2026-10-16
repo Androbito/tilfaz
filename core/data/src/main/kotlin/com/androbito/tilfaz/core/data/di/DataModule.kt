@@ -30,15 +30,24 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
     @Binds abstract fun bindAccountRepository(impl: DefaultAccountRepository): AccountRepository
+
     @Binds abstract fun bindLiveRepository(impl: DefaultLiveRepository): LiveRepository
+
     @Binds abstract fun bindVodRepository(impl: DefaultVodRepository): VodRepository
+
     @Binds abstract fun bindSeriesRepository(impl: DefaultSeriesRepository): SeriesRepository
+
     @Binds abstract fun bindFavoritesRepository(impl: RoomFavoritesRepository): FavoritesRepository
+
     @Binds abstract fun bindWatchProgressRepository(impl: RoomWatchProgressRepository): WatchProgressRepository
+
     @Binds abstract fun bindRecentChannelsRepository(impl: RoomRecentChannelsRepository): RecentChannelsRepository
+
     @Binds abstract fun bindPlaybackSettingsRepository(impl: DataStorePlaybackSettingsRepository): PlaybackSettingsRepository
 
     @Binds abstract fun bindSecretCodec(impl: KeystoreSecretCodec): SecretCodec
+
     @Binds abstract fun bindActiveAccountProvider(impl: ActiveAccountHolder): ActiveAccountProvider
+
     @Binds abstract fun bindUserAgentProvider(impl: ActiveAccountHolder): UserAgentProvider
 }

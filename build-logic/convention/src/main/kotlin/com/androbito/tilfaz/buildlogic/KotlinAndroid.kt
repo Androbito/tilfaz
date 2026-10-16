@@ -4,6 +4,7 @@ import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -41,6 +42,9 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
             "-opt-in=kotlinx.coroutines.FlowPreview",
         )
     }
+
+    // Modules without unit tests yet (e.g. :core:database) must not fail the build on Gradle 9.
+    tasks.withType(Test::class.java).configureEach { failOnNoDiscoveredTests.set(false) }
 
     dependencies {
         add("testImplementation", libs.findLibrary("junit").get())

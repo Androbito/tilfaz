@@ -7,7 +7,7 @@ data class EpgEntry(
     val title: String,
     val description: String?,
     val start: Instant,
-    val end: Instant,
+    val end: Instant
 ) {
     fun isOnAirAt(instant: Instant): Boolean = !instant.isBefore(start) && instant.isBefore(end)
     fun progressAt(instant: Instant): Float {
@@ -19,7 +19,7 @@ data class EpgEntry(
 
 data class NowNext(
     val now: EpgEntry?,
-    val next: EpgEntry?,
+    val next: EpgEntry?
 ) {
     companion object {
         val Empty = NowNext(now = null, next = null)

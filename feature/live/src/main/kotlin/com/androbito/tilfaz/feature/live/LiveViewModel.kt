@@ -13,6 +13,8 @@ import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Clock
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +26,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Clock
-import javax.inject.Inject
 
 /** Left column entries. The first three are virtual and exist only in the UI. */
 data class LiveCategoryUi(val id: String, val name: String, val count: Int?, val kind: Kind) {
@@ -46,7 +46,7 @@ data class LiveUiState(
     val nowNext: Map<Int, NowNext> = emptyMap(),
     val focusedChannelId: Int? = null,
     val query: String = "",
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = true
 ) {
     val focusedChannel: LiveChannel? get() = channels.firstOrNull { it.id == focusedChannelId }
     val selectedCategory: LiveCategoryUi? get() = categories.firstOrNull { it.id == selectedCategoryId }
@@ -68,7 +68,7 @@ class LiveViewModel @Inject constructor(
     favoritesRepository: FavoritesRepository,
     private val recentChannelsRepository: RecentChannelsRepository,
     private val toggleFavorite: ToggleFavoriteUseCase,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val selectedCategoryId = MutableStateFlow(savedStateHandle[LiveRoute.ARG_INITIAL_CATEGORY] ?: LiveCategoryUi.ALL_ID)
@@ -86,7 +86,7 @@ class LiveViewModel @Inject constructor(
         liveRepository.observeCategories(),
         allChannels,
         favoriteIds,
-        recentChannelsRepository.observeRecent(),
+        recentChannelsRepository.observeRecent()
     ) { categories, channels, favorites, recent ->
         val countByCategory = channels.groupingBy { it.categoryId }.eachCount()
         buildList {
@@ -113,7 +113,7 @@ class LiveViewModel @Inject constructor(
         selectedCategoryId,
         channels,
         favoriteIds,
-        combine(nowNext, focusedChannelId, query) { nn, focused, q -> Triple(nn, focused, q) },
+        combine(nowNext, focusedChannelId, query) { nn, focused, q -> Triple(nn, focused, q) }
     ) { categories, selected, channels, favorites, (nowNext, focused, q) ->
         LiveUiState(
             categories = categories,
@@ -123,7 +123,7 @@ class LiveViewModel @Inject constructor(
             nowNext = nowNext,
             focusedChannelId = focused ?: channels.firstOrNull()?.id,
             query = q,
-            isLoading = false,
+            isLoading = false
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LiveUiState())
 

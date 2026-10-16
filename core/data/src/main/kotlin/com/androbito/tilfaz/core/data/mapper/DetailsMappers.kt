@@ -20,7 +20,7 @@ fun VodInfoResponseDto.toDomain(fallback: Movie): MovieDetails {
         name = data?.name?.trim()?.ifEmpty { null } ?: fallback.name,
         posterUrl = info?.movieImage?.takeIf { it.startsWith("http") } ?: fallback.posterUrl,
         containerExtension = data?.containerExtension?.trim()?.trimStart('.')?.ifEmpty { null } ?: fallback.containerExtension,
-        rating = Rating.fromRaw(info?.rating) ?: fallback.rating,
+        rating = Rating.fromRaw(info?.rating) ?: fallback.rating
     )
     return MovieDetails(
         movie = movie,
@@ -31,7 +31,7 @@ fun VodInfoResponseDto.toDomain(fallback: Movie): MovieDetails {
         releaseDate = info?.releaseDate ?: info?.releaseDateAlt,
         durationSeconds = info?.durationSeconds ?: DurationParser.parse(info?.duration),
         backdropUrls = info?.backdropPath?.filter { it.startsWith("http") }.orEmpty(),
-        trailerUrl = info?.youtubeTrailer?.toYoutubeUrl(),
+        trailerUrl = info?.youtubeTrailer?.toYoutubeUrl()
     )
 }
 
@@ -45,14 +45,14 @@ fun SeriesInfoResponseDto.toDomain(fallback: Series, json: Json): SeriesDetails 
         Season(
             number = seasonNumber,
             name = seasonNames[seasonNumber]?.takeIf { it.isNotBlank() } ?: "Season $seasonNumber",
-            episodes = episodes.sortedBy { it.episodeNumber },
+            episodes = episodes.sortedBy { it.episodeNumber }
         )
     }.sortedBy { it.number }
 
     return SeriesDetails(
         series = fallback.copy(
             posterUrl = info?.cover?.takeIf { it.startsWith("http") } ?: fallback.posterUrl,
-            rating = Rating.fromRaw(info?.rating, info?.rating5Based) ?: fallback.rating,
+            rating = Rating.fromRaw(info?.rating, info?.rating5Based) ?: fallback.rating
         ),
         plot = info?.plot?.cleanText() ?: fallback.plot,
         cast = info?.cast?.cleanText(),
@@ -60,7 +60,7 @@ fun SeriesInfoResponseDto.toDomain(fallback: Series, json: Json): SeriesDetails 
         genre = info?.genre?.cleanText() ?: fallback.genre,
         releaseDate = info?.releaseDate ?: info?.releaseDateAlt,
         backdropUrls = info?.backdropPath?.filter { it.startsWith("http") }.orEmpty(),
-        seasons = parsedSeasons,
+        seasons = parsedSeasons
     )
 }
 
@@ -80,7 +80,7 @@ private fun EpisodeDto.toDomain(seriesId: Int, seasonFromKey: Int): Episode? {
         durationSeconds = info?.durationSeconds ?: DurationParser.parse(info?.duration),
         plot = info?.plot?.cleanText(),
         thumbnailUrl = info?.movieImage?.takeIf { it.startsWith("http") },
-        rating = Rating.fromRaw(info?.rating),
+        rating = Rating.fromRaw(info?.rating)
     )
 }
 

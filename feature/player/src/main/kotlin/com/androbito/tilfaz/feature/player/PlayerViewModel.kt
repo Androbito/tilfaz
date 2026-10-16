@@ -14,20 +14,20 @@ import com.androbito.tilfaz.core.domain.usecase.ResumePositionPolicy
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
-import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.Playable
+import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
 import com.androbito.tilfaz.core.model.StreamSource
 import com.androbito.tilfaz.core.model.WatchProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Clock
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Clock
-import javax.inject.Inject
 
 enum class PlayerErrorKind { SOURCE, NETWORK, DECODER, NOT_FOUND, UNKNOWN }
 
@@ -42,7 +42,7 @@ data class PlayerUiState(
     val zapList: List<LiveChannel> = emptyList(),
     val error: PlayerError? = null,
     val isLoading: Boolean = true,
-    val formatOverride: StreamFormat? = null,
+    val formatOverride: StreamFormat? = null
 ) {
     val title: String get() = source?.playable?.title.orEmpty()
     val canSwitchFormat: Boolean get() = isLive
@@ -68,7 +68,7 @@ class PlayerViewModel @Inject constructor(
     private val progressRepository: WatchProgressRepository,
     private val settingsRepository: PlaybackSettingsRepository,
     private val buildStreamSource: BuildStreamSourceUseCase,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val kind: String = checkNotNull(savedStateHandle[PlayerRoute.ARG_KIND])
@@ -175,8 +175,8 @@ class PlayerViewModel @Inject constructor(
                     positionMs = positionMs,
                     durationMs = durationMs,
                     updatedAt = clock.instant(),
-                    reference = reference,
-                ),
+                    reference = reference
+                )
             )
         }
     }

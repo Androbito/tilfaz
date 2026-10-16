@@ -7,13 +7,13 @@ import com.androbito.tilfaz.core.model.DomainException
 import com.androbito.tilfaz.core.model.Playable
 import com.androbito.tilfaz.core.model.StreamFormat
 import com.androbito.tilfaz.core.model.StreamSource
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 
 /** Combines the signed-in account and the playback settings into a URL the player can open. */
 class BuildStreamSourceUseCase @Inject constructor(
     private val accountRepository: AccountRepository,
-    private val settingsRepository: PlaybackSettingsRepository,
+    private val settingsRepository: PlaybackSettingsRepository
 ) {
     suspend operator fun invoke(playable: Playable, formatOverride: StreamFormat? = null): Result<StreamSource> {
         val account = accountRepository.observeAccount().first()

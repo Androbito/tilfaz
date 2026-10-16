@@ -40,10 +40,10 @@ import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.DomainError
-import kotlinx.serialization.Serializable
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlinx.serialization.Serializable
 
 @Serializable
 data object HomeRoute
@@ -55,7 +55,7 @@ class HomeNavigation(
     val onOpenSearch: () -> Unit,
     val onOpenSettings: () -> Unit,
     val onOpenFavorites: () -> Unit,
-    val onOpenContinueWatching: () -> Unit,
+    val onOpenContinueWatching: () -> Unit
 )
 
 fun NavGraphBuilder.homeScreen(navigation: HomeNavigation) {
@@ -77,13 +77,18 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
             IconButton(onClick = navigation.onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.home_settings)) }
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = Dimens.SpaceM)) {
                 Text(state.accountName, style = MaterialTheme.typography.titleMedium)
-                Icon(Icons.Default.Person, contentDescription = stringResource(R.string.home_account_label), tint = TilfazColors.Accent, modifier = Modifier.padding(start = Dimens.SpaceS).size(28.dp))
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = stringResource(R.string.home_account_label),
+                    tint = TilfazColors.Accent,
+                    modifier = Modifier.padding(start = Dimens.SpaceS).size(28.dp)
+                )
             }
         }
 
         Row(
             Modifier.weight(1f).fillMaxWidth().padding(horizontal = Dimens.ScreenPadding),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
         ) {
             HeroTile(
                 title = stringResource(R.string.home_live_tv),
@@ -93,7 +98,7 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.LIVE).isSyncing,
                 onClick = navigation.onOpenLive,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.LIVE)) },
-                modifier = Modifier.weight(1f).fillMaxSize(),
+                modifier = Modifier.weight(1f).fillMaxSize()
             )
             HeroTile(
                 title = stringResource(R.string.home_movies),
@@ -103,7 +108,7 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.VOD).isSyncing,
                 onClick = navigation.onOpenMovies,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.VOD)) },
-                modifier = Modifier.weight(1f).fillMaxSize(),
+                modifier = Modifier.weight(1f).fillMaxSize()
             )
             HeroTile(
                 title = stringResource(R.string.home_series),
@@ -113,13 +118,13 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.SERIES).isSyncing,
                 onClick = navigation.onOpenSeries,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.SERIES)) },
-                modifier = Modifier.weight(1f).fillMaxSize(),
+                modifier = Modifier.weight(1f).fillMaxSize()
             )
         }
 
         Row(
             Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceL).height(72.dp),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
         ) {
             PillTile(stringResource(R.string.home_favorites), Icons.Default.Favorite, navigation.onOpenFavorites, Modifier.weight(1f))
             PillTile(stringResource(R.string.home_continue), Icons.Default.History, navigation.onOpenContinueWatching, Modifier.weight(1f))
@@ -129,7 +134,7 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
         Row(
             Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.SpaceL),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(expirationLabel(state), style = MaterialTheme.typography.titleMedium, color = TilfazColors.OnSurfaceMuted)
             SyncErrors(state.syncErrors)

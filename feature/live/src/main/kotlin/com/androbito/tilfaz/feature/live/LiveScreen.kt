@@ -45,10 +45,10 @@ import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.EpgEntry
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
-import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class LiveRoute(val initialCategoryId: String? = null) {
@@ -72,7 +72,7 @@ fun LiveRoute(onPlayChannel: (Int, String?) -> Unit, viewModel: LiveViewModel = 
             viewModel.onEvent(LiveEvent.Play(id))
             val providerCategory = state.selectedCategory?.takeIf { it.kind == LiveCategoryUi.Kind.PROVIDER }?.id
             onPlayChannel(id, providerCategory)
-        },
+        }
     )
 }
 
@@ -97,7 +97,7 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, mod
             onValueChange = { onEvent(LiveEvent.QueryChanged(it)) },
             label = "",
             placeholder = stringResource(R.string.live_search_categories),
-            modifier = Modifier.padding(bottom = Dimens.SpaceS),
+            modifier = Modifier.padding(bottom = Dimens.SpaceS)
         )
         LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
             items(state.categories, key = { it.id }) { category ->
@@ -112,7 +112,7 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, mod
                     count = category.count,
                     selected = category.id == state.selectedCategoryId,
                     onClick = { onEvent(LiveEvent.SelectCategory(category.id)) },
-                    icon = icon,
+                    icon = icon
                 )
             }
         }
@@ -130,7 +130,7 @@ private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPl
                     state.selectedCategoryId == LiveCategoryUi.FAVORITES_ID -> stringResource(R.string.live_empty_favorites)
                     state.selectedCategoryId == LiveCategoryUi.HISTORY_ID -> stringResource(R.string.live_empty_history)
                     else -> stringResource(R.string.live_empty_category)
-                },
+                }
             )
             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
                 items(state.channels, key = { it.id }) { channel ->
@@ -144,7 +144,7 @@ private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPl
                         onClick = { onPlay(channel.id) },
                         onLongClick = { onEvent(LiveEvent.ToggleFavorite(channel.id)) },
                         isFavorite = channel.id in state.favoriteIds,
-                        modifier = Modifier.onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel.id)) },
+                        modifier = Modifier.onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel.id)) }
                     )
                 }
             }
@@ -161,7 +161,11 @@ private fun PreviewPane(channel: LiveChannel?, nowNext: NowNext?, now: Instant, 
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
                 Text(channel.name, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), maxLines = 2)
                 if (channel.hasArchive && channel.archiveDays > 0) {
-                    Text(stringResource(R.string.live_archive_days, channel.archiveDays), style = MaterialTheme.typography.bodyMedium, color = TilfazColors.Accent)
+                    Text(
+                        stringResource(R.string.live_archive_days, channel.archiveDays),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TilfazColors.Accent
+                    )
                 }
             }
         }
@@ -182,7 +186,11 @@ private fun ProgrammeBlock(label: String, entry: EpgEntry, now: Instant?) {
     val fmt = DateTimeFormatter.ofPattern("HH:mm")
     val zone = ZoneId.systemDefault()
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
-        Text("$label · ${entry.start.atZone(zone).format(fmt)} - ${entry.end.atZone(zone).format(fmt)}", style = MaterialTheme.typography.labelLarge, color = TilfazColors.Accent)
+        Text(
+            "$label · ${entry.start.atZone(zone).format(fmt)} - ${entry.end.atZone(zone).format(fmt)}",
+            style = MaterialTheme.typography.labelLarge,
+            color = TilfazColors.Accent
+        )
         Text(entry.title, style = MaterialTheme.typography.titleLarge, maxLines = 2)
         if (now != null) ProgressBar(entry.progressAt(now), Modifier.fillMaxWidth().padding(vertical = Dimens.SpaceXs).height(4.dp))
         entry.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = 6) }

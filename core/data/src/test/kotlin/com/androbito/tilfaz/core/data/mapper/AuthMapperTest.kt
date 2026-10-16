@@ -14,13 +14,19 @@ import com.androbito.tilfaz.core.network.dto.AuthResponseDto
 import com.androbito.tilfaz.core.network.dto.ServerInfoDto
 import com.androbito.tilfaz.core.network.dto.UserInfoDto
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
-import org.junit.Test
 import java.time.Instant
+import org.junit.Test
 
 class AuthMapperTest {
     private fun user(auth: Boolean? = true, status: String? = "Active", exp: Long? = 1_804_000_000L) = AuthResponseDto(
-        userInfo = UserInfoDto(auth = auth, status = status, expDateEpochSeconds = exp, maxConnections = 2, allowedOutputFormats = listOf("m3u8", "ts", "rtmp")),
-        serverInfo = ServerInfoDto(timezone = "Europe/Paris"),
+        userInfo = UserInfoDto(
+            auth = auth,
+            status = status,
+            expDateEpochSeconds = exp,
+            maxConnections = 2,
+            allowedOutputFormats = listOf("m3u8", "ts", "rtmp")
+        ),
+        serverInfo = ServerInfoDto(timezone = "Europe/Paris")
     )
 
     @Test

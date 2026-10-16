@@ -4,5 +4,5 @@ data class Category(
     val id: String,
     val name: String,
     val type: ContentType,
-    val parentId: String? = null,
+    val parentId: String? = null
 )

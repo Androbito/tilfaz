@@ -10,13 +10,13 @@ import com.androbito.tilfaz.core.model.Account
 import com.androbito.tilfaz.core.model.AccountStatus
 import com.androbito.tilfaz.core.network.XtreamApi
 import com.androbito.tilfaz.core.network.safeApiCall
+import java.time.Clock
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import java.time.Clock
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class DefaultAccountRepository @Inject constructor(
@@ -25,7 +25,7 @@ class DefaultAccountRepository @Inject constructor(
     private val accountHolder: ActiveAccountHolder,
     private val database: TilfazDatabase,
     private val clock: Clock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : AccountRepository {
 
     override fun observeAccount(): Flow<Account?> = accountStore.account

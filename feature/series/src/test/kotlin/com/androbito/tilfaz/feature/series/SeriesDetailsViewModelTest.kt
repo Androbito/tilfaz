@@ -32,7 +32,7 @@ class SeriesDetailsViewModelTest {
         repository,
         favorites,
         progress,
-        ToggleFavoriteUseCase(favorites),
+        ToggleFavoriteUseCase(favorites)
     )
 
     @Test

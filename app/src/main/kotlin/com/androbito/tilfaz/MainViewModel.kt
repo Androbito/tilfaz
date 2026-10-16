@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.androbito.tilfaz.core.domain.repository.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
-import javax.inject.Inject
 
 /**
  * Decides the start destination once: stored account -> home, otherwise the sign-in screen.
@@ -18,7 +18,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    accountRepository: AccountRepository,
+    accountRepository: AccountRepository
 ) : ViewModel() {
 
     enum class Session { Loading, SignedOut, SignedIn }

@@ -5,8 +5,8 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.androbito.tilfaz.core.model.Account
-import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.Playable
+import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import org.junit.Test

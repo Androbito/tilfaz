@@ -63,7 +63,7 @@ fun SignInScreen(state: SignInUiState, onEvent: (SignInEvent) -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             Modifier.width(620.dp).padding(Dimens.SpaceXl),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
         ) {
             BrandMark("Tilfaz")
             Text(stringResource(R.string.signin_title), style = MaterialTheme.typography.headlineMedium)
@@ -77,13 +77,13 @@ fun SignInScreen(state: SignInUiState, onEvent: (SignInEvent) -> Unit) {
                 placeholder = stringResource(R.string.signin_server_hint),
                 keyboardType = KeyboardType.Uri,
                 errorText = state.fieldError.serverMessage(),
-                modifier = Modifier.focusRequester(serverFocus),
+                modifier = Modifier.focusRequester(serverFocus)
             )
             TvTextField(
                 value = state.username,
                 onValueChange = { onEvent(SignInEvent.UsernameChanged(it)) },
                 label = stringResource(R.string.signin_username),
-                errorText = if (state.fieldError == FieldError.Username) stringResource(R.string.signin_error_username) else null,
+                errorText = if (state.fieldError == FieldError.Username) stringResource(R.string.signin_error_username) else null
             )
             TvTextField(
                 value = state.password,
@@ -93,7 +93,7 @@ fun SignInScreen(state: SignInUiState, onEvent: (SignInEvent) -> Unit) {
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Go,
                 onImeAction = { if (state.canSubmit) onEvent(SignInEvent.Submit) },
-                errorText = if (state.fieldError == FieldError.Password) stringResource(R.string.signin_error_password) else null,
+                errorText = if (state.fieldError == FieldError.Password) stringResource(R.string.signin_error_password) else null
             )
 
             state.remoteError?.let { error ->
@@ -103,7 +103,7 @@ fun SignInScreen(state: SignInUiState, onEvent: (SignInEvent) -> Unit) {
             Button(
                 onClick = { onEvent(SignInEvent.Submit) },
                 enabled = state.canSubmit,
-                modifier = Modifier.fillMaxWidth().padding(top = Dimens.SpaceS),
+                modifier = Modifier.fillMaxWidth().padding(top = Dimens.SpaceS)
             ) {
                 Text(if (state.isSubmitting) stringResource(R.string.signin_in_progress) else stringResource(R.string.signin_action))
             }

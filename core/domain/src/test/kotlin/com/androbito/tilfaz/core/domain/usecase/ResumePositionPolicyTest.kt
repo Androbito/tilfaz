@@ -16,7 +16,7 @@ class ResumePositionPolicyTest {
         positionMs = positionMs,
         durationMs = durationMs,
         updatedAt = Fixtures.now,
-        reference = "501",
+        reference = "501"
     )
 
     @Test

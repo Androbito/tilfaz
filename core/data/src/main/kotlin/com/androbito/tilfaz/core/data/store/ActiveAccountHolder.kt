@@ -5,6 +5,9 @@ import com.androbito.tilfaz.core.model.Account
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.network.ActiveAccountProvider
 import com.androbito.tilfaz.core.network.UserAgentProvider
+import java.util.Optional
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -13,9 +16,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.Optional
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * In-memory mirror of the stored account and user agent, so OkHttp interceptors (synchronous, on their own threads)
@@ -25,7 +25,7 @@ import javax.inject.Singleton
 class ActiveAccountHolder @Inject constructor(
     accountStore: AccountStore,
     settingsStore: PlaybackSettingsStore,
-    @ApplicationScope scope: CoroutineScope,
+    @ApplicationScope scope: CoroutineScope
 ) : ActiveAccountProvider, UserAgentProvider {
 
     private val stored = MutableStateFlow<Optional<Account>?>(null)

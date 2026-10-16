@@ -33,11 +33,17 @@ fun <T> BrowserLayout(
     itemKey: (T) -> Any,
     emptyContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    itemContent: @Composable (T) -> Unit,
+    itemContent: @Composable (T) -> Unit
 ) {
     Row(modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)) {
         Column(Modifier.width(Dimens.SidebarWidth).fillMaxHeight()) {
-            TvTextField(value = query, onValueChange = onQueryChange, label = "", placeholder = searchPlaceholder, modifier = Modifier.padding(bottom = Dimens.SpaceS))
+            TvTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                label = "",
+                placeholder = searchPlaceholder,
+                modifier = Modifier.padding(bottom = Dimens.SpaceS)
+            )
             LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
                 sections()
             }
@@ -50,7 +56,7 @@ fun <T> BrowserLayout(
                     columns = GridCells.Adaptive(Dimens.PosterWidth),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
-                    contentPadding = PaddingValues(start = Dimens.SpaceS, end = Dimens.SpaceS, top = Dimens.SpaceS, bottom = Dimens.SpaceXl),
+                    contentPadding = PaddingValues(start = Dimens.SpaceS, end = Dimens.SpaceS, top = Dimens.SpaceS, bottom = Dimens.SpaceXl)
                 ) {
                     items(items, key = itemKey) { itemContent(it) }
                 }

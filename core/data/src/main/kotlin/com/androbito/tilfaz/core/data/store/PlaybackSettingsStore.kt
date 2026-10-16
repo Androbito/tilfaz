@@ -8,13 +8,13 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.androbito.tilfaz.core.model.BufferProfile
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
+import javax.inject.Inject
+import javax.inject.Qualifier
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Qualifier
-import javax.inject.Singleton
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
@@ -22,14 +22,14 @@ annotation class SettingsDataStore
 
 @Singleton
 class PlaybackSettingsStore @Inject constructor(
-    @SettingsDataStore private val dataStore: DataStore<Preferences>,
+    @SettingsDataStore private val dataStore: DataStore<Preferences>
 ) {
     val settings: Flow<PlaybackSettings> = dataStore.data.map { prefs ->
         PlaybackSettings(
             liveFormat = StreamFormat.fromExtension(prefs[Keys.LIVE_FORMAT]) ?: StreamFormat.MPEG_TS,
             userAgent = prefs[Keys.USER_AGENT]?.takeIf { it.isNotBlank() } ?: PlaybackSettings.DEFAULT_USER_AGENT,
             bufferProfile = prefs[Keys.BUFFER]?.let { name -> BufferProfile.entries.firstOrNull { it.name == name } } ?: BufferProfile.BALANCED,
-            resumePlayback = prefs[Keys.RESUME] ?: true,
+            resumePlayback = prefs[Keys.RESUME] ?: true
         )
     }.distinctUntilChanged()
 

@@ -11,7 +11,7 @@ data class Series(
     val year: Int?,
     val lastModifiedAt: Instant?,
     val plot: String? = null,
-    val genre: String? = null,
+    val genre: String? = null
 )
 
 data class SeriesDetails(
@@ -22,7 +22,7 @@ data class SeriesDetails(
     val genre: String?,
     val releaseDate: String?,
     val backdropUrls: List<String>,
-    val seasons: List<Season>,
+    val seasons: List<Season>
 ) {
     val episodeCount: Int get() = seasons.sumOf { it.episodes.size }
 }
@@ -30,7 +30,7 @@ data class SeriesDetails(
 data class Season(
     val number: Int,
     val name: String,
-    val episodes: List<Episode>,
+    val episodes: List<Episode>
 )
 
 data class Episode(
@@ -43,7 +43,7 @@ data class Episode(
     val durationSeconds: Long?,
     val plot: String?,
     val thumbnailUrl: String?,
-    val rating: Rating?,
+    val rating: Rating?
 ) {
     /** "S01E04" style label, used in lists and as the player title. */
     val code: String get() = "S%02dE%02d".format(seasonNumber, episodeNumber)

@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AuthResponseDto(
     @SerialName("user_info") val userInfo: UserInfoDto? = null,
-    @SerialName("server_info") val serverInfo: ServerInfoDto? = null,
+    @SerialName("server_info") val serverInfo: ServerInfoDto? = null
 )
 
 @Serializable
@@ -25,7 +25,7 @@ data class UserInfoDto(
     @SerialName("active_cons") @Serializable(LenientIntSerializer::class) val activeConnections: Int? = null,
     @SerialName("created_at") @Serializable(LenientLongSerializer::class) val createdAtEpochSeconds: Long? = null,
     @SerialName("max_connections") @Serializable(LenientIntSerializer::class) val maxConnections: Int? = null,
-    @SerialName("allowed_output_formats") @Serializable(LenientStringListSerializer::class) val allowedOutputFormats: List<String> = emptyList(),
+    @SerialName("allowed_output_formats") @Serializable(LenientStringListSerializer::class) val allowedOutputFormats: List<String> = emptyList()
 )
 
 @Serializable
@@ -35,5 +35,5 @@ data class ServerInfoDto(
     @SerialName("https_port") @Serializable(LenientStringSerializer::class) val httpsPort: String? = null,
     @SerialName("server_protocol") @Serializable(LenientStringSerializer::class) val serverProtocol: String? = null,
     @Serializable(LenientStringSerializer::class) val timezone: String? = null,
-    @SerialName("timestamp_now") @Serializable(LenientLongSerializer::class) val timestampNow: Long? = null,
+    @SerialName("timestamp_now") @Serializable(LenientLongSerializer::class) val timestampNow: Long? = null
 )

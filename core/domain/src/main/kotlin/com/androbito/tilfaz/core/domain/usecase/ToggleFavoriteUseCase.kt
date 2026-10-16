@@ -6,7 +6,7 @@ import com.androbito.tilfaz.core.model.Playable
 import javax.inject.Inject
 
 class ToggleFavoriteUseCase @Inject constructor(
-    private val favoritesRepository: FavoritesRepository,
+    private val favoritesRepository: FavoritesRepository
 ) {
     suspend fun live(channelId: Int) = favoritesRepository.toggle(liveKey(channelId), ContentType.LIVE)
     suspend fun movie(movieId: Int) = favoritesRepository.toggle(vodKey(movieId), ContentType.VOD)

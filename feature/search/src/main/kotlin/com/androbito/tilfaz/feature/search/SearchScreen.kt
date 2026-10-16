@@ -39,7 +39,7 @@ data object SearchRoute
 class SearchNavigation(
     val onPlayChannel: (channelId: Int) -> Unit,
     val onOpenMovie: (movieId: Int) -> Unit,
-    val onOpenSeries: (seriesId: Int) -> Unit,
+    val onOpenSeries: (seriesId: Int) -> Unit
 )
 
 fun NavGraphBuilder.searchScreen(navigation: SearchNavigation) {
@@ -64,16 +64,21 @@ fun SearchScreen(state: SearchUiState, onQueryChanged: (String) -> Unit, navigat
             label = "",
             placeholder = stringResource(R.string.search_placeholder),
             imeAction = ImeAction.Search,
-            modifier = Modifier.padding(horizontal = Dimens.ScreenPadding).fillMaxWidth().focusRequester(focus),
+            modifier = Modifier.padding(horizontal = Dimens.ScreenPadding).fillMaxWidth().focusRequester(focus)
         )
         when {
             state.isTooShort -> EmptyState(title = stringResource(R.string.search_hint, SearchUiState.MIN_QUERY_LENGTH))
             state.isEmpty -> EmptyState(title = stringResource(R.string.search_no_results, state.query))
-            else -> LazyColumn(contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceL), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)) {
+            else -> LazyColumn(
+                contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceL),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
+            ) {
                 if (state.channels.isNotEmpty()) {
                     item { SectionTitle(stringResource(R.string.search_channels), state.channels.size) }
                     items(state.channels.take(MAX_CHANNELS), key = { "c${it.id}" }) { channel ->
-                        ChannelRow(channel.name, channel.logoUrl, nowTitle = null, progress = null, selected = false, onClick = { navigation.onPlayChannel(channel.id) })
+                        ChannelRow(channel.name, channel.logoUrl, nowTitle = null, progress = null, selected = false, onClick = {
+                            navigation.onPlayChannel(channel.id)
+                        })
                     }
                 }
                 if (state.movies.isNotEmpty()) {

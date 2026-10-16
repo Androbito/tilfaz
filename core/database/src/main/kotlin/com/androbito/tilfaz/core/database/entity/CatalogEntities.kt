@@ -11,7 +11,7 @@ data class CategoryEntity(
     val type: String,
     val name: String,
     val parentId: String?,
-    val position: Int,
+    val position: Int
 )
 
 @Entity(tableName = "live_channels", indices = [Index("categoryId"), Index("name")])
@@ -24,7 +24,7 @@ data class LiveChannelEntity(
     val epgChannelId: String?,
     val hasArchive: Boolean,
     val archiveDays: Int,
-    val position: Int,
+    val position: Int
 )
 
 @Entity(tableName = "movies", indices = [Index("categoryId"), Index("name"), Index("addedAtMillis")])
@@ -37,7 +37,7 @@ data class MovieEntity(
     val year: Int?,
     val addedAtMillis: Long?,
     val containerExtension: String,
-    val position: Int,
+    val position: Int
 )
 
 @Entity(tableName = "series", indices = [Index("categoryId"), Index("name"), Index("lastModifiedMillis")])
@@ -51,12 +51,12 @@ data class SeriesEntity(
     val lastModifiedMillis: Long?,
     val plot: String?,
     val genre: String?,
-    val position: Int,
+    val position: Int
 )
 
 @Entity(tableName = "sync_status")
 data class SyncStatusEntity(
     @PrimaryKey val contentType: String,
     val lastSyncedAtMillis: Long?,
-    val itemCount: Int,
+    val itemCount: Int
 )

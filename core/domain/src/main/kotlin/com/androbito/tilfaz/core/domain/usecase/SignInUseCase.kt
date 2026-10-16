@@ -6,7 +6,7 @@ import com.androbito.tilfaz.core.model.AccountStatus
 import javax.inject.Inject
 
 class SignInUseCase @Inject constructor(
-    private val accountRepository: AccountRepository,
+    private val accountRepository: AccountRepository
 ) {
     sealed interface Failure {
         data class InvalidServer(val reason: ServerUrlNormalizer.Reason) : Failure
@@ -30,7 +30,7 @@ class SignInUseCase @Inject constructor(
 
         return accountRepository.signIn(Account(server, user, pass)).fold(
             onSuccess = { Outcome.Success(it) },
-            onFailure = { Outcome.Failed(Failure.Remote(it)) },
+            onFailure = { Outcome.Failed(Failure.Remote(it)) }
         )
     }
 }

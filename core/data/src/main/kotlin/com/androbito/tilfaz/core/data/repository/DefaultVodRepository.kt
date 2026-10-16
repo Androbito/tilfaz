@@ -17,15 +17,15 @@ import com.androbito.tilfaz.core.model.MovieDetails
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.network.XtreamApi
 import com.androbito.tilfaz.core.network.safeApiCall
+import java.time.Clock
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.time.Clock
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class DefaultVodRepository @Inject constructor(
@@ -34,7 +34,7 @@ class DefaultVodRepository @Inject constructor(
     private val movieDao: MovieDao,
     syncStatusDao: SyncStatusDao,
     clock: Clock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : VodRepository {
 
     private val sync = SyncTracker(ContentType.VOD, syncStatusDao, clock)

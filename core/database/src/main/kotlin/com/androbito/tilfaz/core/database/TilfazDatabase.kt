@@ -28,10 +28,10 @@ import com.androbito.tilfaz.core.database.entity.WatchProgressEntity
         SyncStatusEntity::class,
         FavoriteEntity::class,
         WatchProgressEntity::class,
-        RecentChannelEntity::class,
+        RecentChannelEntity::class
     ],
     version = 1,
-    exportSchema = true,
+    exportSchema = true
 )
 abstract class TilfazDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao

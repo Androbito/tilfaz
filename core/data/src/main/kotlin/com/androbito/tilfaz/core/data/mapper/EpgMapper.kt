@@ -24,7 +24,7 @@ object EpgMapper {
             title = dto.title?.decodeBase64OrSelf()?.trim()?.ifEmpty { null } ?: return@mapNotNull null,
             description = dto.description?.decodeBase64OrSelf()?.trim()?.ifEmpty { null },
             start = start,
-            end = end,
+            end = end
         )
     }
 

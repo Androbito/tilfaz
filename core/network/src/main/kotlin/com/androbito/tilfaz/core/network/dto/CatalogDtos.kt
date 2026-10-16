@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonElement
 data class CategoryDto(
     @SerialName("category_id") @Serializable(LenientStringSerializer::class) val categoryId: String? = null,
     @SerialName("category_name") @Serializable(LenientStringSerializer::class) val categoryName: String? = null,
-    @SerialName("parent_id") @Serializable(LenientStringSerializer::class) val parentId: String? = null,
+    @SerialName("parent_id") @Serializable(LenientStringSerializer::class) val parentId: String? = null
 )
 
 @Serializable
@@ -29,7 +29,7 @@ data class LiveStreamDto(
     @Serializable(LenientLongSerializer::class) val added: Long? = null,
     @SerialName("category_id") @Serializable(LenientStringSerializer::class) val categoryId: String? = null,
     @SerialName("tv_archive") @Serializable(LenientBooleanSerializer::class) val tvArchive: Boolean? = null,
-    @SerialName("tv_archive_duration") @Serializable(LenientIntSerializer::class) val tvArchiveDuration: Int? = null,
+    @SerialName("tv_archive_duration") @Serializable(LenientIntSerializer::class) val tvArchiveDuration: Int? = null
 )
 
 @Serializable
@@ -44,13 +44,13 @@ data class VodStreamDto(
     @SerialName("category_id") @Serializable(LenientStringSerializer::class) val categoryId: String? = null,
     @SerialName("container_extension") @Serializable(LenientStringSerializer::class) val containerExtension: String? = null,
     @Serializable(LenientIntSerializer::class) val year: Int? = null,
-    @SerialName("release_date") @Serializable(LenientStringSerializer::class) val releaseDate: String? = null,
+    @SerialName("release_date") @Serializable(LenientStringSerializer::class) val releaseDate: String? = null
 )
 
 @Serializable
 data class VodInfoResponseDto(
     val info: VodInfoDto? = null,
-    @SerialName("movie_data") val movieData: VodMovieDataDto? = null,
+    @SerialName("movie_data") val movieData: VodMovieDataDto? = null
 )
 
 @Serializable
@@ -66,7 +66,7 @@ data class VodInfoDto(
     @Serializable(LenientStringSerializer::class) val duration: String? = null,
     @Serializable(LenientDoubleSerializer::class) val rating: Double? = null,
     @SerialName("backdrop_path") @Serializable(LenientStringListSerializer::class) val backdropPath: List<String> = emptyList(),
-    @SerialName("youtube_trailer") @Serializable(LenientStringSerializer::class) val youtubeTrailer: String? = null,
+    @SerialName("youtube_trailer") @Serializable(LenientStringSerializer::class) val youtubeTrailer: String? = null
 )
 
 @Serializable
@@ -75,7 +75,7 @@ data class VodMovieDataDto(
     @Serializable(LenientStringSerializer::class) val name: String? = null,
     @Serializable(LenientLongSerializer::class) val added: Long? = null,
     @SerialName("category_id") @Serializable(LenientStringSerializer::class) val categoryId: String? = null,
-    @SerialName("container_extension") @Serializable(LenientStringSerializer::class) val containerExtension: String? = null,
+    @SerialName("container_extension") @Serializable(LenientStringSerializer::class) val containerExtension: String? = null
 )
 
 @Serializable
@@ -95,14 +95,14 @@ data class SeriesDto(
     @SerialName("rating_5based") @Serializable(LenientDoubleSerializer::class) val rating5Based: Double? = null,
     @SerialName("backdrop_path") @Serializable(LenientStringListSerializer::class) val backdropPath: List<String> = emptyList(),
     @SerialName("youtube_trailer") @Serializable(LenientStringSerializer::class) val youtubeTrailer: String? = null,
-    @SerialName("category_id") @Serializable(LenientStringSerializer::class) val categoryId: String? = null,
+    @SerialName("category_id") @Serializable(LenientStringSerializer::class) val categoryId: String? = null
 )
 
 @Serializable
 data class SeriesInfoResponseDto(
     val seasons: List<SeasonDto> = emptyList(),
     val info: SeriesDto? = null,
-    @Serializable(EpisodesBySeasonSerializer::class) val episodes: Map<String, List<JsonElement>> = emptyMap(),
+    @Serializable(EpisodesBySeasonSerializer::class) val episodes: Map<String, List<JsonElement>> = emptyMap()
 )
 
 @Serializable
@@ -111,7 +111,7 @@ data class SeasonDto(
     @Serializable(LenientStringSerializer::class) val name: String? = null,
     @SerialName("episode_count") @Serializable(LenientIntSerializer::class) val episodeCount: Int? = null,
     @Serializable(LenientStringSerializer::class) val cover: String? = null,
-    @SerialName("air_date") @Serializable(LenientStringSerializer::class) val airDate: String? = null,
+    @SerialName("air_date") @Serializable(LenientStringSerializer::class) val airDate: String? = null
 )
 
 @Serializable
@@ -122,7 +122,7 @@ data class EpisodeDto(
     @SerialName("container_extension") @Serializable(LenientStringSerializer::class) val containerExtension: String? = null,
     @Serializable(LenientIntSerializer::class) val season: Int? = null,
     @Serializable(LenientLongSerializer::class) val added: Long? = null,
-    val info: EpisodeInfoDto? = null,
+    val info: EpisodeInfoDto? = null
 )
 
 @Serializable
@@ -132,12 +132,12 @@ data class EpisodeInfoDto(
     @SerialName("duration_secs") @Serializable(LenientLongSerializer::class) val durationSeconds: Long? = null,
     @Serializable(LenientStringSerializer::class) val duration: String? = null,
     @Serializable(LenientDoubleSerializer::class) val rating: Double? = null,
-    @SerialName("releasedate") @Serializable(LenientStringSerializer::class) val releaseDate: String? = null,
+    @SerialName("releasedate") @Serializable(LenientStringSerializer::class) val releaseDate: String? = null
 )
 
 @Serializable
 data class ShortEpgResponseDto(
-    @SerialName("epg_listings") val listings: List<EpgListingDto> = emptyList(),
+    @SerialName("epg_listings") val listings: List<EpgListingDto> = emptyList()
 )
 
 @Serializable
@@ -152,5 +152,5 @@ data class EpgListingDto(
     @SerialName("start_timestamp") @Serializable(LenientLongSerializer::class) val startTimestamp: Long? = null,
     @SerialName("stop_timestamp") @Serializable(LenientLongSerializer::class) val stopTimestamp: Long? = null,
     @SerialName("now_playing") @Serializable(LenientBooleanSerializer::class) val nowPlaying: Boolean? = null,
-    @SerialName("has_archive") @Serializable(LenientBooleanSerializer::class) val hasArchive: Boolean? = null,
+    @SerialName("has_archive") @Serializable(LenientBooleanSerializer::class) val hasArchive: Boolean? = null
 )

@@ -34,10 +34,10 @@ import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.BufferProfile
 import com.androbito.tilfaz.core.model.StreamFormat
-import kotlinx.serialization.Serializable
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlinx.serialization.Serializable
 
 @Serializable
 data object SettingsRoute
@@ -59,15 +59,18 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.settings_title)}")
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.SpaceXl),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
         ) {
             SectionTitle(stringResource(R.string.settings_section_playback))
 
             Setting(stringResource(R.string.settings_live_format), stringResource(R.string.settings_live_format_hint)) {
                 ChoiceRow(
-                    options = listOf(StreamFormat.MPEG_TS to stringResource(R.string.settings_format_ts), StreamFormat.HLS to stringResource(R.string.settings_format_hls)),
+                    options = listOf(
+                        StreamFormat.MPEG_TS to stringResource(R.string.settings_format_ts),
+                        StreamFormat.HLS to stringResource(R.string.settings_format_hls)
+                    ),
                     selected = state.settings.liveFormat,
-                    onSelect = { onEvent(SettingsEvent.SetLiveFormat(it)) },
+                    onSelect = { onEvent(SettingsEvent.SetLiveFormat(it)) }
                 )
             }
             Setting(stringResource(R.string.settings_buffer)) {
@@ -75,10 +78,10 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                     options = listOf(
                         BufferProfile.LOW_LATENCY to stringResource(R.string.settings_buffer_low),
                         BufferProfile.BALANCED to stringResource(R.string.settings_buffer_balanced),
-                        BufferProfile.STABLE to stringResource(R.string.settings_buffer_stable),
+                        BufferProfile.STABLE to stringResource(R.string.settings_buffer_stable)
                     ),
                     selected = state.settings.bufferProfile,
-                    onSelect = { onEvent(SettingsEvent.SetBuffer(it)) },
+                    onSelect = { onEvent(SettingsEvent.SetBuffer(it)) }
                 )
             }
             Setting(stringResource(R.string.settings_user_agent), stringResource(R.string.settings_user_agent_hint)) {
@@ -89,7 +92,7 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                         onValueChange = { draft = it },
                         label = "",
                         onImeAction = { onEvent(SettingsEvent.SetUserAgent(draft)) },
-                        modifier = Modifier.width(560.dp),
+                        modifier = Modifier.width(560.dp)
                     )
                     Button(onClick = { onEvent(SettingsEvent.SetUserAgent(draft)) }) { Text("OK") }
                     OutlinedButton(onClick = { onEvent(SettingsEvent.ResetUserAgent) }) { Text(stringResource(R.string.settings_user_agent_reset)) }
@@ -99,7 +102,7 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                 ChoiceRow(
                     options = listOf(true to stringResource(R.string.settings_on), false to stringResource(R.string.settings_off)),
                     selected = state.settings.resumePlayback,
-                    onSelect = { onEvent(SettingsEvent.SetResume(it)) },
+                    onSelect = { onEvent(SettingsEvent.SetResume(it)) }
                 )
             }
 
@@ -112,15 +115,21 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                 InfoLine(
                     stringResource(R.string.settings_account_expires),
                     status.expiresAt?.atZone(ZoneId.systemDefault())?.toLocalDate()?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
-                        ?: stringResource(R.string.settings_account_unlimited),
+                        ?: stringResource(R.string.settings_account_unlimited)
                 )
                 InfoLine(stringResource(R.string.settings_account_connections), "${status.activeConnections} / ${status.maxConnections}")
                 InfoLine(stringResource(R.string.settings_account_formats), status.allowedOutputFormats.joinToString { it.extension }.ifEmpty { "-" })
             }
             Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                OutlinedButton(onClick = { onEvent(SettingsEvent.RefreshStatus) }, enabled = !state.isRefreshingStatus) { Text(stringResource(R.string.settings_account_refresh)) }
+                OutlinedButton(onClick = {
+                    onEvent(SettingsEvent.RefreshStatus)
+                }, enabled = !state.isRefreshingStatus) { Text(stringResource(R.string.settings_account_refresh)) }
                 if (state.confirmSignOut) {
-                    Text(stringResource(R.string.settings_sign_out_confirm), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = Dimens.SpaceS))
+                    Text(
+                        stringResource(R.string.settings_sign_out_confirm),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = Dimens.SpaceS)
+                    )
                     Button(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
                     OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutCancelled) }) { Text(stringResource(R.string.settings_cancel)) }
                 } else {

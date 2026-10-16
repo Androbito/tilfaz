@@ -7,7 +7,7 @@ internal class LruCache<K, V>(private val maxSize: Int) {
     private val map = Collections.synchronizedMap(
         object : LinkedHashMap<K, V>(maxSize, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean = size > maxSize
-        },
+        }
     )
 
     operator fun get(key: K): V? = map[key]

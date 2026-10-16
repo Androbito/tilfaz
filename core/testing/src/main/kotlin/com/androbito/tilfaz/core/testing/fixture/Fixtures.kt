@@ -32,16 +32,27 @@ object Fixtures {
         activeConnections = 0,
         allowedOutputFormats = listOf(StreamFormat.MPEG_TS, StreamFormat.HLS),
         serverTimeZone = "Europe/Paris",
-        checkedAt = now,
+        checkedAt = now
     )
 
     val liveCategories = listOf(
         Category("1", "BEIN SPORTS HD", ContentType.LIVE),
-        Category("2", "|AR| NEWS", ContentType.LIVE),
+        Category("2", "|AR| NEWS", ContentType.LIVE)
     )
 
-    val alJazeera = LiveChannel(id = 101, number = 1, name = "|AR| AL JAZEERA HD", logoUrl = "http://img/aj.png", categoryId = "2", epgChannelId = "aljazeera.qa")
-    val beinSports1 = LiveChannel(id = 102, number = 2, name = "BEIN SPORTS 1 FHD", logoUrl = null, categoryId = "1", epgChannelId = "bein1.fr", hasArchive = true, archiveDays = 3)
+    val alJazeera =
+        LiveChannel(id = 101, number = 1, name = "|AR| AL JAZEERA HD", logoUrl = "http://img/aj.png", categoryId = "2", epgChannelId = "aljazeera.qa")
+    val beinSports1 =
+        LiveChannel(
+            id = 102,
+            number = 2,
+            name = "BEIN SPORTS 1 FHD",
+            logoUrl = null,
+            categoryId = "1",
+            epgChannelId = "bein1.fr",
+            hasArchive = true,
+            archiveDays = 3
+        )
     val liveChannels = listOf(alJazeera, beinSports1)
 
     val movie = Movie(
@@ -52,7 +63,7 @@ object Fixtures {
         rating = Rating(7.0),
         year = 2026,
         addedAt = now.minusSeconds(3600),
-        containerExtension = "mkv",
+        containerExtension = "mkv"
     )
 
     val series = Series(
@@ -62,7 +73,7 @@ object Fixtures {
         categoryId = "20",
         rating = Rating(6.0),
         year = 2026,
-        lastModifiedAt = now,
+        lastModifiedAt = now
     )
 
     val episode1 = Episode(
@@ -75,7 +86,7 @@ object Fixtures {
         durationSeconds = 43 * 60,
         plot = "Kama returns to her hometown.",
         thumbnailUrl = null,
-        rating = Rating(8.0),
+        rating = Rating(8.0)
     )
 
     val seriesDetails = SeriesDetails(
@@ -86,7 +97,7 @@ object Fixtures {
         genre = "Crime, Drama",
         releaseDate = "2026-10-02",
         backdropUrls = emptyList(),
-        seasons = listOf(Season(1, "Season 1", listOf(episode1, episode1.copy(id = "90102", episodeNumber = 2, title = "S01E02")))),
+        seasons = listOf(Season(1, "Season 1", listOf(episode1, episode1.copy(id = "90102", episodeNumber = 2, title = "S01E02"))))
     )
 
     fun epg(channelId: Int, title: String, startOffsetMin: Long, durationMin: Long) = EpgEntry(
@@ -94,6 +105,6 @@ object Fixtures {
         title = title,
         description = null,
         start = now.plusSeconds(startOffsetMin * 60),
-        end = now.plusSeconds((startOffsetMin + durationMin) * 60),
+        end = now.plusSeconds((startOffsetMin + durationMin) * 60)
     )
 }

@@ -18,6 +18,10 @@ import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.WatchProgress
+import java.time.Clock
+import java.time.Instant
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -25,16 +29,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.time.Clock
-import java.time.Instant
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class RoomFavoritesRepository @Inject constructor(
     private val dao: FavoriteDao,
     private val clock: Clock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : FavoritesRepository {
     override fun observeKeys(type: ContentType): Flow<Set<String>> = dao.observeKeys(type.name).map { it.toSet() }
 
@@ -46,7 +46,7 @@ class RoomFavoritesRepository @Inject constructor(
 @Singleton
 class RoomWatchProgressRepository @Inject constructor(
     private val dao: WatchProgressDao,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : WatchProgressRepository {
     override fun observeContinueWatching(type: ContentType): Flow<List<WatchProgress>> =
         dao.observeByType(type.name, CONTINUE_WATCHING_LIMIT).map { rows -> rows.map { it.toDomain() }.filterNot { it.isFinished } }
@@ -65,7 +65,7 @@ class RoomWatchProgressRepository @Inject constructor(
         positionMs = positionMs,
         durationMs = durationMs,
         updatedAt = Instant.ofEpochMilli(updatedAtMillis),
-        reference = reference,
+        reference = reference
     )
 
     private fun WatchProgress.toEntity() = WatchProgressEntity(
@@ -76,7 +76,7 @@ class RoomWatchProgressRepository @Inject constructor(
         positionMs = positionMs,
         durationMs = durationMs,
         updatedAtMillis = updatedAt.toEpochMilli(),
-        reference = reference,
+        reference = reference
     )
 
     private companion object {
@@ -89,7 +89,7 @@ class RoomRecentChannelsRepository @Inject constructor(
     private val recentDao: RecentChannelDao,
     private val channelDao: LiveChannelDao,
     private val clock: Clock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : RecentChannelsRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -116,7 +116,7 @@ class RoomRecentChannelsRepository @Inject constructor(
 
 @Singleton
 class DataStorePlaybackSettingsRepository @Inject constructor(
-    private val store: PlaybackSettingsStore,
+    private val store: PlaybackSettingsStore
 ) : PlaybackSettingsRepository {
     override fun observe(): Flow<PlaybackSettings> = store.settings
     override suspend fun update(transform: (PlaybackSettings) -> PlaybackSettings) = store.update(transform)

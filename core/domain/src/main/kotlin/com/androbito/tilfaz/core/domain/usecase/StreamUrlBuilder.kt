@@ -1,8 +1,8 @@
 package com.androbito.tilfaz.core.domain.usecase
 
 import com.androbito.tilfaz.core.model.Account
-import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.Playable
+import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
 import com.androbito.tilfaz.core.model.StreamSource
 
@@ -37,7 +37,7 @@ object StreamUrlBuilder {
             playable = playable,
             isLive = playable is Playable.Live,
             userAgent = settings.userAgent,
-            format = format,
+            format = format
         )
     }
 

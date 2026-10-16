@@ -10,12 +10,12 @@ import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Series
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class SeriesUiState(val browser: CatalogBrowser.Snapshot<Series>? = null)
 
@@ -30,7 +30,7 @@ class SeriesViewModel @Inject constructor(
     seriesRepository: SeriesRepository,
     favoritesRepository: FavoritesRepository,
     progressRepository: WatchProgressRepository,
-    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val toggleFavorite: ToggleFavoriteUseCase
 ) : ViewModel() {
 
     private val browser = CatalogBrowser(
@@ -42,7 +42,7 @@ class SeriesViewModel @Inject constructor(
         nameOf = { it.name },
         categoryOf = { it.categoryId },
         addedAtMillisOf = { it.lastModifiedAt?.toEpochMilli() },
-        favoriteKeyOf = ToggleFavoriteUseCase::seriesKey,
+        favoriteKeyOf = ToggleFavoriteUseCase::seriesKey
     )
 
     val state: StateFlow<SeriesUiState> = browser.snapshot

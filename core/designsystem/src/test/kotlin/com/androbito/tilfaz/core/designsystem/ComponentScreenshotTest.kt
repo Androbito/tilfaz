@@ -45,7 +45,8 @@ class ComponentScreenshotTest {
         compose.setContent {
             TilfazTheme {
                 Row(Modifier.padding(Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)) {
-                    HeroTile("LIVE TV", Icons.Default.LiveTv, TilfazColors.LiveGradient, "Last updated: 43 min ago", false, {}, {}, Modifier.width(360.dp).height(300.dp))
+                    HeroTile("LIVE TV", Icons.Default.LiveTv, TilfazColors.LiveGradient, "Last updated: 43 min ago", false, {
+                    }, {}, Modifier.width(360.dp).height(300.dp))
                     HeroTile("MOVIES", Icons.Default.Movie, TilfazColors.MoviesGradient, "Loading…", true, {}, {}, Modifier.width(360.dp).height(300.dp))
                 }
             }

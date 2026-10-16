@@ -17,6 +17,9 @@ import com.androbito.tilfaz.core.model.SeriesDetails
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.network.XtreamApi
 import com.androbito.tilfaz.core.network.safeApiCall
+import java.time.Clock
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -24,9 +27,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import java.time.Clock
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class DefaultSeriesRepository @Inject constructor(
@@ -36,7 +36,7 @@ class DefaultSeriesRepository @Inject constructor(
     private val json: Json,
     syncStatusDao: SyncStatusDao,
     clock: Clock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : SeriesRepository {
 
     private val sync = SyncTracker(ContentType.SERIES, syncStatusDao, clock)

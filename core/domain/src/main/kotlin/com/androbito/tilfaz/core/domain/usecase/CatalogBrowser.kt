@@ -28,7 +28,7 @@ class CatalogBrowser<T>(
     private val nameOf: (T) -> String,
     private val categoryOf: (T) -> String?,
     private val addedAtMillisOf: (T) -> Long?,
-    private val favoriteKeyOf: (Int) -> String,
+    private val favoriteKeyOf: (Int) -> String
 ) {
     data class Section(val id: String, val name: String, val count: Int?, val kind: Kind) {
         enum class Kind { ALL, FAVORITES, CONTINUE_WATCHING, RECENTLY_ADDED, PROVIDER }
@@ -40,7 +40,7 @@ class CatalogBrowser<T>(
         val items: List<T>,
         val favoriteIds: Set<Int>,
         val progressById: Map<Int, WatchProgress>,
-        val query: String,
+        val query: String
     ) {
         val selectedSection: Section? get() = sections.firstOrNull { it.id == selectedSectionId }
     }
@@ -79,9 +79,18 @@ class CatalogBrowser<T>(
         if (q.isEmpty()) source else source.map { list -> list.filter { nameOf(it).contains(q, ignoreCase = true) } }
     }
 
-    val snapshot: Flow<Snapshot<T>> = combine(sections, selectedSectionId, items, favoriteIds, combine(progress, query) { p, q -> p to q }) { sections, selected, items, favorites, (progress, q) ->
-        Snapshot(sections, selected, items, favorites, progress, q)
-    }
+    val snapshot: Flow<Snapshot<T>> =
+        combine(
+            sections,
+            selectedSectionId,
+            items,
+            favoriteIds,
+            combine(progress, query) { p, q ->
+                p to q
+            }
+        ) { sections, selected, items, favorites, (progress, q) ->
+            Snapshot(sections, selected, items, favorites, progress, q)
+        }
 
     fun select(sectionId: String) {
         selectedSectionId.value = sectionId

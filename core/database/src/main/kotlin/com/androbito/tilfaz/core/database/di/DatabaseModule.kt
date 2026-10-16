@@ -23,11 +23,18 @@ object DatabaseModule {
             .build()
 
     @Provides fun provideCategoryDao(db: TilfazDatabase) = db.categoryDao()
+
     @Provides fun provideLiveChannelDao(db: TilfazDatabase) = db.liveChannelDao()
+
     @Provides fun provideMovieDao(db: TilfazDatabase) = db.movieDao()
+
     @Provides fun provideSeriesDao(db: TilfazDatabase) = db.seriesDao()
+
     @Provides fun provideSyncStatusDao(db: TilfazDatabase) = db.syncStatusDao()
+
     @Provides fun provideFavoriteDao(db: TilfazDatabase) = db.favoriteDao()
+
     @Provides fun provideWatchProgressDao(db: TilfazDatabase) = db.watchProgressDao()
+
     @Provides fun provideRecentChannelDao(db: TilfazDatabase) = db.recentChannelDao()
 }

@@ -5,16 +5,16 @@ import com.androbito.tilfaz.core.database.dao.SyncStatusDao
 import com.androbito.tilfaz.core.database.entity.SyncStatusEntity
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.SyncStatus
+import java.time.Clock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import java.time.Clock
 
 /** Shared by the three catalog repositories: persisted "last synced" plus a transient "syncing now" flag. */
 internal class SyncTracker(
     private val type: ContentType,
     private val dao: SyncStatusDao,
-    private val clock: Clock,
+    private val clock: Clock
 ) {
     private val syncing = MutableStateFlow(false)
 

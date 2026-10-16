@@ -19,12 +19,12 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
-import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlinx.coroutines.delay
 
 /** Brand + clock bar like the Smarters header: logo left, time/date, then whatever the screen adds on the right. */
 @Composable
@@ -32,25 +32,25 @@ fun TopBar(
     modifier: Modifier = Modifier,
     title: String = "Tilfaz",
     showClock: Boolean = true,
-    actions: @Composable RowScope.() -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     val now by rememberCurrentTime()
     Row(
         modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceL),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
     ) {
         BrandMark(title)
         if (showClock) {
             val local = LocalDateTime.ofInstant(now, ZoneId.systemDefault())
             Text(
                 text = local.format(DateTimeFormatter.ofPattern("HH:mm")),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
             Text(
                 text = local.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
                 style = MaterialTheme.typography.titleMedium,
-                color = TilfazColors.OnSurfaceMuted,
+                color = TilfazColors.OnSurfaceMuted
             )
         }
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) { actions() }
@@ -62,8 +62,12 @@ fun BrandMark(title: String, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
         Text(
             text = title.uppercase(),
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, letterSpacing = MaterialTheme.typography.headlineSmall.fontSize * 0.08),
-            color = TilfazColors.Accent,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing =
+                MaterialTheme.typography.headlineSmall.fontSize * 0.08
+            ),
+            color = TilfazColors.Accent
         )
     }
 }

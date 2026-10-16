@@ -17,6 +17,10 @@ import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.network.XtreamApi
 import com.androbito.tilfaz.core.network.safeApiCall
+import java.time.Clock
+import java.time.ZoneId
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -24,10 +28,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.time.Clock
-import java.time.ZoneId
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class DefaultLiveRepository @Inject constructor(
@@ -37,7 +37,7 @@ class DefaultLiveRepository @Inject constructor(
     private val accountStore: AccountStore,
     syncStatusDao: SyncStatusDao,
     clock: Clock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @IoDispatcher private val io: CoroutineDispatcher
 ) : LiveRepository {
 
     private val sync = SyncTracker(ContentType.LIVE, syncStatusDao, clock)

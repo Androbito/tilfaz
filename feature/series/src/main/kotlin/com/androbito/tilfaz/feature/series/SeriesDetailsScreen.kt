@@ -72,7 +72,7 @@ fun SeriesDetailsRoute(onPlayEpisode: (Int, String, Long) -> Unit, viewModel: Se
         onPlay = { episode ->
             val progress = state.progressByEpisodeId[episode.id]
             onPlayEpisode(episode.seriesId, episode.id, progress?.takeUnless { it.isFinished }?.positionMs ?: 0L)
-        },
+        }
     )
 }
 
@@ -82,7 +82,9 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
     when {
         state.isLoading && series == null -> { LoadingState(); return }
         state.failed && state.details == null -> {
-            ErrorState(stringResource(R.string.series_details_error), onRetry = { onEvent(SeriesDetailsEvent.Retry) }, retryLabel = stringResource(R.string.series_retry))
+            ErrorState(stringResource(R.string.series_details_error), onRetry = {
+                onEvent(SeriesDetailsEvent.Retry)
+            }, retryLabel = stringResource(R.string.series_retry))
             return
         }
     }
@@ -95,7 +97,10 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
         }
         Column(Modifier.fillMaxSize()) {
             TopBar(title = "Tilfaz", showClock = false)
-            LazyColumn(contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceS), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)) {
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceS),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
+            ) {
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXl)) {
                         Box(Modifier.width(220.dp).height(320.dp).clip(RoundedCornerShape(Dimens.CornerM))) {
@@ -119,8 +124,15 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     }
                                 }
                                 OutlinedButton(onClick = { onEvent(SeriesDetailsEvent.ToggleFavorite) }) {
-                                    Icon(if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, contentDescription = null, tint = if (state.isFavorite) TilfazColors.Danger else MaterialTheme.colorScheme.onSurface)
-                                    Text(stringResource(if (state.isFavorite) R.string.series_remove_favorite else R.string.series_add_favorite), modifier = Modifier.padding(start = Dimens.SpaceS))
+                                    Icon(
+                                        if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                        contentDescription = null,
+                                        tint = if (state.isFavorite) TilfazColors.Danger else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        stringResource(if (state.isFavorite) R.string.series_remove_favorite else R.string.series_add_favorite),
+                                        modifier = Modifier.padding(start = Dimens.SpaceS)
+                                    )
                                 }
                             }
                         }
@@ -134,15 +146,23 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     onClick = { onEvent(SeriesDetailsEvent.SelectSeason(season.number)) },
                                     selected = season.number == state.selectedSeason,
                                     corner = Dimens.CornerS,
-                                    focusedScale = 1.0f,
+                                    focusedScale = 1.0f
                                 ) {
-                                    Text(stringResource(R.string.series_season, season.number), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceS))
+                                    Text(
+                                        stringResource(R.string.series_season, season.number),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceS)
+                                    )
                                 }
                             }
                         }
                     }
                     item {
-                        Text(stringResource(R.string.series_episodes, state.episodes.size), style = MaterialTheme.typography.titleLarge, color = TilfazColors.OnSurfaceMuted)
+                        Text(
+                            stringResource(R.string.series_episodes, state.episodes.size),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TilfazColors.OnSurfaceMuted
+                        )
                     }
                     items(state.episodes, key = { it.id }) { episode ->
                         EpisodeRow(episode, state.progressByEpisodeId[episode.id], onClick = { onPlay(episode) })
@@ -158,14 +178,25 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
 @Composable
 private fun EpisodeRow(episode: Episode, progress: WatchProgress?, onClick: () -> Unit) {
     FocusableSurface(onClick = onClick, modifier = Modifier.fillMaxWidth(), corner = Dimens.CornerS, focusedScale = 1.0f) {
-        Row(Modifier.fillMaxWidth().padding(Dimens.SpaceM), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.fillMaxWidth().padding(Dimens.SpaceM),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(Modifier.width(160.dp).height(90.dp).clip(RoundedCornerShape(Dimens.CornerS))) {
                 AsyncImage(model = episode.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 if (progress != null) ProgressBar(progress.fraction, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
-                Text("${episode.code}  ${episode.title}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                episode.plot?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                Text(
+                    "${episode.code}  ${episode.title}",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                episode.plot?.let {
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
                 formatDuration(episode.durationSeconds)?.let { Text(it, style = MaterialTheme.typography.labelLarge, color = TilfazColors.Accent) }
             }
         }

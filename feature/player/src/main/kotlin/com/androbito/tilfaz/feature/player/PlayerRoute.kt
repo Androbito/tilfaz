@@ -12,7 +12,7 @@ data class PlayerRoute(
     val itemId: String,
     val parentId: Int = 0,
     val categoryId: String? = null,
-    val startPositionMs: Long = 0L,
+    val startPositionMs: Long = 0L
 ) {
     companion object {
         const val KIND_LIVE = "live"
@@ -27,6 +27,10 @@ data class PlayerRoute(
 
         fun live(channelId: Int, categoryId: String?) = PlayerRoute(KIND_LIVE, channelId.toString(), categoryId = categoryId)
         fun movie(movieId: Int, startPositionMs: Long) = PlayerRoute(KIND_MOVIE, movieId.toString(), startPositionMs = startPositionMs)
-        fun episode(seriesId: Int, episodeId: String, startPositionMs: Long) = PlayerRoute(KIND_EPISODE, episodeId, parentId = seriesId, startPositionMs = startPositionMs)
+        fun episode(
+            seriesId: Int,
+            episodeId: String,
+            startPositionMs: Long
+        ) = PlayerRoute(KIND_EPISODE, episodeId, parentId = seriesId, startPositionMs = startPositionMs)
     }
 }

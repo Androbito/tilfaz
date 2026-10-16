@@ -10,8 +10,8 @@ import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
-import okhttp3.OkHttpClient
 import javax.inject.Inject
+import okhttp3.OkHttpClient
 
 @HiltAndroidApp
 class TilfazApplication : Application(), SingletonImageLoader.Factory {

@@ -7,12 +7,12 @@ import com.androbito.tilfaz.core.domain.usecase.SignInUseCase
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.toDomainError
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class SignInUiState(
     val serverUrl: String = "",
@@ -21,7 +21,7 @@ data class SignInUiState(
     val isSubmitting: Boolean = false,
     val fieldError: FieldError? = null,
     val remoteError: RemoteError? = null,
-    val signedIn: Boolean = false,
+    val signedIn: Boolean = false
 ) {
     val canSubmit: Boolean get() = !isSubmitting && serverUrl.isNotBlank() && username.isNotBlank() && password.isNotBlank()
 }
@@ -46,7 +46,7 @@ sealed interface SignInEvent {
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val signIn: SignInUseCase,
+    private val signIn: SignInUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SignInUiState())
@@ -80,7 +80,7 @@ class SignInViewModel @Inject constructor(
                 ServerUrlNormalizer.Reason.EMPTY -> FieldError.ServerEmpty
                 ServerUrlNormalizer.Reason.UNSUPPORTED_SCHEME -> FieldError.ServerScheme
                 ServerUrlNormalizer.Reason.UNPARSEABLE, ServerUrlNormalizer.Reason.MISSING_HOST -> FieldError.ServerInvalid
-            },
+            }
         )
         SignInUseCase.Failure.EmptyUsername -> copy(fieldError = FieldError.Username)
         SignInUseCase.Failure.EmptyPassword -> copy(fieldError = FieldError.Password)
@@ -91,7 +91,7 @@ class SignInViewModel @Inject constructor(
                 DomainError.Network -> RemoteError.NETWORK
                 is DomainError.BadResponse, is DomainError.Server -> RemoteError.BAD_RESPONSE
                 is DomainError.Unknown -> RemoteError.UNKNOWN
-            },
+            }
         )
     }
 }

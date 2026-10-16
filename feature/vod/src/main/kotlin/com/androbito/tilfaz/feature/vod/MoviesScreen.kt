@@ -72,8 +72,10 @@ fun MoviesScreen(state: MoviesUiState, onEvent: (MoviesEvent) -> Unit, onOpenMov
             items = browser.items,
             itemKey = { it.id },
             emptyContent = {
-                EmptyState(title = if (browser.query.isNotBlank()) stringResource(R.string.vod_no_results, browser.query) else stringResource(R.string.vod_empty))
-            },
+                EmptyState(
+                    title = if (browser.query.isNotBlank()) stringResource(R.string.vod_no_results, browser.query) else stringResource(R.string.vod_empty)
+                )
+            }
         ) { movie ->
             PosterCard(
                 title = movie.name,
@@ -82,7 +84,7 @@ fun MoviesScreen(state: MoviesUiState, onEvent: (MoviesEvent) -> Unit, onOpenMov
                 onLongClick = { onEvent(MoviesEvent.ToggleFavorite(movie.id)) },
                 ratingBadge = movie.rating?.badge,
                 isFavorite = movie.id in browser.favoriteIds,
-                progress = browser.progressById[movie.id]?.fraction,
+                progress = browser.progressById[movie.id]?.fraction
             )
         }
     }

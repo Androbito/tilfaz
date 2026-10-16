@@ -10,13 +10,13 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.androbito.tilfaz.core.model.Account
 import com.androbito.tilfaz.core.model.AccountStatus
 import com.androbito.tilfaz.core.model.StreamFormat
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
@@ -26,7 +26,7 @@ annotation class AccountDataStore
 @Singleton
 class AccountStore @Inject constructor(
     @AccountDataStore private val dataStore: DataStore<Preferences>,
-    private val secretCodec: SecretCodec,
+    private val secretCodec: SecretCodec
 ) {
     val account: Flow<Account?> = dataStore.data.map { prefs ->
         val server = prefs[Keys.SERVER] ?: return@map null
@@ -45,7 +45,7 @@ class AccountStore @Inject constructor(
             activeConnections = prefs[Keys.STATUS_ACTIVE_CONS] ?: 0,
             allowedOutputFormats = prefs[Keys.STATUS_FORMATS]?.split(',')?.mapNotNull(StreamFormat::fromExtension).orEmpty(),
             serverTimeZone = prefs[Keys.STATUS_TIMEZONE],
-            checkedAt = Instant.ofEpochMilli(checkedAt),
+            checkedAt = Instant.ofEpochMilli(checkedAt)
         )
     }.distinctUntilChanged()
 

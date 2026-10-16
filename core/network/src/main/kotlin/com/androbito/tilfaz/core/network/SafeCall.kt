@@ -2,10 +2,10 @@ package com.androbito.tilfaz.core.network
 
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.DomainException
+import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
-import java.io.IOException
 
 /**
  * Runs a network call and translates transport and parsing failures into [DomainException]s,
@@ -28,7 +28,7 @@ fun Throwable.toDomainException(): DomainException = when (this) {
             in 500..599 -> DomainError.Server(code())
             else -> DomainError.BadResponse("HTTP ${code()}")
         },
-        this,
+        this
     )
     is SerializationException -> DomainException(DomainError.BadResponse(message?.take(200)), this)
     is IOException -> DomainException(DomainError.Network, this)
