@@ -18,6 +18,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Mirrors Maven Central; a second route when Central is slow to answer.
+        gradlePluginPortal()
     }
 }
 
