@@ -3,6 +3,7 @@ package com.androbito.tilfaz.core.domain.usecase
 import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.containsOnly
 import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.model.Category
 import com.androbito.tilfaz.core.model.ContentType
@@ -66,7 +67,7 @@ class CatalogBrowserTest {
         browser.snapshot.test {
             val snapshot = expectMostRecentItem()
             assertThat(snapshot.items).containsExactly(older)
-            assertThat(snapshot.progressById.keys).containsExactly(1)
+            assertThat(snapshot.progressById.keys).containsOnly(1)
         }
     }
 

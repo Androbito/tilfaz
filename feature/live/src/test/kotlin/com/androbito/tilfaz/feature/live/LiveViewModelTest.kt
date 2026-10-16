@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.containsOnly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
@@ -55,7 +56,7 @@ class LiveViewModelTest {
             viewModel.onEvent(LiveEvent.SelectCategory(LiveCategoryUi.FAVORITES_ID))
             val state = expectMostRecentItem()
             assertThat(state.channels).containsExactly(Fixtures.beinSports1)
-            assertThat(state.favoriteIds).containsExactly(Fixtures.beinSports1.id)
+            assertThat(state.favoriteIds).containsOnly(Fixtures.beinSports1.id)
         }
     }
 
