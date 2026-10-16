@@ -1,0 +1,22 @@
+[
+  {
+    "category_id": "10",
+    "category_name": "|VOD-FR| NOUVEAUTES",
+    "parent_id": 0
+  },
+  {
+    "category_id": "11",
+    "category_name": "|VOD-FR| FILMS 4K UHD",
+    "parent_id": 0
+  },
+  {
+    "category_id": "12",
+    "category_name": "|VOD-FR| ACTION  AVENTURE",
+    "parent_id": 0
+  },
+  {
+    "category_id": "13",
+    "category_name": "|VOD-AR| أفلام عربية",
+    "parent_id": 0
+  }
+]

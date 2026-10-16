@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vod_title">Movies</string>
+    <string name="vod_search">Search movies</string>
+    <string name="vod_all">ALL</string>
+    <string name="vod_favorites">FAVOURITES</string>
+    <string name="vod_continue">CONTINUE WATCHING</string>
+    <string name="vod_recent">RECENTLY ADDED</string>
+    <string name="vod_empty">No movies in this section</string>
+    <string name="vod_no_results">No movie matches "%1$s"</string>
+    <string name="vod_play">Play</string>
+    <string name="vod_resume">Resume at %1$s</string>
+    <string name="vod_start_over">Start over</string>
+    <string name="vod_trailer">Trailer</string>
+    <string name="vod_add_favorite">Add to favourites</string>
+    <string name="vod_remove_favorite">Remove from favourites</string>
+    <string name="vod_directed_by">Directed by</string>
+    <string name="vod_release_date">Release date</string>
+    <string name="vod_genre">Genre</string>
+    <string name="vod_cast">Cast</string>
+    <string name="vod_duration">Duration</string>
+    <string name="vod_plot">Plot</string>
+    <string name="vod_details_error">Could not load the details. You can still play the movie.</string>
+    <string name="vod_back">Back</string>
+</resources>

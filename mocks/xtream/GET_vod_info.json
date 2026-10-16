@@ -1,0 +1,33 @@
+{
+  "method": "GET",
+  "path": "/player_api.php",
+  "query": {
+    "action": "get_vod_info"
+  },
+  "scenarios": {
+    "default": {
+      "status": 200,
+      "bodyFile": "../fixtures/vod_info_501.json",
+      "delayMs": 300
+    },
+    "minimal": {
+      "status": 200,
+      "body": {
+        "info": [],
+        "movie_data": {
+          "stream_id": "{{query.vod_id}}",
+          "container_extension": "mp4"
+        }
+      }
+    },
+    "server_error": {
+      "status": 500,
+      "body": {
+        "error": "internal"
+      }
+    },
+    "offline": {
+      "dropConnection": true
+    }
+  }
+}

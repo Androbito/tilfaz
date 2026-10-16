@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="series_title">Series</string>
+    <string name="series_search">Search series</string>
+    <string name="series_all">ALL</string>
+    <string name="series_favorites">FAVOURITES</string>
+    <string name="series_continue">CONTINUE WATCHING</string>
+    <string name="series_recent">RECENTLY ADDED</string>
+    <string name="series_empty">No series in this section</string>
+    <string name="series_no_results">No series matches "%1$s"</string>
+    <string name="series_play_episode">Play %1$s</string>
+    <string name="series_season">Season %1$d</string>
+    <string name="series_episodes">Episodes (%1$d)</string>
+    <string name="series_add_favorite">Add to favourites</string>
+    <string name="series_remove_favorite">Remove from favourites</string>
+    <string name="series_directed_by">Directed by</string>
+    <string name="series_release_date">Release date</string>
+    <string name="series_genre">Genre</string>
+    <string name="series_cast">Cast</string>
+    <string name="series_plot">Plot</string>
+    <string name="series_details_error">Could not load this series.</string>
+    <string name="series_retry">Retry</string>
+    <string name="series_no_episodes">The provider did not list any episode for this series.</string>
+</resources>

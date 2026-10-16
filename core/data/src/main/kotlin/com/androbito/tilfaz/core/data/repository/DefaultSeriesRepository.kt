@@ -1,0 +1,89 @@
+package com.androbito.tilfaz.core.data.repository
+
+import com.androbito.tilfaz.core.data.di.IoDispatcher
+import com.androbito.tilfaz.core.data.mapper.toDomain
+import com.androbito.tilfaz.core.data.mapper.toEntities
+import com.androbito.tilfaz.core.data.mapper.toSeriesEntities
+import com.androbito.tilfaz.core.database.dao.CategoryDao
+import com.androbito.tilfaz.core.database.dao.SeriesDao
+import com.androbito.tilfaz.core.database.dao.SyncStatusDao
+import com.androbito.tilfaz.core.domain.repository.SeriesRepository
+import com.androbito.tilfaz.core.model.Category
+import com.androbito.tilfaz.core.model.ContentType
+import com.androbito.tilfaz.core.model.DomainError
+import com.androbito.tilfaz.core.model.DomainException
+import com.androbito.tilfaz.core.model.Series
+import com.androbito.tilfaz.core.model.SeriesDetails
+import com.androbito.tilfaz.core.model.SyncStatus
+import com.androbito.tilfaz.core.network.XtreamApi
+import com.androbito.tilfaz.core.network.safeApiCall
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import java.time.Clock
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class DefaultSeriesRepository @Inject constructor(
+    private val api: XtreamApi,
+    private val categoryDao: CategoryDao,
+    private val seriesDao: SeriesDao,
+    private val json: Json,
+    syncStatusDao: SyncStatusDao,
+    clock: Clock,
+    @IoDispatcher private val io: CoroutineDispatcher,
+) : SeriesRepository {
+
+    private val sync = SyncTracker(ContentType.SERIES, syncStatusDao, clock)
+    private val detailsCache = LruCache<Int, SeriesDetails>(DETAILS_CACHE_SIZE)
+
+    override fun observeCategories(): Flow<List<Category>> =
+        categoryDao.observeByType(ContentType.SERIES.name).map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeItems(categoryId: String?): Flow<List<Series>> =
+        (if (categoryId == null) seriesDao.observeAll() else seriesDao.observeByCategory(categoryId))
+            .map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeSyncStatus(): Flow<SyncStatus> = sync.observe()
+
+    override fun search(query: String): Flow<List<Series>> =
+        seriesDao.search(query.trim(), SEARCH_LIMIT).map { rows -> rows.map { it.toDomain() } }
+
+    override suspend fun refresh(): Result<Unit> = withContext(io) {
+        sync.track {
+            safeApiCall {
+                coroutineScope {
+                    val categories = async { api.seriesCategories() }
+                    val series = async { api.series() }
+                    categories.await().toEntities(ContentType.SERIES) to series.await().toSeriesEntities()
+                }
+            }.map { (categories, series) ->
+                categoryDao.replaceAll(ContentType.SERIES.name, categories)
+                seriesDao.replaceAll(series)
+                detailsCache.clear()
+                sync.markSynced(series.size)
+            }
+        }
+    }
+
+    override suspend fun series(seriesId: Int): Series? = withContext(io) { seriesDao.byId(seriesId)?.toDomain() }
+
+    override suspend fun details(seriesId: Int): Result<SeriesDetails> = withContext(io) {
+        detailsCache[seriesId]?.let { return@withContext Result.success(it) }
+        val fallback = seriesDao.byId(seriesId)?.toDomain()
+            ?: return@withContext Result.failure(DomainException(DomainError.BadResponse("unknown series $seriesId")))
+        safeApiCall { api.seriesInfo(seriesId) }
+            .map { it.toDomain(fallback, json) }
+            .onSuccess { detailsCache[seriesId] = it }
+    }
+
+    private companion object {
+        const val SEARCH_LIMIT = 200
+        const val DETAILS_CACHE_SIZE = 50
+    }
+}

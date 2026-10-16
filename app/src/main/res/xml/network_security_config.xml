@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Xtream panels are overwhelmingly served over plain http on a custom port, so cleartext has to be allowed
+  for the user-entered server. There is nothing to pin: the host is whatever the user types in.
+  See docs/adr/0006 for the trade-off.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

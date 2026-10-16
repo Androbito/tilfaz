@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signin_title">Add your Xtream account</string>
+    <string name="signin_subtitle">Use the server, username and password your provider gave you.</string>
+    <string name="signin_server">Server URL</string>
+    <string name="signin_server_hint">http://example.com:8080</string>
+    <string name="signin_username">Username</string>
+    <string name="signin_password">Password</string>
+    <string name="signin_action">Sign in</string>
+    <string name="signin_in_progress">Checking account…</string>
+    <string name="signin_error_server_empty">Enter the server address.</string>
+    <string name="signin_error_server_invalid">That does not look like a server address. Example: http://host:8080</string>
+    <string name="signin_error_server_scheme">Only http and https servers are supported.</string>
+    <string name="signin_error_username">Enter the username.</string>
+    <string name="signin_error_password">Enter the password.</string>
+    <string name="signin_error_unauthorized">The server rejected these credentials.</string>
+    <string name="signin_error_expired">This account has expired. Contact your provider.</string>
+    <string name="signin_error_network">Cannot reach the server. Check the address and your connection.</string>
+    <string name="signin_error_bad_response">The server did not answer like an Xtream panel. Check the URL and port.</string>
+    <string name="signin_error_unknown">Something went wrong. Try again.</string>
+</resources>

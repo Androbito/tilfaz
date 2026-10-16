@@ -1,0 +1,32 @@
+{
+  "method": "GET",
+  "path": "/player_api.php",
+  "query": {
+    "action": "get_vod_categories"
+  },
+  "scenarios": {
+    "default": {
+      "status": 200,
+      "bodyFile": "../fixtures/vod_categories.json",
+      "delayMs": 300
+    },
+    "empty": {
+      "status": 200,
+      "body": []
+    },
+    "server_error": {
+      "status": 500,
+      "body": {
+        "error": "internal"
+      }
+    },
+    "slow": {
+      "status": 200,
+      "bodyFile": "../fixtures/vod_categories.json",
+      "delayMs": 5000
+    },
+    "offline": {
+      "dropConnection": true
+    }
+  }
+}

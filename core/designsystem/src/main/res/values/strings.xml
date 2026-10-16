@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ds_retry">Retry</string>
+    <string name="ds_loading">Loading…</string>
+    <string name="ds_empty_title">Nothing here yet</string>
+    <string name="ds_last_updated">Last updated: %1$s</string>
+    <string name="ds_never_updated">Not synced yet</string>
+    <string name="ds_refresh">Refresh</string>
+    <string name="ds_just_now">just now</string>
+    <string name="ds_minutes_ago">%1$d min ago</string>
+    <string name="ds_hours_ago">%1$d h ago</string>
+    <string name="ds_days_ago">%1$d d ago</string>
+    <string name="ds_favorite">Favourite</string>
+    <string name="ds_rating_content_description">Rating %1$s out of 10</string>
+    <string name="ds_no_program">No programme info</string>
+</resources>

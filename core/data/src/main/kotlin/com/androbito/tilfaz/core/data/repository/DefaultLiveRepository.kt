@@ -1,0 +1,83 @@
+package com.androbito.tilfaz.core.data.repository
+
+import com.androbito.tilfaz.core.data.di.IoDispatcher
+import com.androbito.tilfaz.core.data.mapper.EpgMapper
+import com.androbito.tilfaz.core.data.mapper.toDomain
+import com.androbito.tilfaz.core.data.mapper.toEntities
+import com.androbito.tilfaz.core.data.mapper.toLiveEntities
+import com.androbito.tilfaz.core.data.store.AccountStore
+import com.androbito.tilfaz.core.database.dao.CategoryDao
+import com.androbito.tilfaz.core.database.dao.LiveChannelDao
+import com.androbito.tilfaz.core.database.dao.SyncStatusDao
+import com.androbito.tilfaz.core.domain.repository.LiveRepository
+import com.androbito.tilfaz.core.model.Category
+import com.androbito.tilfaz.core.model.ContentType
+import com.androbito.tilfaz.core.model.EpgEntry
+import com.androbito.tilfaz.core.model.LiveChannel
+import com.androbito.tilfaz.core.model.SyncStatus
+import com.androbito.tilfaz.core.network.XtreamApi
+import com.androbito.tilfaz.core.network.safeApiCall
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.time.Clock
+import java.time.ZoneId
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class DefaultLiveRepository @Inject constructor(
+    private val api: XtreamApi,
+    private val categoryDao: CategoryDao,
+    private val channelDao: LiveChannelDao,
+    private val accountStore: AccountStore,
+    syncStatusDao: SyncStatusDao,
+    clock: Clock,
+    @IoDispatcher private val io: CoroutineDispatcher,
+) : LiveRepository {
+
+    private val sync = SyncTracker(ContentType.LIVE, syncStatusDao, clock)
+
+    override fun observeCategories(): Flow<List<Category>> =
+        categoryDao.observeByType(ContentType.LIVE.name).map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeItems(categoryId: String?): Flow<List<LiveChannel>> =
+        (if (categoryId == null) channelDao.observeAll() else channelDao.observeByCategory(categoryId))
+            .map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeSyncStatus(): Flow<SyncStatus> = sync.observe()
+
+    override fun search(query: String): Flow<List<LiveChannel>> =
+        channelDao.search(query.trim(), SEARCH_LIMIT).map { rows -> rows.map { it.toDomain() } }
+
+    override suspend fun refresh(): Result<Unit> = withContext(io) {
+        sync.track {
+            safeApiCall {
+                coroutineScope {
+                    val categories = async { api.liveCategories() }
+                    val streams = async { api.liveStreams() }
+                    categories.await().toEntities(ContentType.LIVE) to streams.await().toLiveEntities()
+                }
+            }.map { (categories, channels) ->
+                categoryDao.replaceAll(ContentType.LIVE.name, categories)
+                channelDao.replaceAll(channels)
+                sync.markSynced(channels.size)
+            }
+        }
+    }
+
+    override suspend fun channel(channelId: Int): LiveChannel? = withContext(io) { channelDao.byId(channelId)?.toDomain() }
+
+    override suspend fun shortEpg(channelId: Int, limit: Int): Result<List<EpgEntry>> = withContext(io) {
+        val zone = accountStore.status.first()?.serverTimeZone?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: ZoneId.systemDefault()
+        safeApiCall { api.shortEpg(channelId, limit) }.map { EpgMapper.toDomain(it.listings, channelId, zone) }
+    }
+
+    private companion object {
+        const val SEARCH_LIMIT = 200
+    }
+}

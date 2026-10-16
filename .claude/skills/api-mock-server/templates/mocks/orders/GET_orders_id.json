@@ -1,0 +1,11 @@
+{
+  "method": "GET",
+  "path": "/api/v1/orders/:id",
+  "scenarios": {
+    "default": {
+      "status": 200,
+      "body": { "id": "{{params.id}}", "status": "PENDING", "totalCents": 4990, "currency": "EUR", "createdAt": "{{now}}" }
+    },
+    "not_found": { "status": 404, "body": { "error": "ORDER_NOT_FOUND", "message": "Order {{params.id}} does not exist" } }
+  }
+}

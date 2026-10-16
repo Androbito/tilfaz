@@ -1,0 +1,80 @@
+package com.androbito.tilfaz.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.androbito.tilfaz.feature.home.HomeNavigation
+import com.androbito.tilfaz.feature.home.HomeRoute
+import com.androbito.tilfaz.feature.home.homeScreen
+import com.androbito.tilfaz.feature.live.LiveRoute
+import com.androbito.tilfaz.feature.live.liveScreen
+import com.androbito.tilfaz.feature.onboarding.SignInRoute
+import com.androbito.tilfaz.feature.onboarding.signInScreen
+import com.androbito.tilfaz.feature.player.PlayerRoute
+import com.androbito.tilfaz.feature.player.playerScreen
+import com.androbito.tilfaz.feature.search.SearchNavigation
+import com.androbito.tilfaz.feature.search.SearchRoute
+import com.androbito.tilfaz.feature.search.searchScreen
+import com.androbito.tilfaz.feature.series.SeriesDetailsRoute
+import com.androbito.tilfaz.feature.series.SeriesRoute
+import com.androbito.tilfaz.feature.series.seriesDetailsScreen
+import com.androbito.tilfaz.feature.series.seriesScreen
+import com.androbito.tilfaz.feature.settings.SettingsRoute
+import com.androbito.tilfaz.feature.settings.settingsScreen
+import com.androbito.tilfaz.feature.vod.MovieDetailsRoute
+import com.androbito.tilfaz.feature.vod.MoviesRoute
+import com.androbito.tilfaz.feature.vod.movieDetailsScreen
+import com.androbito.tilfaz.feature.vod.moviesScreen
+
+/**
+ * The only place that knows about every feature. Features expose routes and callbacks; this maps the callbacks
+ * to destinations, so no feature module depends on another.
+ */
+@Composable
+fun TilfazNavHost(startSignedIn: Boolean) {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = if (startSignedIn) HomeRoute else SignInRoute) {
+        signInScreen(
+            onSignedIn = {
+                navController.navigate(HomeRoute) { popUpTo(SignInRoute) { inclusive = true } }
+            },
+        )
+
+        homeScreen(
+            HomeNavigation(
+                onOpenLive = { navController.navigate(LiveRoute()) },
+                onOpenMovies = { navController.navigate(MoviesRoute()) },
+                onOpenSeries = { navController.navigate(SeriesRoute) },
+                onOpenSearch = { navController.navigate(SearchRoute) },
+                onOpenSettings = { navController.navigate(SettingsRoute) },
+                onOpenFavorites = { navController.navigate(LiveRoute(initialCategoryId = LiveRoute.FAVORITES)) },
+                onOpenContinueWatching = { navController.navigate(MoviesRoute(initialSectionId = MoviesRoute.CONTINUE_WATCHING)) },
+            ),
+        )
+
+        liveScreen(onPlayChannel = { channelId, categoryId -> navController.navigate(PlayerRoute.live(channelId, categoryId)) })
+
+        moviesScreen(onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) })
+        movieDetailsScreen(onPlayMovie = { movieId, start -> navController.navigate(PlayerRoute.movie(movieId, start)) })
+
+        seriesScreen(onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) })
+        seriesDetailsScreen(onPlayEpisode = { seriesId, episodeId, start -> navController.navigate(PlayerRoute.episode(seriesId, episodeId, start)) })
+
+        searchScreen(
+            SearchNavigation(
+                onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
+                onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
+                onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) },
+            ),
+        )
+
+        playerScreen(onExit = { navController.popBackStack() })
+
+        settingsScreen(
+            onSignedOut = {
+                navController.navigate(SignInRoute) { popUpTo(0) { inclusive = true } }
+            },
+        )
+    }
+}

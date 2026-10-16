@@ -1,0 +1,165 @@
+package com.androbito.tilfaz.feature.settings
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import androidx.tv.material3.Button
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.OutlinedButton
+import androidx.tv.material3.Text
+import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
+import com.androbito.tilfaz.core.designsystem.component.TopBar
+import com.androbito.tilfaz.core.designsystem.component.TvTextField
+import com.androbito.tilfaz.core.designsystem.theme.Dimens
+import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
+import com.androbito.tilfaz.core.model.BufferProfile
+import com.androbito.tilfaz.core.model.StreamFormat
+import kotlinx.serialization.Serializable
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+@Serializable
+data object SettingsRoute
+
+fun NavGraphBuilder.settingsScreen(onSignedOut: () -> Unit) {
+    composable<SettingsRoute> { SettingsRoute(onSignedOut) }
+}
+
+@Composable
+fun SettingsRoute(onSignedOut: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(state.signedOut) { if (state.signedOut) onSignedOut() }
+    SettingsScreen(state, viewModel::onEvent)
+}
+
+@Composable
+fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
+    Column(Modifier.fillMaxSize()) {
+        TopBar(title = "Tilfaz · ${stringResource(R.string.settings_title)}")
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.SpaceXl),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL),
+        ) {
+            SectionTitle(stringResource(R.string.settings_section_playback))
+
+            Setting(stringResource(R.string.settings_live_format), stringResource(R.string.settings_live_format_hint)) {
+                ChoiceRow(
+                    options = listOf(StreamFormat.MPEG_TS to stringResource(R.string.settings_format_ts), StreamFormat.HLS to stringResource(R.string.settings_format_hls)),
+                    selected = state.settings.liveFormat,
+                    onSelect = { onEvent(SettingsEvent.SetLiveFormat(it)) },
+                )
+            }
+            Setting(stringResource(R.string.settings_buffer)) {
+                ChoiceRow(
+                    options = listOf(
+                        BufferProfile.LOW_LATENCY to stringResource(R.string.settings_buffer_low),
+                        BufferProfile.BALANCED to stringResource(R.string.settings_buffer_balanced),
+                        BufferProfile.STABLE to stringResource(R.string.settings_buffer_stable),
+                    ),
+                    selected = state.settings.bufferProfile,
+                    onSelect = { onEvent(SettingsEvent.SetBuffer(it)) },
+                )
+            }
+            Setting(stringResource(R.string.settings_user_agent), stringResource(R.string.settings_user_agent_hint)) {
+                var draft by remember(state.settings.userAgent) { mutableStateOf(state.settings.userAgent) }
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), modifier = Modifier.fillMaxWidth()) {
+                    TvTextField(
+                        value = draft,
+                        onValueChange = { draft = it },
+                        label = "",
+                        onImeAction = { onEvent(SettingsEvent.SetUserAgent(draft)) },
+                        modifier = Modifier.width(560.dp),
+                    )
+                    Button(onClick = { onEvent(SettingsEvent.SetUserAgent(draft)) }) { Text("OK") }
+                    OutlinedButton(onClick = { onEvent(SettingsEvent.ResetUserAgent) }) { Text(stringResource(R.string.settings_user_agent_reset)) }
+                }
+            }
+            Setting(stringResource(R.string.settings_resume)) {
+                ChoiceRow(
+                    options = listOf(true to stringResource(R.string.settings_on), false to stringResource(R.string.settings_off)),
+                    selected = state.settings.resumePlayback,
+                    onSelect = { onEvent(SettingsEvent.SetResume(it)) },
+                )
+            }
+
+            SectionTitle(stringResource(R.string.settings_section_account))
+            state.account?.let { account ->
+                InfoLine(stringResource(R.string.settings_account_server), account.serverUrl)
+                InfoLine(stringResource(R.string.settings_account_username), account.username)
+            }
+            state.status?.let { status ->
+                InfoLine(
+                    stringResource(R.string.settings_account_expires),
+                    status.expiresAt?.atZone(ZoneId.systemDefault())?.toLocalDate()?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+                        ?: stringResource(R.string.settings_account_unlimited),
+                )
+                InfoLine(stringResource(R.string.settings_account_connections), "${status.activeConnections} / ${status.maxConnections}")
+                InfoLine(stringResource(R.string.settings_account_formats), status.allowedOutputFormats.joinToString { it.extension }.ifEmpty { "-" })
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+                OutlinedButton(onClick = { onEvent(SettingsEvent.RefreshStatus) }, enabled = !state.isRefreshingStatus) { Text(stringResource(R.string.settings_account_refresh)) }
+                if (state.confirmSignOut) {
+                    Text(stringResource(R.string.settings_sign_out_confirm), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = Dimens.SpaceS))
+                    Button(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
+                    OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutCancelled) }) { Text(stringResource(R.string.settings_cancel)) }
+                } else {
+                    OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutRequested) }) { Text(stringResource(R.string.settings_sign_out)) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(text, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = TilfazColors.Accent)
+}
+
+@Composable
+private fun Setting(title: String, hint: String? = null, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        if (hint != null) Text(hint, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted)
+        content()
+    }
+}
+
+@Composable
+private fun <T> ChoiceRow(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+        options.forEach { (value, label) ->
+            FocusableSurface(onClick = { onSelect(value) }, selected = value == selected, corner = Dimens.CornerS, focusedScale = 1.0f) {
+                Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceS))
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoLine(label: String, value: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+        Text(label, style = MaterialTheme.typography.titleMedium, color = TilfazColors.OnSurfaceMuted, modifier = Modifier.width(260.dp))
+        Text(value, style = MaterialTheme.typography.titleMedium)
+    }
+}

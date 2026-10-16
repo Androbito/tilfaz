@@ -1,0 +1,27 @@
+{
+  "info": {
+    "movie_image": "https://picsum.photos/seed/501/300/450",
+    "plot": "Un été à Cadaqués. Deux êtres qui ne devaient jamais se croiser.",
+    "cast": "Javier Bardem, Victoria Luengo",
+    "director": "Isabel Peña, Rodrigo Sorogoyen",
+    "genre": "Drame, Romance",
+    "releasedate": "2026-09-18",
+    "duration_secs": "6660",
+    "duration": "01:51:00",
+    "rating": "7.1",
+    "backdrop_path": [
+      "https://picsum.photos/seed/501b/1280/720"
+    ],
+    "youtube_trailer": "dQw4w9WgXcQ",
+    "tmdb_id": "999001"
+  },
+  "movie_data": {
+    "stream_id": 501,
+    "name": "|FR| L'Être Aimé (2026)",
+    "added": "1760600000",
+    "category_id": "10",
+    "container_extension": "mkv",
+    "custom_sid": "",
+    "direct_source": ""
+  }
+}

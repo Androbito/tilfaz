@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_playback">Playback</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_live_format">Live stream format</string>
+    <string name="settings_live_format_hint">Switch to HLS if channels show a reading error with MPEG-TS, or the other way round.</string>
+    <string name="settings_format_ts">MPEG-TS (.ts)</string>
+    <string name="settings_format_hls">HLS (.m3u8)</string>
+    <string name="settings_buffer">Buffering</string>
+    <string name="settings_buffer_low">Low latency</string>
+    <string name="settings_buffer_balanced">Balanced</string>
+    <string name="settings_buffer_stable">Stable (unreliable connection)</string>
+    <string name="settings_user_agent">User agent</string>
+    <string name="settings_user_agent_hint">Some providers only accept known players. Try VLC/3.0.20 LibVLC/3.0.20 if streams are refused.</string>
+    <string name="settings_user_agent_reset">Reset to default</string>
+    <string name="settings_resume">Resume movies and episodes where I stopped</string>
+    <string name="settings_on">On</string>
+    <string name="settings_off">Off</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_username">Username</string>
+    <string name="settings_account_expires">Expires</string>
+    <string name="settings_account_unlimited">Unlimited</string>
+    <string name="settings_account_connections">Connections</string>
+    <string name="settings_account_formats">Formats allowed by server</string>
+    <string name="settings_account_refresh">Refresh account info</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_sign_out_confirm">Sign out and delete cached catalog?</string>
+    <string name="settings_sign_out_yes">Yes, sign out</string>
+    <string name="settings_cancel">Cancel</string>
+</resources>

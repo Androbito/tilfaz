@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "/api/v1/orders",
+  "scenarios": {
+    "default": {
+      "status": 201,
+      "headers": { "Location": "/api/v1/orders/{{uuid}}" },
+      "body": { "id": "{{uuid}}", "status": "PENDING", "items": "{{body.items}}", "createdAt": "{{now}}" }
+    },
+    "validation_error": {
+      "status": 422,
+      "body": { "error": "VALIDATION_ERROR", "fields": { "items": "At least one item is required" } }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "items": [
+    { "id": "ord-1001", "status": "PENDING", "totalCents": 4990, "currency": "EUR" },
+    { "id": "ord-1002", "status": "SHIPPED", "totalCents": 12900, "currency": "EUR" }
+  ],
+  "page": 1,
+  "totalPages": 1
+}

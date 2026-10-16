@@ -1,0 +1,33 @@
+{
+  "method": "GET",
+  "path": "/player_api.php",
+  "query": {
+    "action": "get_series_info"
+  },
+  "scenarios": {
+    "default": {
+      "status": 200,
+      "bodyFile": "../fixtures/series_info_901.json",
+      "delayMs": 300
+    },
+    "no_episodes": {
+      "status": 200,
+      "body": {
+        "seasons": [],
+        "info": {
+          "name": "Empty series"
+        },
+        "episodes": []
+      }
+    },
+    "server_error": {
+      "status": 500,
+      "body": {
+        "error": "internal"
+      }
+    },
+    "offline": {
+      "dropConnection": true
+    }
+  }
+}

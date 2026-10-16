@@ -1,0 +1,74 @@
+{
+  "seasons": [
+    {
+      "air_date": "2026-10-02",
+      "episode_count": 2,
+      "id": 1,
+      "name": "Season 1",
+      "overview": "",
+      "season_number": 1,
+      "cover": "https://picsum.photos/seed/901s1/300/450",
+      "cover_big": ""
+    }
+  ],
+  "info": {
+    "name": "|MULTI| The Torment (2026)",
+    "cover": "https://picsum.photos/seed/901/300/450",
+    "plot": "Kama returns to her hometown and gets entangled in an old missing case. Family secrets, passions and crime reveal that the past never falls silent.",
+    "cast": "N/A",
+    "director": "N/A",
+    "genre": "Crime, Drama",
+    "releaseDate": "2026-10-02",
+    "last_modified": "1760700000",
+    "rating": "6",
+    "rating_5based": 3,
+    "backdrop_path": [
+      "https://picsum.photos/seed/901b/1280/720"
+    ],
+    "youtube_trailer": "",
+    "episode_run_time": "43",
+    "category_id": "22"
+  },
+  "episodes": {
+    "1": [
+      {
+        "id": "90101",
+        "episode_num": 1,
+        "title": "S01E01",
+        "container_extension": "mp4",
+        "info": {
+          "movie_image": "https://picsum.photos/seed/90101/320/180",
+          "plot": "Kama arrives in town.",
+          "duration_secs": 2580,
+          "duration": "00:43:00",
+          "rating": "8",
+          "releasedate": "2026-10-02",
+          "bitrate": 4800
+        },
+        "custom_sid": "",
+        "added": "1760700000",
+        "season": 1,
+        "direct_source": ""
+      },
+      {
+        "id": "90102",
+        "episode_num": "2",
+        "title": "S01E02",
+        "container_extension": "mp4",
+        "info": {
+          "movie_image": "https://picsum.photos/seed/90102/320/180",
+          "plot": "The case reopens.",
+          "duration_secs": "2600",
+          "duration": "00:43:20",
+          "rating": "8",
+          "releasedate": "2026-10-09",
+          "bitrate": 4800
+        },
+        "custom_sid": "",
+        "added": "1760800000",
+        "season": 1,
+        "direct_source": ""
+      }
+    ]
+  }
+}

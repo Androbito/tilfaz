@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_loading">Opening stream…</string>
+    <string name="player_buffering">Buffering…</string>
+    <string name="player_error_title">Cannot play this stream</string>
+    <string name="player_error_source">The server refused the stream or sent something the player cannot read.</string>
+    <string name="player_error_network">Network problem while loading the stream.</string>
+    <string name="player_error_decoder">This device cannot decode the stream's audio or video format.</string>
+    <string name="player_error_not_found">The stream could not be found. The provider may have moved it.</string>
+    <string name="player_error_unknown">Unexpected playback error (%1$s).</string>
+    <string name="player_retry">Retry</string>
+    <string name="player_switch_to_hls">Try HLS (m3u8)</string>
+    <string name="player_switch_to_ts">Try MPEG-TS</string>
+    <string name="player_back">Back</string>
+    <string name="player_live">LIVE</string>
+    <string name="player_now">Now</string>
+    <string name="player_next">Next</string>
+    <string name="player_hint_live">OK: info · Up/Down: change channel · Back: exit</string>
+    <string name="player_hint_vod">OK: pause · Left/Right: seek 10 s · Back: exit</string>
+</resources>

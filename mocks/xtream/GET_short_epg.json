@@ -1,0 +1,72 @@
+{
+  "method": "GET",
+  "path": "/player_api.php",
+  "query": {
+    "action": "get_short_epg"
+  },
+  "scenarios": {
+    "default": {
+      "status": 200,
+      "body": {
+        "epg_listings": [
+          {
+            "id": "1",
+            "epg_id": "1",
+            "title": "TmV3cyBIb3Vy",
+            "lang": "en",
+            "start": "2026-10-16 21:30:00",
+            "end": "2026-10-16 22:30:00",
+            "description": "VGhlIGRheSdzIGhlYWRsaW5lcyBmcm9tIHRoZSBuZXdzcm9vbS4=",
+            "channel_id": "aljazeera.qa",
+            "start_timestamp": "{{unix-1800}}",
+            "stop_timestamp": "{{unix+1800}}",
+            "now_playing": 1,
+            "has_archive": 1
+          },
+          {
+            "id": "2",
+            "epg_id": "1",
+            "title": "VGhlIERlYmF0ZSDCtyDZhtmC2KfYtA==",
+            "lang": "en",
+            "start": "2026-10-16 22:30:00",
+            "end": "2026-10-16 23:30:00",
+            "description": "R3Vlc3RzIGFyZ3VlIHRoZSB3ZWVrJ3MgYmlnIHN0b3J5Lg==",
+            "channel_id": "aljazeera.qa",
+            "start_timestamp": "{{unix+1800}}",
+            "stop_timestamp": "{{unix+5400}}",
+            "now_playing": 0,
+            "has_archive": 0
+          },
+          {
+            "id": "3",
+            "epg_id": "1",
+            "title": "TGF0ZSBFZGl0aW9u",
+            "lang": "en",
+            "start": "",
+            "end": "",
+            "description": "",
+            "channel_id": "aljazeera.qa",
+            "start_timestamp": "{{unix+5400}}",
+            "stop_timestamp": "{{unix+7200}}",
+            "now_playing": 0,
+            "has_archive": 0
+          }
+        ]
+      },
+      "delayMs": 150
+    },
+    "empty": {
+      "status": 200,
+      "body": {
+        "epg_listings": []
+      }
+    },
+    "server_error": {
+      "status": 500,
+      "body": {}
+    },
+    "offline": {
+      "dropConnection": true
+    }
+  }
+}

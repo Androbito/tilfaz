@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wordmark drawn as paths so the banner needs no font: "TILFAZ" in blocky capitals under a screen glyph. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="220dp"
+    android:height="110dp"
+    android:viewportWidth="220"
+    android:viewportHeight="110">
+    <path android:fillColor="#27A9E1" android:pathData="M80,6 h60 a5,5 0 0 1 5,5 v34 a5,5 0 0 1 -5,5 h-60 a5,5 0 0 1 -5,-5 v-34 a5,5 0 0 1 5,-5 z" />
+    <path android:fillColor="#070C18" android:pathData="M84,12 h52 v30 h-52 z" />
+    <path android:fillColor="#E9EEF8" android:pathData="M104,19 l16,8 l-16,8 z" />
+    <!-- T -->
+    <path android:fillColor="#E9EEF8" android:pathData="M8,66 h26 v8 h-9 v30 h-8 v-30 h-9 z" />
+    <!-- I -->
+    <path android:fillColor="#E9EEF8" android:pathData="M40,66 h8 v38 h-8 z" />
+    <!-- L -->
+    <path android:fillColor="#E9EEF8" android:pathData="M56,66 h8 v30 h16 v8 h-24 z" />
+    <!-- F -->
+    <path android:fillColor="#E9EEF8" android:pathData="M88,66 h24 v8 h-16 v7 h14 v8 h-14 v15 h-8 z" />
+    <!-- A -->
+    <path android:fillColor="#E9EEF8" android:pathData="M118,104 l13,-38 h8 l13,38 h-8 l-2.6,-8 h-12.8 l-2.6,8 z M131.2,88 h7.6 l-3.8,-12 z" />
+    <!-- Z -->
+    <path android:fillColor="#27A9E1" android:pathData="M160,66 h30 v7 l-20,23 h20 v8 h-30 v-7 l20,-23 h-20 z" />
+</vector>

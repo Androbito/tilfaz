@@ -1,0 +1,12 @@
+{
+  "method": "GET",
+  "path": "/api/v1/orders",
+  "scenarios": {
+    "default": { "status": 200, "bodyFile": "../fixtures/orders.json", "delayMs": 300 },
+    "empty": { "status": 200, "body": { "items": [], "page": 1, "totalPages": 0 } },
+    "unauthorized": { "status": 401, "body": { "error": "TOKEN_EXPIRED", "message": "Session expired" } },
+    "server_error": { "status": 500, "body": { "error": "INTERNAL_ERROR" } },
+    "slow": { "status": 200, "bodyFile": "../fixtures/orders.json", "delayMs": 4000 },
+    "offline": { "dropConnection": true }
+  }
+}

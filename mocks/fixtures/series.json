@@ -1,0 +1,58 @@
+[
+  {
+    "num": 1,
+    "name": "|MULTI| The Torment (2026)",
+    "series_id": 901,
+    "cover": "https://picsum.photos/seed/901/300/450",
+    "plot": "Kama returns to her hometown and gets entangled in an old missing case.",
+    "cast": "",
+    "director": "",
+    "genre": "Crime, Drama",
+    "releaseDate": "2026-10-02",
+    "last_modified": "1760700000",
+    "rating": "6",
+    "rating_5based": 3,
+    "backdrop_path": [
+      "https://picsum.photos/seed/901b/1280/720"
+    ],
+    "youtube_trailer": "",
+    "episode_run_time": "43",
+    "category_id": "22"
+  },
+  {
+    "num": 2,
+    "name": "| ورود وذنوب | 2025 |",
+    "series_id": 902,
+    "cover": "https://picsum.photos/seed/902/300/450",
+    "plot": "دراما اجتماعية",
+    "cast": "",
+    "director": "",
+    "genre": "Drama",
+    "releaseDate": "2025-03-01",
+    "last_modified": "1760600000",
+    "rating": "9",
+    "rating_5based": "4.5",
+    "backdrop_path": "https://picsum.photos/seed/902b/1280/720",
+    "youtube_trailer": "",
+    "episode_run_time": "45",
+    "category_id": "21"
+  },
+  {
+    "num": 3,
+    "name": "| Sido And Horia | 2026 | سيدو وحورية",
+    "series_id": 903,
+    "cover": "https://picsum.photos/seed/903/300/450",
+    "plot": "",
+    "cast": "",
+    "director": "",
+    "genre": "Comedy",
+    "releaseDate": "2026-02-28",
+    "last_modified": "1760500000",
+    "rating": "7",
+    "rating_5based": "3.5",
+    "backdrop_path": [],
+    "youtube_trailer": "",
+    "episode_run_time": "30",
+    "category_id": "21"
+  }
+]
