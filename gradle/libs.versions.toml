@@ -24,7 +24,7 @@ leanback = "1.2.0"
 media3 = "1.11.1"
 room = "2.8.5"
 datastore = "1.2.1"
-hilt = "2.60.1"
+hilt = "2.58" # 2.59+ requires AGP 9, see docs/adr/0008
 hiltNavigationCompose = "1.4.0"
 
 # Kotlinx

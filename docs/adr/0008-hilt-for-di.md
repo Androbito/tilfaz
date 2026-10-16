@@ -23,4 +23,5 @@ We will use Hilt with KSP; repository bindings live in `:core:data` (`DataModule
 
 - Positive: a missing binding fails the build, not the demo.
 - Negative: Hilt-annotated modules must be Android libraries; the pure JVM modules only use `javax.inject`.
-- Follow-up: none.
+- Negative: Hilt 2.59+ requires AGP 9; this project stays on Hilt 2.58 until the AGP 9 migration (built-in Kotlin, plugin changes) is done deliberately. Renovate/Dependabot must not bump Hilt alone.
+- Follow-up: migrate to AGP 9 + Hilt 2.60 as one change, verified by the full test suite.
