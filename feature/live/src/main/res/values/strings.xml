@@ -11,7 +11,7 @@
     <string name="live_empty_category">No channels in this category</string>
     <string name="live_empty_favorites">Long-press a channel to add it here</string>
     <string name="live_empty_history">Channels you watch will appear here</string>
-    <string name="live_no_results">No channel matches "%1$s"</string>
+    <string name="live_no_results">No channel matches \"%1$s\"</string>
     <string name="live_epg_unavailable">No programme information</string>
     <string name="live_archive_days">Catch-up: %1$d days</string>
 </resources>

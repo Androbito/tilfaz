@@ -3,6 +3,7 @@ package com.androbito.tilfaz.core.network
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
 import com.androbito.tilfaz.core.model.Account
 import com.androbito.tilfaz.core.model.DomainError
 import kotlinx.coroutines.test.runTest
@@ -80,6 +81,6 @@ class XtreamRequestInterceptorTest {
 
         val error = safeApiCall { api.liveCategories() }.exceptionOrNull()?.toDomainException()?.error
 
-        assertThat(error).isInstanceOf<DomainError.BadResponse>()
+        assertThat(error).isNotNull().isInstanceOf<DomainError.BadResponse>()
     }
 }

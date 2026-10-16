@@ -4,7 +4,6 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
-import assertk.assertions.isTrue
 import com.androbito.tilfaz.core.network.dto.LiveStreamDto
 import com.androbito.tilfaz.core.network.dto.SeriesInfoResponseDto
 import com.androbito.tilfaz.core.network.dto.UserInfoDto
@@ -23,8 +22,8 @@ class LenientSerializersTest {
 
         assertThat(asString.streamId).isEqualTo(101)
         assertThat(asNumber.streamId).isEqualTo(101)
-        assertThat(asString.tvArchive).isTrue()
-        assertThat(asNumber.tvArchive).isTrue()
+        assertThat(asString.tvArchive).isEqualTo(true)
+        assertThat(asNumber.tvArchive).isEqualTo(true)
         assertThat(empty.streamId).isNull()
         assertThat(empty.num).isNull()
         assertThat(empty.tvArchive).isNull()
@@ -47,7 +46,7 @@ class LenientSerializersTest {
         assertThat(string.allowedOutputFormats).containsExactly("m3u8", "ts")
         assertThat(array.expDateEpochSeconds).isEqualTo(1772000000L)
         assertThat(string.expDateEpochSeconds).isNull()
-        assertThat(array.auth).isTrue()
+        assertThat(array.auth).isEqualTo(true)
         assertThat(string.auth).isEqualTo(false)
     }
 

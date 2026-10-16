@@ -26,7 +26,7 @@ class LiveViewModelTest {
     }
     private val favorites = FakeFavoritesRepository()
     private val recent = FakeRecentChannelsRepository { id -> Fixtures.liveChannels.firstOrNull { it.id == id } }
-    private val viewModel = LiveViewModel(SavedStateHandle(), live, favorites, recent, ToggleFavoriteUseCase(favorites), Fixtures.fixedClock)
+    private val viewModel by lazy { LiveViewModel(SavedStateHandle(), live, favorites, recent, ToggleFavoriteUseCase(favorites), Fixtures.fixedClock) }
 
     @Test
     fun `virtual categories come first with live counts`() = runTest {

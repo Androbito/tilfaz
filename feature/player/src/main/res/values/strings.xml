@@ -5,7 +5,7 @@
     <string name="player_error_title">Cannot play this stream</string>
     <string name="player_error_source">The server refused the stream or sent something the player cannot read.</string>
     <string name="player_error_network">Network problem while loading the stream.</string>
-    <string name="player_error_decoder">This device cannot decode the stream's audio or video format.</string>
+    <string name="player_error_decoder">This device cannot decode the stream\'s audio or video format.</string>
     <string name="player_error_not_found">The stream could not be found. The provider may have moved it.</string>
     <string name="player_error_unknown">Unexpected playback error (%1$s).</string>
     <string name="player_retry">Retry</string>

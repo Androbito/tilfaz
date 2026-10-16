@@ -21,7 +21,7 @@ class SettingsViewModelTest {
 
     private val settings = FakePlaybackSettingsRepository()
     private val account = FakeAccountRepository(Fixtures.account).apply { status.value = Fixtures.activeStatus }
-    private val viewModel = SettingsViewModel(settings, account)
+    private val viewModel by lazy { SettingsViewModel(settings, account) }
 
     @Test
     fun `playback choices are persisted`() = runTest {

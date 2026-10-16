@@ -7,7 +7,7 @@
     <string name="series_continue">CONTINUE WATCHING</string>
     <string name="series_recent">RECENTLY ADDED</string>
     <string name="series_empty">No series in this section</string>
-    <string name="series_no_results">No series matches "%1$s"</string>
+    <string name="series_no_results">No series matches \"%1$s\"</string>
     <string name="series_play_episode">Play %1$s</string>
     <string name="series_season">Season %1$d</string>
     <string name="series_episodes">Episodes (%1$d)</string>

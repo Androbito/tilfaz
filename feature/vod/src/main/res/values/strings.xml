@@ -7,7 +7,7 @@
     <string name="vod_continue">CONTINUE WATCHING</string>
     <string name="vod_recent">RECENTLY ADDED</string>
     <string name="vod_empty">No movies in this section</string>
-    <string name="vod_no_results">No movie matches "%1$s"</string>
+    <string name="vod_no_results">No movie matches \"%1$s\"</string>
     <string name="vod_play">Play</string>
     <string name="vod_resume">Resume at %1$s</string>
     <string name="vod_start_over">Start over</string>
@@ -22,4 +22,6 @@
     <string name="vod_plot">Plot</string>
     <string name="vod_details_error">Could not load the details. You can still play the movie.</string>
     <string name="vod_back">Back</string>
+    <string name="vod_related">More like this</string>
+    <string name="vod_score">%1$.1f / 10</string>
 </resources>

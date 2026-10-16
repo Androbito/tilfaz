@@ -25,7 +25,7 @@ class SearchViewModelTest {
     private val live = FakeLiveRepository().apply { items.value = Fixtures.liveChannels }
     private val vod = FakeVodRepository().apply { items.value = listOf(Fixtures.movie) }
     private val series = FakeSeriesRepository().apply { items.value = listOf(Fixtures.series) }
-    private val viewModel = SearchViewModel(live, vod, series)
+    private val viewModel by lazy { SearchViewModel(live, vod, series) }
 
     @Test
     fun `short queries do not search`() = runTest(dispatcher) {

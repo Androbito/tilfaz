@@ -56,7 +56,10 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         liveScreen(onPlayChannel = { channelId, categoryId -> navController.navigate(PlayerRoute.live(channelId, categoryId)) })
 
         moviesScreen(onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) })
-        movieDetailsScreen(onPlayMovie = { movieId, start -> navController.navigate(PlayerRoute.movie(movieId, start)) })
+        movieDetailsScreen(
+            onPlayMovie = { movieId, start -> navController.navigate(PlayerRoute.movie(movieId, start)) },
+            onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
+        )
 
         seriesScreen(onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) })
         seriesDetailsScreen(onPlayEpisode = { seriesId, episodeId, start -> navController.navigate(PlayerRoute.episode(seriesId, episodeId, start)) })

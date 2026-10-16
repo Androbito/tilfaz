@@ -19,7 +19,7 @@ class SignInViewModelTest {
     @get:Rule val mainDispatcher = MainDispatcherRule()
 
     private val repository = FakeAccountRepository()
-    private val viewModel = SignInViewModel(SignInUseCase(repository))
+    private val viewModel by lazy { SignInViewModel(SignInUseCase(repository)) }
 
     private fun fill() {
         viewModel.onEvent(SignInEvent.ServerChanged("tv.example.com:8080"))

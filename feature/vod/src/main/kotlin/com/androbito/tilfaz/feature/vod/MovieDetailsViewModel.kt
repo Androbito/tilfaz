@@ -12,7 +12,12 @@ import com.androbito.tilfaz.core.model.Movie
 import com.androbito.tilfaz.core.model.MovieDetails
 import com.androbito.tilfaz.core.model.WatchProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,6 +33,8 @@ data class MovieDetailsUiState(
     val detailsFailed: Boolean = false,
     val isFavorite: Boolean = false,
     val progress: WatchProgress? = null,
+    /** "More like this": other movies from the same provider category, the only grouping Xtream guarantees. */
+    val related: List<Movie> = emptyList(),
 ) {
     val isLoading: Boolean get() = movie == null
     val canResume: Boolean get() = progress != null && !progress.isFinished && progress.positionMs > 0
@@ -54,16 +61,27 @@ class MovieDetailsViewModel @Inject constructor(
 
     private data class Loaded(val movie: Movie? = null, val details: MovieDetails? = null, val failed: Boolean = false, val progress: WatchProgress? = null)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val related: Flow<List<Movie>> = loaded
+        .map { it.movie?.categoryId }
+        .distinctUntilChanged()
+        .flatMapLatest { categoryId ->
+            if (categoryId == null) flowOf(emptyList()) else vodRepository.observeItems(categoryId)
+        }
+        .map { list -> list.filter { it.id != movieId }.take(RELATED_LIMIT) }
+
     val state: StateFlow<MovieDetailsUiState> = combine(
         loaded,
         favoritesRepository.observeKeys(ContentType.VOD).map { ToggleFavoriteUseCase.vodKey(movieId) in it },
-    ) { loaded, favorite ->
+        related,
+    ) { loaded, favorite, related ->
         MovieDetailsUiState(
             movie = loaded.details?.movie ?: loaded.movie,
             details = loaded.details,
             detailsFailed = loaded.failed,
             isFavorite = favorite,
             progress = loaded.progress,
+            related = related,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MovieDetailsUiState())
 
@@ -91,5 +109,9 @@ class MovieDetailsViewModel @Inject constructor(
                 .onSuccess { details -> loaded.update { it.copy(details = details) } }
                 .onFailure { loaded.update { it.copy(failed = true) } }
         }
+    }
+
+    private companion object {
+        const val RELATED_LIMIT = 20
     }
 }

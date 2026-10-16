@@ -74,6 +74,18 @@ class MovieDetailsViewModelTest {
     }
 
     @Test
+    fun `related movies come from the same category and exclude the movie itself`() = runTest {
+        val sameCategory = Fixtures.movie.copy(id = 502, name = "Same category")
+        val otherCategory = Fixtures.movie.copy(id = 503, name = "Other", categoryId = "99")
+        vod.items.value = listOf(Fixtures.movie, sameCategory, otherCategory)
+        vod.detailsResult = { Result.success(details) }
+
+        viewModel().state.test {
+            assertThat(expectMostRecentItem().related).isEqualTo(listOf(sameCategory))
+        }
+    }
+
+    @Test
     fun `favourite toggles are reflected`() = runTest {
         vod.detailsResult = { Result.success(details) }
         val vm = viewModel()
