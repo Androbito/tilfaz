@@ -47,4 +47,14 @@ data class Episode(
 ) {
     /** "S01E04" style label, used in lists and as the player title. */
     val code: String get() = "S%02dE%02d".format(seasonNumber, episodeNumber)
+
+    /** The code followed by the title, without repeating the code when the panel already put it in the title. */
+    val displayTitle: String get() {
+        val trimmed = title.trim()
+        return when {
+            trimmed.isEmpty() || trimmed.equals(code, ignoreCase = true) -> code
+            trimmed.startsWith(code, ignoreCase = true) -> trimmed
+            else -> "$code  $trimmed"
+        }
+    }
 }
