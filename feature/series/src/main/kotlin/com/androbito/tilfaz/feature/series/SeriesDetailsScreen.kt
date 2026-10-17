@@ -32,7 +32,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
@@ -44,6 +43,7 @@ import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.ProgressBar
 import com.androbito.tilfaz.core.designsystem.component.RatingBadge
+import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.formatDuration
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
@@ -118,7 +118,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
                                 state.nextEpisode?.let { next ->
-                                    Button(onClick = { onPlay(next) }) {
+                                    TilfazButton(onClick = { onPlay(next) }) {
                                         Icon(Icons.Default.PlayArrow, contentDescription = null)
                                         Text(stringResource(R.string.series_play_episode, next.code), modifier = Modifier.padding(start = Dimens.SpaceS))
                                     }

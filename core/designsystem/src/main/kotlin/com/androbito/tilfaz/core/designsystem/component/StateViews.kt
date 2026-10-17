@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -55,7 +54,7 @@ fun EmptyState(
             )
         }
         if (actionLabel != null && onAction != null) {
-            Button(onClick = onAction, modifier = Modifier.padding(top = Dimens.SpaceL)) { Text(actionLabel) }
+            TilfazButton(onClick = onAction, modifier = Modifier.padding(top = Dimens.SpaceL)) { Text(actionLabel) }
         }
     }
 }
@@ -75,7 +74,7 @@ fun ErrorState(
         Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = TilfazColors.Danger, modifier = Modifier.size(64.dp))
         Text(message, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = Dimens.SpaceM), textAlign = TextAlign.Center)
         if (onRetry != null) {
-            Button(onClick = onRetry, modifier = Modifier.padding(top = Dimens.SpaceL)) { Text(retryLabel) }
+            TilfazButton(onClick = onRetry, modifier = Modifier.padding(top = Dimens.SpaceL)) { Text(retryLabel) }
         }
     }
 }

@@ -33,7 +33,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
@@ -42,6 +41,7 @@ import coil3.compose.AsyncImage
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.RatingBadge
+import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.formatDuration
 import com.androbito.tilfaz.core.designsystem.component.formatPlayerTime
@@ -105,7 +105,7 @@ fun MovieDetailsScreen(
                         movie.rating?.let { ScoreLine(it) }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
-                            Button(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
+                            TilfazButton(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                                 Text(
                                     if (state.canResume) {

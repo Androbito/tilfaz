@@ -23,11 +23,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
+import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.TvTextField
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
@@ -94,7 +94,7 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                         onImeAction = { onEvent(SettingsEvent.SetUserAgent(draft)) },
                         modifier = Modifier.width(560.dp)
                     )
-                    Button(onClick = { onEvent(SettingsEvent.SetUserAgent(draft)) }) { Text("OK") }
+                    TilfazButton(onClick = { onEvent(SettingsEvent.SetUserAgent(draft)) }) { Text("OK") }
                     OutlinedButton(onClick = { onEvent(SettingsEvent.ResetUserAgent) }) { Text(stringResource(R.string.settings_user_agent_reset)) }
                 }
             }
@@ -130,7 +130,7 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(top = Dimens.SpaceS)
                     )
-                    Button(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
+                    TilfazButton(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
                     OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutCancelled) }) { Text(stringResource(R.string.settings_cancel)) }
                 } else {
                     OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutRequested) }) { Text(stringResource(R.string.settings_sign_out)) }

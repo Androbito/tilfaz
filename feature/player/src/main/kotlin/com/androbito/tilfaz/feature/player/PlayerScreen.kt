@@ -48,12 +48,12 @@ import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_SURFACE_VIEW
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.tv.material3.Button
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.ProgressBar
+import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.formatPlayerTime
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
@@ -264,7 +264,9 @@ private fun ErrorOverlay(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, o
             modifier = Modifier.padding(top = Dimens.SpaceS, bottom = Dimens.SpaceL)
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-            Button(onClick = { onEvent(PlayerEvent.Retry) }, modifier = Modifier.focusRequester(retryFocus)) { Text(stringResource(R.string.player_retry)) }
+            TilfazButton(onClick = {
+                onEvent(PlayerEvent.Retry)
+            }, modifier = Modifier.focusRequester(retryFocus)) { Text(stringResource(R.string.player_retry)) }
             if (state.canSwitchFormat) {
                 OutlinedButton(onClick = { onEvent(PlayerEvent.SwitchFormat) }) {
                     Text(stringResource(if (state.alternativeFormat == StreamFormat.HLS) R.string.player_switch_to_hls else R.string.player_switch_to_ts))
