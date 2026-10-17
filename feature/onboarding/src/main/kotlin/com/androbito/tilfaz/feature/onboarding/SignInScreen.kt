@@ -26,6 +26,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.BrandMark
 import com.androbito.tilfaz.core.designsystem.component.TvTextField
+import com.androbito.tilfaz.core.designsystem.component.tilfazButtonBorder
+import com.androbito.tilfaz.core.designsystem.component.tilfazButtonColors
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import kotlinx.serialization.Serializable
@@ -101,6 +103,8 @@ fun SignInScreen(state: SignInUiState, onEvent: (SignInEvent) -> Unit) {
             Button(
                 onClick = { onEvent(SignInEvent.Submit) },
                 enabled = state.canSubmit,
+                colors = tilfazButtonColors(),
+                border = tilfazButtonBorder(),
                 modifier = Modifier.fillMaxWidth().padding(top = Dimens.SpaceS)
             ) {
                 Text(if (state.isSubmitting) stringResource(R.string.signin_in_progress) else stringResource(R.string.signin_action))

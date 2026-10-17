@@ -14,6 +14,7 @@ object TilfazColors {
     val SurfaceBright = Color(0xFF1F3566)
     val Accent = Color(0xFF27A9E1)
     val AccentSoft = Color(0xFF1C6FA0)
+    val OnAccent = Color.White
     val OnBackground = Color(0xFFE9EEF8)
     val OnSurfaceMuted = Color(0xFF9AA8C7)
     val Danger = Color(0xFFE5484D)

@@ -1,6 +1,8 @@
 package com.androbito.tilfaz.feature.onboarding
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
@@ -8,14 +10,19 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThanOrEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
+import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import org.junit.Rule
 import org.junit.Test
@@ -54,6 +61,42 @@ class SignInScreenTest {
         fields[1].assertIsFocused()
         fields[1].performKeyInput { pressKey(Key.DirectionDown) }
         fields[2].assertIsFocused()
+    }
+
+    private fun signInLabelColor(): Color {
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose.onNodeWithText("Sign in", useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        return layouts.first().layoutInput.style.color
+    }
+
+    private fun showFilledForm() {
+        val filled = SignInUiState(serverUrl = "http://example.com:8080", username = "user", password = "secret")
+        compose.setContent { TilfazTheme { SignInScreen(state = filled, onEvent = {}) } }
+    }
+
+    @Test
+    fun serverFieldHasFocusOnLaunchEvenWhenTheFormIsPrefilled() {
+        showFilledForm()
+        compose.waitForIdle()
+
+        compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.EditableText))[0].assertIsFocused()
+    }
+
+    @Test
+    fun signInLabelIsWhiteWhenTheButtonIsEnabled() {
+        showFilledForm()
+
+        assertThat(signInLabelColor()).isEqualTo(TilfazColors.OnAccent)
+    }
+
+    @Test
+    fun signInLabelStaysWhiteWhenTheButtonIsFocused() {
+        showFilledForm()
+        compose.onNode(hasText("Sign in") and hasClickAction()).requestFocus()
+        compose.waitForIdle()
+
+        assertThat(signInLabelColor()).isEqualTo(TilfazColors.OnAccent)
     }
 
     private companion object {
