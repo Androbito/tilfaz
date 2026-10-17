@@ -3,6 +3,7 @@ package com.androbito.tilfaz.core.designsystem.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,7 +52,7 @@ fun PosterCard(
     FocusableSurface(
         onClick = onClick,
         onLongClick = onLongClick,
-        modifier = modifier.width(Dimens.PosterWidth).height(Dimens.PosterHeight),
+        modifier = modifier.width(Dimens.PosterWidth).aspectRatio(Dimens.PosterWidth / Dimens.PosterHeight),
         corner = Dimens.CornerS,
         focusedScale = 1.08f
     ) {

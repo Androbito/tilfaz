@@ -28,8 +28,20 @@ class RatingTest {
     }
 
     @Test
-    fun `badge shows the integer part like the Smarters corner badge`() {
-        assertThat(Rating(7.9).badge).isEqualTo("7")
+    fun `badge shows the score with one decimal`() {
+        assertThat(Rating(6.9).badge).isEqualTo("6.9")
+        assertThat(Rating(7.0).badge).isEqualTo("7.0")
+        assertThat(Rating(1.04).badge).isEqualTo("1.0")
+    }
+
+    @Test
+    fun `badge rounds to the nearest tenth`() {
+        assertThat(Rating(7.86).badge).isEqualTo("7.9")
+    }
+
+    @Test
+    fun `a perfect or almost perfect score reads 10`() {
         assertThat(Rating(10.0).badge).isEqualTo("10")
+        assertThat(Rating(9.96).badge).isEqualTo("10")
     }
 }

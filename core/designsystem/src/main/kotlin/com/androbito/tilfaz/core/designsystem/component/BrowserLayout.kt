@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 
+private const val POSTERS_PER_ROW = 4
+
 /**
  * The two-pane browser used by Movies and Series: a search box and a section list on the left,
  * a poster grid on the right. Features supply the data and the item composable.
@@ -54,10 +56,10 @@ fun <T> BrowserLayout(
                 emptyContent()
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(Dimens.PosterWidth),
+                    columns = GridCells.Fixed(POSTERS_PER_ROW),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
-                    contentPadding = PaddingValues(start = Dimens.SpaceS, end = Dimens.SpaceS, top = Dimens.SpaceS, bottom = Dimens.SpaceXl)
+                    contentPadding = PaddingValues(start = Dimens.SpaceM, end = Dimens.SpaceM, top = Dimens.SpaceM, bottom = Dimens.SpaceXl)
                 ) {
                     itemsIndexed(items, key = { _, item -> itemKey(item) }) { index, item ->
                         // propagateMinConstraints keeps the grid cell's width tight, as if the item were placed directly.

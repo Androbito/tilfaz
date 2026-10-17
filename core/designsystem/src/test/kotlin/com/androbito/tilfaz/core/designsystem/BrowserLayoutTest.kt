@@ -13,6 +13,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isGreaterThan
 import com.androbito.tilfaz.core.designsystem.component.BrowserLayout
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import org.junit.Rule
@@ -39,6 +42,16 @@ class BrowserLayoutTest {
                 emptyContent = {}
             ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
         }
+    }
+
+    @Test
+    fun postersAreShownFourPerRow() {
+        compose.setContent(browser)
+        compose.waitForIdle()
+
+        fun top(number: Int) = compose.onNodeWithTag("item$number").fetchSemanticsNode().boundsInRoot.top
+        assertThat(top(4)).isEqualTo(top(1))
+        assertThat(top(5)).isGreaterThan(top(1))
     }
 
     @Test

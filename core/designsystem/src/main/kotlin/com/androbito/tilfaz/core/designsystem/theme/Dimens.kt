@@ -18,6 +18,6 @@ object Dimens {
     val PosterWidth = 180.dp
     val PosterHeight = 260.dp
     val ChannelLogo = 56.dp
-    val SidebarWidth = 340.dp
+    val SidebarWidth = 280.dp
     val MinTouchTarget = 48.dp
 }
