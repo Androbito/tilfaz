@@ -1,17 +1,23 @@
 package com.androbito.tilfaz.core.database.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.androbito.tilfaz.core.database.entity.CategoryEntity
 import com.androbito.tilfaz.core.database.entity.LiveChannelEntity
 import com.androbito.tilfaz.core.database.entity.MovieEntity
 import com.androbito.tilfaz.core.database.entity.SeriesEntity
 import com.androbito.tilfaz.core.database.entity.SyncStatusEntity
 import kotlinx.coroutines.flow.Flow
+
+/** How many rows of a catalog table fall in each provider category (null: rows without one). */
+data class CategoryCount(val categoryId: String?, val count: Int)
 
 @Dao
 interface CategoryDao {
@@ -33,6 +39,22 @@ interface CategoryDao {
 
 @Dao
 interface LiveChannelDao {
+    @Query("SELECT * FROM live_channels ORDER BY position")
+    fun pagingAll(): PagingSource<Int, LiveChannelEntity>
+
+    @Query("SELECT * FROM live_channels WHERE categoryId = :categoryId ORDER BY position")
+    fun pagingByCategory(categoryId: String): PagingSource<Int, LiveChannelEntity>
+
+    @Query("SELECT COUNT(*) FROM live_channels")
+    fun observeCount(): Flow<Int>
+
+    @Query("SELECT categoryId, COUNT(*) AS count FROM live_channels GROUP BY categoryId")
+    fun observeCategoryCounts(): Flow<List<CategoryCount>>
+
+    /** Build the query with [com.androbito.tilfaz.core.database.CatalogSearch.query]. */
+    @RawQuery(observedEntities = [LiveChannelEntity::class])
+    fun search(query: SupportSQLiteQuery): Flow<List<LiveChannelEntity>>
+
     @Query("SELECT * FROM live_channels ORDER BY position")
     fun observeAll(): Flow<List<LiveChannelEntity>>
 
@@ -64,10 +86,29 @@ interface LiveChannelDao {
 @Dao
 interface MovieDao {
     @Query("SELECT * FROM movies ORDER BY position")
+    fun pagingAll(): PagingSource<Int, MovieEntity>
+
+    @Query("SELECT * FROM movies WHERE categoryId = :categoryId ORDER BY position")
+    fun pagingByCategory(categoryId: String): PagingSource<Int, MovieEntity>
+
+    @Query("SELECT COUNT(*) FROM movies")
+    fun observeCount(): Flow<Int>
+
+    @Query("SELECT categoryId, COUNT(*) AS count FROM movies GROUP BY categoryId")
+    fun observeCategoryCounts(): Flow<List<CategoryCount>>
+
+    /** Build the query with [com.androbito.tilfaz.core.database.CatalogSearch.query]. */
+    @RawQuery(observedEntities = [MovieEntity::class])
+    fun search(query: SupportSQLiteQuery): Flow<List<MovieEntity>>
+
+    @Query("SELECT * FROM movies ORDER BY position")
     fun observeAll(): Flow<List<MovieEntity>>
 
     @Query("SELECT * FROM movies WHERE categoryId = :categoryId ORDER BY position")
     fun observeByCategory(categoryId: String): Flow<List<MovieEntity>>
+
+    @Query("SELECT * FROM movies WHERE categoryId = :categoryId AND id != :excludeId ORDER BY position LIMIT :limit")
+    fun observeRelated(categoryId: String, excludeId: Int, limit: Int): Flow<List<MovieEntity>>
 
     @Query("SELECT * FROM movies ORDER BY addedAtMillis DESC LIMIT :limit")
     fun observeRecentlyAdded(limit: Int): Flow<List<MovieEntity>>
@@ -94,10 +135,29 @@ interface MovieDao {
 @Dao
 interface SeriesDao {
     @Query("SELECT * FROM series ORDER BY position")
+    fun pagingAll(): PagingSource<Int, SeriesEntity>
+
+    @Query("SELECT * FROM series WHERE categoryId = :categoryId ORDER BY position")
+    fun pagingByCategory(categoryId: String): PagingSource<Int, SeriesEntity>
+
+    @Query("SELECT COUNT(*) FROM series")
+    fun observeCount(): Flow<Int>
+
+    @Query("SELECT categoryId, COUNT(*) AS count FROM series GROUP BY categoryId")
+    fun observeCategoryCounts(): Flow<List<CategoryCount>>
+
+    /** Build the query with [com.androbito.tilfaz.core.database.CatalogSearch.query]. */
+    @RawQuery(observedEntities = [SeriesEntity::class])
+    fun search(query: SupportSQLiteQuery): Flow<List<SeriesEntity>>
+
+    @Query("SELECT * FROM series ORDER BY position")
     fun observeAll(): Flow<List<SeriesEntity>>
 
     @Query("SELECT * FROM series WHERE categoryId = :categoryId ORDER BY position")
     fun observeByCategory(categoryId: String): Flow<List<SeriesEntity>>
+
+    @Query("SELECT * FROM series WHERE categoryId = :categoryId AND id != :excludeId ORDER BY position LIMIT :limit")
+    fun observeRelated(categoryId: String, excludeId: Int, limit: Int): Flow<List<SeriesEntity>>
 
     @Query("SELECT * FROM series ORDER BY lastModifiedMillis DESC LIMIT :limit")
     fun observeRecentlyAdded(limit: Int): Flow<List<SeriesEntity>>
