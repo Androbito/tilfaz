@@ -27,6 +27,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
+import com.androbito.tilfaz.core.designsystem.component.ProvideMinimalBringIntoView
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.TvTextField
@@ -55,85 +56,87 @@ fun SettingsRoute(onSignedOut: () -> Unit, viewModel: SettingsViewModel = hiltVi
 
 @Composable
 fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
-    Column(Modifier.fillMaxSize()) {
-        TopBar(title = "Tilfaz · ${stringResource(R.string.settings_title)}")
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.SpaceXl),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
-        ) {
-            SectionTitle(stringResource(R.string.settings_section_playback))
+    ProvideMinimalBringIntoView {
+        Column(Modifier.fillMaxSize()) {
+            TopBar(title = "Tilfaz · ${stringResource(R.string.settings_title)}")
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Dimens.ScreenPadding).padding(bottom = Dimens.SpaceXl),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
+            ) {
+                SectionTitle(stringResource(R.string.settings_section_playback))
 
-            Setting(stringResource(R.string.settings_live_format), stringResource(R.string.settings_live_format_hint)) {
-                ChoiceRow(
-                    options = listOf(
-                        StreamFormat.MPEG_TS to stringResource(R.string.settings_format_ts),
-                        StreamFormat.HLS to stringResource(R.string.settings_format_hls)
-                    ),
-                    selected = state.settings.liveFormat,
-                    onSelect = { onEvent(SettingsEvent.SetLiveFormat(it)) }
-                )
-            }
-            Setting(stringResource(R.string.settings_buffer)) {
-                ChoiceRow(
-                    options = listOf(
-                        BufferProfile.LOW_LATENCY to stringResource(R.string.settings_buffer_low),
-                        BufferProfile.BALANCED to stringResource(R.string.settings_buffer_balanced),
-                        BufferProfile.STABLE to stringResource(R.string.settings_buffer_stable)
-                    ),
-                    selected = state.settings.bufferProfile,
-                    onSelect = { onEvent(SettingsEvent.SetBuffer(it)) }
-                )
-            }
-            Setting(stringResource(R.string.settings_user_agent), stringResource(R.string.settings_user_agent_hint)) {
-                var draft by remember(state.settings.userAgent) { mutableStateOf(state.settings.userAgent) }
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), modifier = Modifier.fillMaxWidth()) {
-                    TvTextField(
-                        value = draft,
-                        onValueChange = { draft = it },
-                        label = "",
-                        onImeAction = { onEvent(SettingsEvent.SetUserAgent(draft)) },
-                        modifier = Modifier.width(560.dp)
+                Setting(stringResource(R.string.settings_live_format), stringResource(R.string.settings_live_format_hint)) {
+                    ChoiceRow(
+                        options = listOf(
+                            StreamFormat.MPEG_TS to stringResource(R.string.settings_format_ts),
+                            StreamFormat.HLS to stringResource(R.string.settings_format_hls)
+                        ),
+                        selected = state.settings.liveFormat,
+                        onSelect = { onEvent(SettingsEvent.SetLiveFormat(it)) }
                     )
-                    TilfazButton(onClick = { onEvent(SettingsEvent.SetUserAgent(draft)) }) { Text("OK") }
-                    OutlinedButton(onClick = { onEvent(SettingsEvent.ResetUserAgent) }) { Text(stringResource(R.string.settings_user_agent_reset)) }
                 }
-            }
-            Setting(stringResource(R.string.settings_resume)) {
-                ChoiceRow(
-                    options = listOf(true to stringResource(R.string.settings_on), false to stringResource(R.string.settings_off)),
-                    selected = state.settings.resumePlayback,
-                    onSelect = { onEvent(SettingsEvent.SetResume(it)) }
-                )
-            }
-
-            SectionTitle(stringResource(R.string.settings_section_account))
-            state.account?.let { account ->
-                InfoLine(stringResource(R.string.settings_account_server), account.serverUrl)
-                InfoLine(stringResource(R.string.settings_account_username), account.username)
-            }
-            state.status?.let { status ->
-                InfoLine(
-                    stringResource(R.string.settings_account_expires),
-                    status.expiresAt?.atZone(ZoneId.systemDefault())?.toLocalDate()?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
-                        ?: stringResource(R.string.settings_account_unlimited)
-                )
-                InfoLine(stringResource(R.string.settings_account_connections), "${status.activeConnections} / ${status.maxConnections}")
-                InfoLine(stringResource(R.string.settings_account_formats), status.allowedOutputFormats.joinToString { it.extension }.ifEmpty { "-" })
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-                OutlinedButton(onClick = {
-                    onEvent(SettingsEvent.RefreshStatus)
-                }, enabled = !state.isRefreshingStatus) { Text(stringResource(R.string.settings_account_refresh)) }
-                if (state.confirmSignOut) {
-                    Text(
-                        stringResource(R.string.settings_sign_out_confirm),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(top = Dimens.SpaceS)
+                Setting(stringResource(R.string.settings_buffer)) {
+                    ChoiceRow(
+                        options = listOf(
+                            BufferProfile.LOW_LATENCY to stringResource(R.string.settings_buffer_low),
+                            BufferProfile.BALANCED to stringResource(R.string.settings_buffer_balanced),
+                            BufferProfile.STABLE to stringResource(R.string.settings_buffer_stable)
+                        ),
+                        selected = state.settings.bufferProfile,
+                        onSelect = { onEvent(SettingsEvent.SetBuffer(it)) }
                     )
-                    TilfazButton(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
-                    OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutCancelled) }) { Text(stringResource(R.string.settings_cancel)) }
-                } else {
-                    OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutRequested) }) { Text(stringResource(R.string.settings_sign_out)) }
+                }
+                Setting(stringResource(R.string.settings_user_agent), stringResource(R.string.settings_user_agent_hint)) {
+                    var draft by remember(state.settings.userAgent) { mutableStateOf(state.settings.userAgent) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), modifier = Modifier.fillMaxWidth()) {
+                        TvTextField(
+                            value = draft,
+                            onValueChange = { draft = it },
+                            label = "",
+                            onImeAction = { onEvent(SettingsEvent.SetUserAgent(draft)) },
+                            modifier = Modifier.width(560.dp)
+                        )
+                        TilfazButton(onClick = { onEvent(SettingsEvent.SetUserAgent(draft)) }) { Text("OK") }
+                        OutlinedButton(onClick = { onEvent(SettingsEvent.ResetUserAgent) }) { Text(stringResource(R.string.settings_user_agent_reset)) }
+                    }
+                }
+                Setting(stringResource(R.string.settings_resume)) {
+                    ChoiceRow(
+                        options = listOf(true to stringResource(R.string.settings_on), false to stringResource(R.string.settings_off)),
+                        selected = state.settings.resumePlayback,
+                        onSelect = { onEvent(SettingsEvent.SetResume(it)) }
+                    )
+                }
+
+                SectionTitle(stringResource(R.string.settings_section_account))
+                state.account?.let { account ->
+                    InfoLine(stringResource(R.string.settings_account_server), account.serverUrl)
+                    InfoLine(stringResource(R.string.settings_account_username), account.username)
+                }
+                state.status?.let { status ->
+                    InfoLine(
+                        stringResource(R.string.settings_account_expires),
+                        status.expiresAt?.atZone(ZoneId.systemDefault())?.toLocalDate()?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+                            ?: stringResource(R.string.settings_account_unlimited)
+                    )
+                    InfoLine(stringResource(R.string.settings_account_connections), "${status.activeConnections} / ${status.maxConnections}")
+                    InfoLine(stringResource(R.string.settings_account_formats), status.allowedOutputFormats.joinToString { it.extension }.ifEmpty { "-" })
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+                    OutlinedButton(onClick = {
+                        onEvent(SettingsEvent.RefreshStatus)
+                    }, enabled = !state.isRefreshingStatus) { Text(stringResource(R.string.settings_account_refresh)) }
+                    if (state.confirmSignOut) {
+                        Text(
+                            stringResource(R.string.settings_sign_out_confirm),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = Dimens.SpaceS)
+                        )
+                        TilfazButton(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
+                        OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutCancelled) }) { Text(stringResource(R.string.settings_cancel)) }
+                    } else {
+                        OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutRequested) }) { Text(stringResource(R.string.settings_sign_out)) }
+                    }
                 }
             }
         }
