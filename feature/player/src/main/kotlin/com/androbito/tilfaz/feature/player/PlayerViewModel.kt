@@ -18,6 +18,7 @@ import com.androbito.tilfaz.core.model.Playable
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
 import com.androbito.tilfaz.core.model.StreamSource
+import com.androbito.tilfaz.core.model.SubtitleStyle
 import com.androbito.tilfaz.core.model.WatchProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
@@ -60,6 +61,8 @@ sealed interface PlayerEvent {
 
     /** The user picked a track in the options: that language becomes the preference (null: subtitles off). */
     data class RememberLanguage(val kind: TrackKind, val language: String?) : PlayerEvent
+
+    data class SetSubtitleStyle(val style: SubtitleStyle) : PlayerEvent
 }
 
 @HiltViewModel
@@ -103,6 +106,10 @@ class PlayerViewModel @Inject constructor(
             PlayerEvent.ZapNext -> zap(+1)
             PlayerEvent.ZapPrevious -> zap(-1)
             is PlayerEvent.ProgressTick -> saveProgress(event.positionMs, event.durationMs)
+            is PlayerEvent.SetSubtitleStyle -> {
+                _state.update { it.copy(settings = it.settings.copy(subtitleStyle = event.style)) }
+                viewModelScope.launch { settingsRepository.update { it.copy(subtitleStyle = event.style) } }
+            }
             is PlayerEvent.RememberLanguage -> viewModelScope.launch {
                 settingsRepository.update {
                     when (event.kind) {

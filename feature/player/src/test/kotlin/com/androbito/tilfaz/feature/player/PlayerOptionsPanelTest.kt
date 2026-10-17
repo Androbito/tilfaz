@@ -24,6 +24,10 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
+import com.androbito.tilfaz.core.model.SubtitleBackground
+import com.androbito.tilfaz.core.model.SubtitleColor
+import com.androbito.tilfaz.core.model.SubtitleSize
+import com.androbito.tilfaz.core.model.SubtitleStyle
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +59,9 @@ class PlayerOptionsPanelTest {
     private var chosenAudio: TrackOption? = null
     private var chosenSubtitle: TrackOption? = null
     private var subtitleChosen = false
+    private var chosenStyle: SubtitleStyle? = null
+    private var chosenSpeed: Float? = null
+    private var chosenAspect: AspectMode? = null
     private var closed = false
 
     private fun show(subtitles: List<TrackOption> = listOf(french, englishSubs), initial: OptionsPage = OptionsPage.Root) {
@@ -71,7 +78,13 @@ class PlayerOptionsPanelTest {
                     onSelectSubtitle = {
                         subtitleChosen = true
                         chosenSubtitle = it
-                    }
+                    },
+                    style = SubtitleStyle(),
+                    onStyle = { chosenStyle = it },
+                    speed = 1f,
+                    onSpeed = { chosenSpeed = it },
+                    aspect = AspectMode.FIT,
+                    onAspect = { chosenAspect = it }
                 )
             }
         }
@@ -147,7 +160,13 @@ class PlayerOptionsPanelTest {
                     audio = listOf(arabic, english),
                     subtitles = emptyList(),
                     onSelectAudio = {},
-                    onSelectSubtitle = {}
+                    onSelectSubtitle = {},
+                    style = SubtitleStyle(),
+                    onStyle = {},
+                    speed = 1f,
+                    onSpeed = {},
+                    aspect = AspectMode.FIT,
+                    onAspect = {}
                 )
             }
         }
@@ -160,5 +179,47 @@ class PlayerOptionsPanelTest {
 
         compose.runOnIdle { dispatcher!!.onBackPressed() }
         assertThat(closed).isEqualTo(true)
+    }
+
+    @Test
+    fun theStylePageShowsEachChoiceAndPressingOneMovesToTheNextValue() {
+        show(initial = OptionsPage.Style)
+
+        compose.onNode(row(string(R.string.player_options_style_size))).assertExists()
+        pressOk(row(string(R.string.player_options_style_size)))
+        assertThat(chosenStyle).isEqualTo(SubtitleStyle(size = SubtitleSize.LARGE))
+
+        pressOk(row(string(R.string.player_options_style_color)))
+        assertThat(chosenStyle).isEqualTo(SubtitleStyle(textColor = SubtitleColor.YELLOW))
+
+        pressOk(row(string(R.string.player_options_style_background)))
+        assertThat(chosenStyle).isEqualTo(SubtitleStyle(background = SubtitleBackground.BLACK))
+    }
+
+    @Test
+    fun theSpeedPageOffersTheUsualSpeedsAndPicksOne() {
+        show(initial = OptionsPage.Speed)
+
+        pressOk(row("1.5x"))
+
+        assertThat(chosenSpeed).isEqualTo(1.5f)
+    }
+
+    @Test
+    fun theAspectPagePicksHowTheVideoFillsTheScreen() {
+        show(initial = OptionsPage.Aspect)
+
+        pressOk(row(string(R.string.player_aspect_fill)))
+
+        assertThat(chosenAspect).isEqualTo(AspectMode.FILL)
+    }
+
+    @Test
+    fun theRootLeadsToEveryPage() {
+        show()
+
+        compose.onNode(row(string(R.string.player_options_subtitle_style))).assertExists()
+        compose.onNode(row(string(R.string.player_options_speed))).assertExists()
+        compose.onNode(row(string(R.string.player_options_aspect))).assertExists()
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,7 +52,7 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.compose.PlayerSurface
+import androidx.media3.ui.compose.ContentFrame
 import androidx.media3.ui.compose.SURFACE_TYPE_SURFACE_VIEW
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -104,6 +106,8 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     var cues by remember { mutableStateOf(CueGroup.EMPTY_TIME_ZERO) }
     var optionsOpen by remember { mutableStateOf(false) }
     var optionsPage by remember { mutableStateOf<OptionsPage>(OptionsPage.Root) }
+    var speed by remember { mutableFloatStateOf(1f) }
+    var aspect by remember { mutableStateOf(AspectMode.FIT) }
 
     fun showControls() {
         controlsVisible = true
@@ -115,6 +119,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         if (source == null) return@DisposableEffect onDispose { }
         val exo = factory.create(source, state.settings)
         if (state.startPositionMs > 0) exo.seekTo(state.startPositionMs)
+        exo.setPlaybackSpeed(speed) // a zap or retry keeps the speed the user chose
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 isBuffering = playbackState == Player.STATE_BUFFERING
@@ -218,7 +223,18 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                 }
             }
     ) {
-        player?.let { PlayerSurface(player = it, surfaceType = SURFACE_TYPE_SURFACE_VIEW, modifier = Modifier.fillMaxSize()) }
+        player?.let {
+            ContentFrame(
+                player = it,
+                surfaceType = SURFACE_TYPE_SURFACE_VIEW,
+                contentScale = when (aspect) {
+                    AspectMode.FIT -> ContentScale.Fit
+                    AspectMode.FILL -> ContentScale.Crop
+                    AspectMode.STRETCH -> ContentScale.FillBounds
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
         SubtitleOverlay(cues = cues.cues, style = state.settings.subtitleStyle, modifier = Modifier.fillMaxSize())
 
         when {
@@ -248,6 +264,15 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                     subtitles = tracks.toOptions(TrackKind.SUBTITLE),
                     onSelectAudio = { choose(TrackKind.AUDIO, it) },
                     onSelectSubtitle = { choose(TrackKind.SUBTITLE, it) },
+                    style = state.settings.subtitleStyle,
+                    onStyle = { onEvent(PlayerEvent.SetSubtitleStyle(it)) },
+                    speed = speed,
+                    onSpeed = {
+                        speed = it
+                        player?.setPlaybackSpeed(it)
+                    },
+                    aspect = aspect,
+                    onAspect = { aspect = it },
                     modifier = Modifier.weight(OPTIONS_PANEL_WIDTH_FRACTION).fillMaxHeight()
                 )
             }

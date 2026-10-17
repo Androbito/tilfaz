@@ -9,6 +9,9 @@ import assertk.assertions.isNull
 import com.androbito.tilfaz.core.domain.usecase.BuildStreamSourceUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.StreamFormat
+import com.androbito.tilfaz.core.model.SubtitleColor
+import com.androbito.tilfaz.core.model.SubtitleSize
+import com.androbito.tilfaz.core.model.SubtitleStyle
 import com.androbito.tilfaz.core.model.WatchProgress
 import com.androbito.tilfaz.core.testing.fake.FakeAccountRepository
 import com.androbito.tilfaz.core.testing.fake.FakeLiveRepository
@@ -152,5 +155,16 @@ class PlayerViewModelTest {
         vm.onEvent(PlayerEvent.RememberLanguage(TrackKind.SUBTITLE, null))
 
         assertThat(settings.settings.value.subtitleLanguage).isNull()
+    }
+
+    @Test
+    fun `a new subtitle style is saved and applies to the screen at once`() = runTest {
+        val vm = viewModel(PlayerRoute.movie(Fixtures.movie.id, 0L))
+        val style = SubtitleStyle(size = SubtitleSize.LARGE, textColor = SubtitleColor.YELLOW)
+
+        vm.onEvent(PlayerEvent.SetSubtitleStyle(style))
+
+        assertThat(settings.settings.value.subtitleStyle).isEqualTo(style)
+        assertThat(vm.state.value.settings.subtitleStyle).isEqualTo(style)
     }
 }
