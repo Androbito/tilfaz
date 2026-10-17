@@ -63,6 +63,17 @@ class MovieDetailsViewModelTest {
     }
 
     @Test
+    fun `resume appears when progress is saved while the page is open`() = runTest {
+        vod.detailsResult = { Result.success(details) }
+        val vm = viewModel()
+        vm.state.test {
+            assertThat(expectMostRecentItem().canResume).isFalse()
+            progress.save(WatchProgress("vod:501", ContentType.VOD, "x", null, 600_000, 6_000_000, Fixtures.now, "501"))
+            assertThat(expectMostRecentItem().canResume).isTrue()
+        }
+    }
+
+    @Test
     fun `resume is offered when progress exists and start over clears it`() = runTest {
         vod.detailsResult = { Result.success(details) }
         progress.save(WatchProgress("vod:501", ContentType.VOD, "x", null, 900_000, 6_000_000, Fixtures.now, "501"))

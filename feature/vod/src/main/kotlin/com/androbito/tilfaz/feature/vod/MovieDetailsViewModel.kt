@@ -59,7 +59,7 @@ class MovieDetailsViewModel @Inject constructor(
     private val movieId: Int = checkNotNull(savedStateHandle[MovieDetailsRoute.ARG_MOVIE_ID])
     private val loaded = MutableStateFlow(Loaded())
 
-    private data class Loaded(val movie: Movie? = null, val details: MovieDetails? = null, val failed: Boolean = false, val progress: WatchProgress? = null)
+    private data class Loaded(val movie: Movie? = null, val details: MovieDetails? = null, val failed: Boolean = false)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val related: Flow<List<Movie>> = loaded
@@ -70,17 +70,22 @@ class MovieDetailsViewModel @Inject constructor(
         }
         .map { list -> list.filter { it.id != movieId }.take(RELATED_LIMIT) }
 
+    // Observed, not read once: the player saves progress while this page waits underneath it on the back stack.
+    private val progress: Flow<WatchProgress?> = progressRepository.observeContinueWatching(ContentType.VOD)
+        .map { list -> list.firstOrNull { it.playableKey == ToggleFavoriteUseCase.vodKey(movieId) } }
+
     val state: StateFlow<MovieDetailsUiState> = combine(
         loaded,
         favoritesRepository.observeKeys(ContentType.VOD).map { ToggleFavoriteUseCase.vodKey(movieId) in it },
+        progress,
         related
-    ) { loaded, favorite, related ->
+    ) { loaded, favorite, progress, related ->
         MovieDetailsUiState(
             movie = loaded.details?.movie ?: loaded.movie,
             details = loaded.details,
             detailsFailed = loaded.failed,
             isFavorite = favorite,
-            progress = loaded.progress,
+            progress = progress,
             related = related
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MovieDetailsUiState())
@@ -93,18 +98,14 @@ class MovieDetailsViewModel @Inject constructor(
         when (event) {
             MovieDetailsEvent.ToggleFavorite -> viewModelScope.launch { toggleFavorite.movie(movieId) }
             MovieDetailsEvent.Retry -> load()
-            MovieDetailsEvent.StartOver -> viewModelScope.launch {
-                progressRepository.clear(ToggleFavoriteUseCase.vodKey(movieId))
-                loaded.update { it.copy(progress = null) }
-            }
+            MovieDetailsEvent.StartOver -> viewModelScope.launch { progressRepository.clear(ToggleFavoriteUseCase.vodKey(movieId)) }
         }
     }
 
     private fun load() {
         viewModelScope.launch {
             val movie = vodRepository.movie(movieId)
-            val progress = progressRepository.progress(ToggleFavoriteUseCase.vodKey(movieId))
-            loaded.update { it.copy(movie = movie, progress = progress, failed = false) }
+            loaded.update { it.copy(movie = movie, failed = false) }
             vodRepository.details(movieId)
                 .onSuccess { details -> loaded.update { it.copy(details = details) } }
                 .onFailure { loaded.update { it.copy(failed = true) } }
