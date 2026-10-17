@@ -15,7 +15,7 @@ format when a channel refuses to play, and a codebase that follows software craf
   details pages, season/episode lists, resume where you stopped.
 - Player: Media3 ExoPlayer, D-pad controls, channel zapping, error screen with Retry and "Try HLS / MPEG-TS" switch,
   configurable user agent and buffering profile.
-- Global search across the three catalogs.
+- Search inside Live, Movies and Series: ranked results and suggestions as you type, over the cached catalog.
 
 ## Build
 

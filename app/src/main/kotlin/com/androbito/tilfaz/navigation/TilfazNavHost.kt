@@ -18,8 +18,6 @@ import com.androbito.tilfaz.feature.onboarding.SignInRoute
 import com.androbito.tilfaz.feature.onboarding.signInScreen
 import com.androbito.tilfaz.feature.player.PlayerRoute
 import com.androbito.tilfaz.feature.player.playerScreen
-import com.androbito.tilfaz.feature.search.SearchNavigation
-import com.androbito.tilfaz.feature.search.searchScreen
 import com.androbito.tilfaz.feature.series.SeriesDetailsRoute
 import com.androbito.tilfaz.feature.series.SeriesRoute
 import com.androbito.tilfaz.feature.series.seriesDetailsScreen
@@ -69,14 +67,6 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         seriesDetailsScreen(
             onPlayEpisode = { seriesId, episodeId, start -> navController.navigate(PlayerRoute.episode(seriesId, episodeId, start)) },
             onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
-        )
-
-        searchScreen(
-            SearchNavigation(
-                onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
-                onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
-                onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
-            )
         )
 
         favoritesScreen(

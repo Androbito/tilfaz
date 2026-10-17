@@ -35,8 +35,6 @@ abstract class FakeCatalogRepository<T>(
         items.map { list -> if (categoryId == null) list else list.filter { categoryOf(it) == categoryId } }
     override fun observeByIds(ids: Set<Int>): Flow<List<T>> = items.map { list -> list.filter { idOf(it) in ids } }
     override fun observeSyncStatus(): Flow<SyncStatus> = syncStatus
-    override fun search(query: String): Flow<List<T>> =
-        items.map { list -> list.filter { nameOf(it).contains(query, ignoreCase = true) } }
 
     override suspend fun refresh(): Result<Unit> {
         refreshCalls++

@@ -81,7 +81,6 @@ dependencies {
     implementation(projects.feature.series)
     implementation(projects.feature.player)
     implementation(projects.feature.settings)
-    implementation(projects.feature.search)
     implementation(projects.feature.library)
 
     implementation(libs.androidx.core.ktx)

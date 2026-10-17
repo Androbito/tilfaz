@@ -54,9 +54,6 @@ class DefaultLiveRepository @Inject constructor(
 
     override fun observeSyncStatus(): Flow<SyncStatus> = sync.observe()
 
-    override fun search(query: String): Flow<List<LiveChannel>> =
-        channelDao.search(query.trim(), SEARCH_LIMIT).map { rows -> rows.map { it.toDomain() } }
-
     override suspend fun refresh(): Result<Unit> = withContext(io) {
         sync.track {
             safeApiCall {
@@ -81,6 +78,5 @@ class DefaultLiveRepository @Inject constructor(
     }
 
     private companion object {
-        const val SEARCH_LIMIT = 200
     }
 }

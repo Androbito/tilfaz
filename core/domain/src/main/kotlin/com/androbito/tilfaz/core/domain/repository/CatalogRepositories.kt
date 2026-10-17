@@ -19,7 +19,6 @@ interface CatalogRepository<T> {
     fun observeByIds(ids: Set<Int>): Flow<List<T>>
 
     fun observeSyncStatus(): Flow<SyncStatus>
-    fun search(query: String): Flow<List<T>>
     suspend fun refresh(): Result<Unit>
 }
 

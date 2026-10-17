@@ -42,9 +42,6 @@ interface LiveChannelDao {
     @Query("SELECT * FROM live_channels WHERE id IN (:ids)")
     fun observeByIds(ids: List<Int>): Flow<List<LiveChannelEntity>>
 
-    @Query("SELECT * FROM live_channels WHERE name LIKE '%' || :query || '%' ORDER BY position LIMIT :limit")
-    fun search(query: String, limit: Int): Flow<List<LiveChannelEntity>>
-
     @Query("SELECT * FROM live_channels WHERE id = :id")
     suspend fun byId(id: Int): LiveChannelEntity?
 
@@ -78,9 +75,6 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE id IN (:ids)")
     fun observeByIds(ids: List<Int>): Flow<List<MovieEntity>>
 
-    @Query("SELECT * FROM movies WHERE name LIKE '%' || :query || '%' ORDER BY position LIMIT :limit")
-    fun search(query: String, limit: Int): Flow<List<MovieEntity>>
-
     @Query("SELECT * FROM movies WHERE id = :id")
     suspend fun byId(id: Int): MovieEntity?
 
@@ -110,9 +104,6 @@ interface SeriesDao {
 
     @Query("SELECT * FROM series WHERE id IN (:ids)")
     fun observeByIds(ids: List<Int>): Flow<List<SeriesEntity>>
-
-    @Query("SELECT * FROM series WHERE name LIKE '%' || :query || '%' ORDER BY position LIMIT :limit")
-    fun search(query: String, limit: Int): Flow<List<SeriesEntity>>
 
     @Query("SELECT * FROM series WHERE id = :id")
     suspend fun byId(id: Int): SeriesEntity?

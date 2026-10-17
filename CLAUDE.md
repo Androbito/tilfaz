@@ -24,13 +24,13 @@ This project follows the nine `mobile-craft-skills` in `.claude/skills/`. Load t
 ```
 :app                 composition root, TilfazNavHost, Hilt, Coil image loader
 :core:model          pure Kotlin entities (Account, LiveChannel, Movie, Series, Episode, Playable, StreamSource...)
-:core:domain         repository interfaces + use cases (StreamUrlBuilder, ServerUrlNormalizer, NowNextResolver, CatalogBrowser, SyncCatalogUseCase)
+:core:domain         repository interfaces + use cases (StreamUrlBuilder, ServerUrlNormalizer, NowNextResolver, CatalogBrowser, TitleSearch, SyncCatalogUseCase)
 :core:network        Retrofit XtreamApi, lenient DTO serializers, request interceptor (host + credentials), safeApiCall error mapping
 :core:database       Room: catalog cache + favourites, watch progress, recent channels, sync status
 :core:data           repository implementations, mappers, DataStore (account encrypted via Keystore, playback settings), Hilt bindings
 :core:designsystem   TilfazTheme, tokens (TilfazColors, Dimens), components (HeroTile, PosterCard, ChannelRow, CategoryRow, BrowserLayout...)
 :core:testing        fakes, fixtures, MainDispatcherRule
-:feature:*           onboarding (sign in), home, live, vod, series, player, settings, search
+:feature:*           onboarding (sign in), home, live, vod, series, player, settings, library (favourites, continue watching)
 ```
 
 Rules that are not negotiable:

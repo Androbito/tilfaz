@@ -26,5 +26,4 @@ dependencies {
     kover(projects.feature.series)
     kover(projects.feature.player)
     kover(projects.feature.settings)
-    kover(projects.feature.search)
 }
