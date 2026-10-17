@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
@@ -100,6 +101,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     var controlsShownAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var scrub by remember { mutableStateOf<ScrubState?>(null) }
     var tracks by remember { mutableStateOf(Tracks.EMPTY) }
+    var cues by remember { mutableStateOf(CueGroup.EMPTY_TIME_ZERO) }
     var optionsOpen by remember { mutableStateOf(false) }
     var optionsPage by remember { mutableStateOf<OptionsPage>(OptionsPage.Root) }
 
@@ -120,6 +122,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             }
             override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
             override fun onTracksChanged(newTracks: Tracks) { tracks = newTracks }
+            override fun onCues(cueGroup: CueGroup) { cues = cueGroup }
             override fun onPlayerError(error: PlaybackException) { onEvent(PlayerEvent.PlaybackFailed(error.toPlayerError())) }
         }
         exo.addListener(listener)
@@ -131,6 +134,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             exo.release()
             player = null
             tracks = Tracks.EMPTY
+            cues = CueGroup.EMPTY_TIME_ZERO
         }
     }
 
@@ -215,6 +219,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             }
     ) {
         player?.let { PlayerSurface(player = it, surfaceType = SURFACE_TYPE_SURFACE_VIEW, modifier = Modifier.fillMaxSize()) }
+        SubtitleOverlay(cues = cues.cues, style = state.settings.subtitleStyle, modifier = Modifier.fillMaxSize())
 
         when {
             state.error != null -> ErrorOverlay(state, onEvent, onExit)
