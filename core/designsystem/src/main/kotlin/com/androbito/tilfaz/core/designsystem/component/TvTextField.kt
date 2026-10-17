@@ -14,11 +14,22 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -43,8 +54,13 @@ fun TvTextField(
     onImeAction: () -> Unit = {},
     errorText: String? = null
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
+    // Focus alone must not pop the keyboard (it would take the D-pad); OK makes the field editable.
+    var editing by remember { mutableStateOf(false) }
+    LaunchedEffect(focused) { if (!focused) editing = false }
     val borderColor = when {
         errorText != null -> TilfazColors.Danger
         focused -> TilfazColors.Accent
@@ -68,13 +84,30 @@ fun TvTextField(
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
+                readOnly = !editing,
                 interactionSource = interaction,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = TilfazColors.OnBackground),
                 cursorBrush = SolidColor(TilfazColors.Accent),
                 visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
                 keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }, onGo = { onImeAction() }),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+                    if (event.key == Key.DirectionCenter && !editing) {
+                        if (event.type == KeyEventType.KeyDown) {
+                            editing = true
+                            keyboard?.show()
+                        }
+                        return@onPreviewKeyEvent true
+                    }
+                    // BasicTextField treats Up/Down as cursor-line movement and swallows them; a TV needs them to leave the field.
+                    val direction = when (event.key) {
+                        Key.DirectionDown -> FocusDirection.Down
+                        Key.DirectionUp -> FocusDirection.Up
+                        else -> return@onPreviewKeyEvent false
+                    }
+                    if (event.type == KeyEventType.KeyDown) focusManager.moveFocus(direction)
+                    true
+                }
             )
         }
         if (errorText != null) {

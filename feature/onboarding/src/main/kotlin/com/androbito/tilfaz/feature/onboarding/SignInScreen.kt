@@ -1,14 +1,11 @@
 package com.androbito.tilfaz.feature.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,7 +17,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -60,16 +56,18 @@ fun SignInScreen(state: SignInUiState, onEvent: (SignInEvent) -> Unit) {
     val serverFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { serverFocus.requestFocus() }
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            Modifier.width(620.dp).padding(Dimens.SpaceXl),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
-        ) {
+    Row(
+        Modifier.fillMaxSize().padding(Dimens.ScreenPadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.ScreenPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
             BrandMark("Tilfaz")
             Text(stringResource(R.string.signin_title), style = MaterialTheme.typography.headlineMedium)
             Text(stringResource(R.string.signin_subtitle), style = MaterialTheme.typography.bodyLarge, color = TilfazColors.OnSurfaceMuted)
-            Spacer(Modifier.height(Dimens.SpaceS))
+        }
 
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
             TvTextField(
                 value = state.serverUrl,
                 onValueChange = { onEvent(SignInEvent.ServerChanged(it)) },

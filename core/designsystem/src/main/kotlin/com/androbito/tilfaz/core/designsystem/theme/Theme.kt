@@ -4,10 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Typography
 import androidx.tv.material3.darkColorScheme
@@ -45,8 +47,11 @@ private val typography = Typography(
 @Composable
 fun TilfazTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = colorScheme, typography = typography) {
-        Box(Modifier.fillMaxSize().background(TilfazColors.Background)) {
-            content()
+        // TV Material does not set a content colour from the scheme; without this, bare Text is black.
+        CompositionLocalProvider(LocalContentColor provides TilfazColors.OnBackground) {
+            Box(Modifier.fillMaxSize().background(TilfazColors.Background)) {
+                content()
+            }
         }
     }
 }
