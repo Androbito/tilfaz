@@ -1,10 +1,12 @@
 package com.androbito.tilfaz.feature.live
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,19 +16,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -67,18 +76,25 @@ data class LiveRoute(val initialCategoryId: String? = null) {
     }
 }
 
-fun NavGraphBuilder.liveScreen(onPlayChannel: (channelId: Int, categoryId: String?) -> Unit) {
-    composable<LiveRoute> { LiveRoute(onPlayChannel) }
+/**
+ * The small live video of the right-hand pane. It is provided by the player feature (features never depend on each other)
+ * and receives the channel to show, the space to fill, and what to call when the user presses OK on it.
+ */
+typealias LivePreviewSlot = @Composable (channel: LiveChannel, modifier: Modifier, onOpen: () -> Unit) -> Unit
+
+fun NavGraphBuilder.liveScreen(onPlayChannel: (channelId: Int, categoryId: String?) -> Unit, preview: LivePreviewSlot) {
+    composable<LiveRoute> { LiveRoute(onPlayChannel, preview) }
 }
 
 @Composable
-fun LiveRoute(onPlayChannel: (Int, String?) -> Unit, viewModel: LiveViewModel = hiltViewModel()) {
+fun LiveRoute(onPlayChannel: (Int, String?) -> Unit, preview: LivePreviewSlot, viewModel: LiveViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val channels = viewModel.channels.collectAsLazyPagingItems()
     LiveScreen(
         state = state,
         channels = channels,
         onEvent = viewModel::onEvent,
+        preview = preview,
         onPlay = { channel ->
             viewModel.onEvent(LiveEvent.Play(channel.id))
             onPlayChannel(channel.id, zapCategoryFor(state, channel))
@@ -98,18 +114,35 @@ internal fun zapCategoryFor(state: LiveUiState, channel: LiveChannel): String? =
     }
 
 @Composable
-fun LiveScreen(state: LiveUiState, channels: LazyPagingItems<LiveChannel>, onEvent: (LiveEvent) -> Unit, onPlay: (LiveChannel) -> Unit) {
+fun LiveScreen(
+    state: LiveUiState,
+    channels: LazyPagingItems<LiveChannel>,
+    onEvent: (LiveEvent) -> Unit,
+    onPlay: (LiveChannel) -> Unit,
+    preview: LivePreviewSlot = { _, _, _ -> }
+) {
     val now by rememberCurrentTime()
+    // The account allows one connection: once a channel is opened full screen, the small video goes away at once so that
+    // the two never stream together. It is allowed back when this screen is shown again.
+    var previewSuspended by remember { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { previewSuspended = false }
+    val play: (LiveChannel) -> Unit = { channel ->
+        previewSuspended = true
+        onPlay(channel)
+    }
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.live_title)}")
         Row(Modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-            CategoryColumn(state, onEvent, onPlay, Modifier.width(SidebarWidth).fillMaxHeight())
-            ChannelColumn(state, channels, onEvent, onPlay, now, Modifier.weight(1f).fillMaxHeight())
+            CategoryColumn(state, onEvent, play, Modifier.width(SidebarWidth).fillMaxHeight())
+            ChannelColumn(state, channels, onEvent, play, now, Modifier.weight(1f).fillMaxHeight())
             PreviewPane(
                 channel = state.focusedChannel,
                 nowNext = state.focusedChannelId?.let { state.nowNext[it] },
                 now = now,
                 isFavorite = state.focusedChannelId in state.favoriteIds,
+                video = state.previewChannel.takeUnless { previewSuspended },
+                onOpenVideo = play,
+                preview = preview,
                 modifier = Modifier.width(PreviewWidth).fillMaxHeight()
             )
         }
@@ -119,6 +152,7 @@ fun LiveScreen(state: LiveUiState, channels: LazyPagingItems<LiveChannel>, onEve
 // The three columns share 960dp on a 1080p TV; the channel list gets what these two leave, enough for logo, name and programme.
 private val SidebarWidth = 270.dp
 private val PreviewWidth = 300.dp
+private const val VIDEO_ASPECT = 16f / 9f
 
 @Composable
 private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (LiveChannel) -> Unit, modifier: Modifier) {
@@ -211,13 +245,30 @@ private fun ChannelColumn(
 }
 
 @Composable
-private fun PreviewPane(channel: LiveChannel?, nowNext: NowNext?, now: Instant, isFavorite: Boolean, modifier: Modifier) {
-    Column(modifier.padding(start = Dimens.SpaceM), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+private fun PreviewPane(
+    channel: LiveChannel?,
+    nowNext: NowNext?,
+    now: Instant,
+    isFavorite: Boolean,
+    video: LiveChannel?,
+    onOpenVideo: (LiveChannel) -> Unit,
+    preview: LivePreviewSlot,
+    modifier: Modifier
+) {
+    Column(modifier.padding(start = Dimens.SpaceM), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
         if (channel == null) return
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-            ChannelLogo(channel.logoUrl, Modifier.size(72.dp))
+        // The small live video, or the channel's logo while nothing is playing (scrolling, or just opened).
+        Box(Modifier.fillMaxWidth().aspectRatio(VIDEO_ASPECT).clip(RoundedCornerShape(Dimens.CornerS)).background(TilfazColors.Surface)) {
+            if (video != null) {
+                preview(video, Modifier.fillMaxSize()) { onOpenVideo(video) }
+            } else {
+                ChannelLogo(channel.logoUrl, Modifier.size(72.dp).align(Alignment.Center))
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+            ChannelLogo(channel.logoUrl, Modifier.size(40.dp))
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
-                Text(channel.name, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), maxLines = 2)
+                Text(channel.name, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
                 if (channel.hasArchive && channel.archiveDays > 0) {
                     Text(
                         stringResource(R.string.live_archive_days, channel.archiveDays),

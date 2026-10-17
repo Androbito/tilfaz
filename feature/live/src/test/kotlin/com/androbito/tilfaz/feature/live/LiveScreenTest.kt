@@ -1,16 +1,24 @@
 package com.androbito.tilfaz.feature.live
 
 import android.content.Context
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
@@ -164,6 +172,87 @@ class LiveScreenTest {
 
         assertThat(zapCategoryFor(browsing, Fixtures.alJazeera)).isEqualTo("2")
         assertThat(zapCategoryFor(stateWith(), Fixtures.alJazeera)).isNull()
+    }
+
+    /** Stands in for the player feature's small video: focusable, clickable, and it records that it is on screen. */
+    private fun previewSlot(onScreen: MutableList<Int>): @Composable (LiveChannel, Modifier, () -> Unit) -> Unit = { channel, modifier, onOpen ->
+        DisposableEffect(channel.id) {
+            onScreen += channel.id
+            onDispose { onScreen -= channel.id }
+        }
+        Box(modifier.testTag("preview").clickable(onClick = onOpen))
+    }
+
+    @Test
+    fun theSmallVideoShowsTheChannelThatIsBeingPreviewed() {
+        val onScreen = mutableListOf<Int>()
+        val state = stateWith().copy(previewChannel = Fixtures.alJazeera)
+        compose.setContent {
+            TilfazTheme { LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}, preview = previewSlot(onScreen)) }
+        }
+        compose.waitForIdle()
+
+        assertThat(onScreen).isEqualTo(listOf(Fixtures.alJazeera.id))
+    }
+
+    @Test
+    fun noVideoIsStartedWhileScrolling() {
+        val onScreen = mutableListOf<Int>()
+        val state = stateWith().copy(previewChannel = null)
+        compose.setContent {
+            TilfazTheme { LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}, preview = previewSlot(onScreen)) }
+        }
+        compose.waitForIdle()
+
+        assertThat(onScreen).isEqualTo(emptyList())
+        compose.onNodeWithTag("preview").assertDoesNotExist()
+    }
+
+    @Test
+    fun okOnTheSmallVideoOpensThatChannelFullScreen() {
+        val played = mutableListOf<Int>()
+        val state = stateWith().copy(previewChannel = Fixtures.alJazeera)
+        compose.setContent {
+            TilfazTheme {
+                LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {
+                }, onPlay = { played += it.id }, preview = previewSlot(mutableListOf()))
+            }
+        }
+
+        pressOk(hasTestTag("preview"))
+
+        assertThat(played).isEqualTo(listOf(Fixtures.alJazeera.id))
+    }
+
+    @Test
+    fun theSmallVideoIsRemovedAsSoonAsAChannelIsOpenedFullScreen() {
+        val onScreen = mutableListOf<Int>()
+        val state = stateWith().copy(previewChannel = Fixtures.alJazeera)
+        compose.setContent {
+            TilfazTheme { LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}, preview = previewSlot(onScreen)) }
+        }
+        compose.waitForIdle()
+        assertThat(onScreen).isEqualTo(listOf(Fixtures.alJazeera.id))
+
+        pressOk(hasText(Fixtures.beinSports1.name) and hasClickAction())
+
+        // The account has one connection: the preview must be gone before the full screen player connects.
+        assertThat(onScreen).isEqualTo(emptyList())
+    }
+
+    @Test
+    fun theSmallVideoIsRemovedWhenASuggestionIsOpenedToo() {
+        val onScreen = mutableListOf<Int>()
+        val typing = stateWith().copy(query = "jaz", suggestions = listOf(Fixtures.alJazeera), previewChannel = Fixtures.alJazeera)
+        compose.setContent {
+            TilfazTheme {
+                LiveScreen(state = typing, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}, preview = previewSlot(onScreen))
+            }
+        }
+
+        pressOk(hasText("AL JAZEERA HD") and hasClickAction())
+
+        assertThat(onScreen).isEqualTo(emptyList())
     }
 
     private companion object {

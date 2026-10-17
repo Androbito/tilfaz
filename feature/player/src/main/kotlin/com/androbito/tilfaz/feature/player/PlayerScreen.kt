@@ -65,6 +65,7 @@ import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
+import com.androbito.tilfaz.core.domain.usecase.BuildStreamSourceUseCase
 import com.androbito.tilfaz.core.model.StreamFormat
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -87,6 +88,8 @@ fun PlayerRoute(onExit: () -> Unit, viewModel: PlayerViewModel = hiltViewModel()
 internal interface PlayerEntryPoint {
     @OptIn(UnstableApi::class)
     fun exoPlayerFactory(): ExoPlayerFactory
+
+    fun buildStreamSource(): BuildStreamSourceUseCase
 }
 
 @OptIn(UnstableApi::class)

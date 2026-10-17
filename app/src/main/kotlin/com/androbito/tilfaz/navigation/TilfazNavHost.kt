@@ -16,6 +16,7 @@ import com.androbito.tilfaz.feature.live.LiveRoute
 import com.androbito.tilfaz.feature.live.liveScreen
 import com.androbito.tilfaz.feature.onboarding.SignInRoute
 import com.androbito.tilfaz.feature.onboarding.signInScreen
+import com.androbito.tilfaz.feature.player.LivePreview
 import com.androbito.tilfaz.feature.player.PlayerRoute
 import com.androbito.tilfaz.feature.player.playerScreen
 import com.androbito.tilfaz.feature.series.SeriesDetailsRoute
@@ -55,7 +56,10 @@ fun TilfazNavHost(startSignedIn: Boolean) {
             )
         )
 
-        liveScreen(onPlayChannel = { channelId, categoryId -> navController.navigate(PlayerRoute.live(channelId, categoryId)) })
+        liveScreen(
+            onPlayChannel = { channelId, categoryId -> navController.navigate(PlayerRoute.live(channelId, categoryId)) },
+            preview = { channel, modifier, onOpen -> LivePreview(channel, onOpen, modifier) }
+        )
 
         moviesScreen(onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) })
         movieDetailsScreen(
