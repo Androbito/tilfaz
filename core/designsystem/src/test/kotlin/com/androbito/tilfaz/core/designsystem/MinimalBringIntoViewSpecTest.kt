@@ -11,7 +11,8 @@ import org.junit.Test
 class MinimalBringIntoViewSpecTest {
     private val container = 900f
 
-    private fun distance(offset: Float, size: Float) = MinimalBringIntoViewSpec.calculateScrollDistance(offset, size, container)
+    private fun distance(offset: Float, size: Float, margin: Float = 0f) =
+        MinimalBringIntoViewSpec(margin).calculateScrollDistance(offset, size, container)
 
     @Test
     fun `an item that is already fully visible does not scroll the page`() {
@@ -28,6 +29,19 @@ class MinimalBringIntoViewSpecTest {
     @Test
     fun `an item above the viewport scrolls just enough to show its top edge`() {
         assertThat(distance(offset = -40f, size = 100f)).isEqualTo(-40f)
+    }
+
+    @Test
+    fun `an item inside the edge margin is scrolled clear of the screen edge`() {
+        // Fully on screen, but its bottom (890) is inside the 20px safe margin (limit 880).
+        assertThat(distance(offset = 850f, size = 40f, margin = 20f)).isEqualTo(10f)
+        // Same at the top: its top (10) is inside the margin (limit 20).
+        assertThat(distance(offset = 10f, size = 100f, margin = 20f)).isEqualTo(-10f)
+    }
+
+    @Test
+    fun `an item comfortably inside the margins does not scroll`() {
+        assertThat(distance(offset = 300f, size = 100f, margin = 20f)).isEqualTo(0f)
     }
 
     @Test
