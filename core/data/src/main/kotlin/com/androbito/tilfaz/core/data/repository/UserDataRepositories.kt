@@ -49,7 +49,8 @@ class RoomWatchProgressRepository @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher
 ) : WatchProgressRepository {
     override fun observeContinueWatching(type: ContentType): Flow<List<WatchProgress>> =
-        dao.observeByType(type.name, CONTINUE_WATCHING_LIMIT).map { rows -> rows.map { it.toDomain() }.filterNot { it.isFinished } }
+        dao.observeUnfinishedByType(type.name, WatchProgress.FINISHED_THRESHOLD.toDouble(), CONTINUE_WATCHING_LIMIT)
+            .map { rows -> rows.map { it.toDomain() } }
 
     override fun observeByKeyPrefix(prefix: String): Flow<List<WatchProgress>> =
         dao.observeByKeyPrefix(prefix).map { rows -> rows.map { it.toDomain() } }

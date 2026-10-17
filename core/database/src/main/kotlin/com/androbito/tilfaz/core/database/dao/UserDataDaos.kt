@@ -27,8 +27,12 @@ interface FavoriteDao {
 
 @Dao
 interface WatchProgressDao {
-    @Query("SELECT * FROM watch_progress WHERE type = :type ORDER BY updatedAtMillis DESC LIMIT :limit")
-    fun observeByType(type: String, limit: Int): Flow<List<WatchProgressEntity>>
+    /** Finished items are filtered here, before the limit, so they cannot push unfinished ones out of the list. */
+    @Query(
+        "SELECT * FROM watch_progress WHERE type = :type AND (durationMs <= 0 OR positionMs < :finishedFraction * durationMs) " +
+            "ORDER BY updatedAtMillis DESC LIMIT :limit"
+    )
+    fun observeUnfinishedByType(type: String, finishedFraction: Double, limit: Int): Flow<List<WatchProgressEntity>>
 
     @Query("SELECT * FROM watch_progress WHERE playableKey LIKE :prefix || '%' ORDER BY updatedAtMillis DESC")
     fun observeByKeyPrefix(prefix: String): Flow<List<WatchProgressEntity>>
