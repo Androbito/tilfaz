@@ -8,7 +8,11 @@ package com.androbito.tilfaz.core.domain.search
  */
 class TitleSearch<T>(private val items: List<T>, private val titleOf: (T) -> String) {
     // Each title is stored with a leading space, so "a word starts with x" is a plain contains(" x").
-    private val padded: Array<String> = Array(items.size) { " " + TitleText.normalize(titleOf(items[it])) }
+    // A heading entry (see TitleText.isSeparator) gets no text at all, so nothing ever matches it.
+    private val padded: Array<String> = Array(items.size) {
+        val title = titleOf(items[it])
+        if (TitleText.isSeparator(title)) "" else " " + TitleText.normalize(title)
+    }
 
     fun search(query: String, limit: Int = Int.MAX_VALUE): List<T> {
         val q = TitleText.normalize(query)

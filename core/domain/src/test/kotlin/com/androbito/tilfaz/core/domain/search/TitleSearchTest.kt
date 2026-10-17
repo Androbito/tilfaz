@@ -72,6 +72,14 @@ class TitleSearchTest {
     }
 
     @Test
+    fun `a separator entry is never a result nor a suggestion`() {
+        val withSeparators = TitleSearch(listOf("-----| BEIN SPORTS |-----", "BEIN SPORTS 1", "===== BEIN =====")) { it }
+
+        assertThat(withSeparators.found("bein")).isEqualTo(listOf("BEIN SPORTS 1"))
+        assertThat(withSeparators.suggest("bein", limit = 8)).isEqualTo(listOf("BEIN SPORTS 1"))
+    }
+
+    @Test
     fun `a blank query finds nothing`() {
         assertThat(search.found("")).isEmpty()
         assertThat(search.found("   ")).isEmpty()

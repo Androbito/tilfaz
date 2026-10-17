@@ -44,6 +44,20 @@ class TitleTextTest {
     }
 
     @Test
+    fun `a heading made of repeated symbols is a separator, a real title is not`() {
+        assertThat(TitleText.isSeparator("-----| BEIN SPORTS |-----")).isEqualTo(true)
+        assertThat(TitleText.isSeparator("===== FRANCE =====")).isEqualTo(true)
+        assertThat(TitleText.isSeparator("*** SPORT ***")).isEqualTo(true)
+        assertThat(TitleText.isSeparator("▬▬▬▬ MOVIES ▬▬▬▬")).isEqualTo(true)
+        assertThat(TitleText.isSeparator("=====")).isEqualTo(true)
+        assertThat(TitleText.isSeparator("  ")).isEqualTo(true)
+        assertThat(TitleText.isSeparator("|FR| TF1 HD")).isEqualTo(false)
+        assertThat(TitleText.isSeparator("| VISA | 2026 | فيزا |")).isEqualTo(false)
+        assertThat(TitleText.isSeparator("BEIN SPORTS 1 FHD")).isEqualTo(false)
+        assertThat(TitleText.isSeparator("-Eli Roth's History of Horror")).isEqualTo(false)
+    }
+
+    @Test
     fun `blank text stays blank`() {
         assertThat(TitleText.normalize("   ")).isEqualTo("")
         assertThat(TitleText.clean("  ")).isEqualTo("")
