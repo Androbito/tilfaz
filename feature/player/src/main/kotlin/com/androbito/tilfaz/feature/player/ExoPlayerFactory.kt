@@ -6,6 +6,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -33,6 +34,13 @@ class ExoPlayerFactory @Inject constructor(
             .setUserAgent(source.userAgent)
             .setDefaultRequestProperties(mapOf("Accept" to "*/*"))
 
+        // Movies and episodes are progressive files; some Matroska ones need their seek index pointed out to be seekable.
+        val mediaDataSourceFactory = if (source.format == null) {
+            DataSource.Factory { MatroskaCuesDataSource(dataSourceFactory) }
+        } else {
+            dataSourceFactory
+        }
+
         val buffer = settings.bufferProfile
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(buffer.minBufferMs, buffer.maxBufferMs, buffer.playbackBufferMs, buffer.playbackBufferMs * 2)
@@ -44,7 +52,7 @@ class ExoPlayerFactory @Inject constructor(
             .setEnableDecoderFallback(true)
 
         return ExoPlayer.Builder(context, renderers)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(mediaDataSourceFactory))
             .setLoadControl(loadControl)
             .setHandleAudioBecomingNoisy(false)
             .setWakeMode(C.WAKE_MODE_NETWORK)
