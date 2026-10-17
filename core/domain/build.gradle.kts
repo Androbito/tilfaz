@@ -13,4 +13,5 @@ dependencies {
 
 dependencies {
     testImplementation(projects.core.testing)
+    testImplementation(libs.androidx.paging.testing)
 }

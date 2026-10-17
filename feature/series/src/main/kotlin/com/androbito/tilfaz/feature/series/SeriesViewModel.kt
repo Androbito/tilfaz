@@ -2,6 +2,8 @@ package com.androbito.tilfaz.feature.series
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.SeriesRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
@@ -11,6 +13,7 @@ import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Series
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -37,13 +40,15 @@ class SeriesViewModel @Inject constructor(
         repository = seriesRepository,
         favoritesRepository = favoritesRepository,
         progressRepository = progressRepository,
+        recent = seriesRepository::observeRecent,
         contentType = ContentType.SERIES,
         idOf = { it.id },
         nameOf = { it.name },
-        categoryOf = { it.categoryId },
-        addedAtMillisOf = { it.lastModifiedAt?.toEpochMilli() },
         favoriteKeyOf = ToggleFavoriteUseCase::seriesKey
     )
+
+    /** The grid. Cached so it survives a rotation or a return from the details page without being reloaded. */
+    val items: Flow<PagingData<Series>> = browser.items.cachedIn(viewModelScope)
 
     val state: StateFlow<SeriesUiState> = browser.snapshot
         .map { SeriesUiState(browser = it) }

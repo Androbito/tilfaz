@@ -10,12 +10,16 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
+import com.androbito.tilfaz.core.model.Movie
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,10 +35,9 @@ class MoviesScreenTest {
     private val scream = Fixtures.movie.copy(id = 7, name = "|FR| Scream 4 (2011)")
     private val screamers = Fixtures.movie.copy(id = 8, name = "|EN| Screamers")
 
-    private fun snapshot(query: String, suggestions: List<com.androbito.tilfaz.core.model.Movie>) = CatalogBrowser.Snapshot(
+    private fun snapshot(query: String, suggestions: List<Movie>) = CatalogBrowser.Snapshot(
         sections = listOf(CatalogBrowser.Section(CatalogBrowser.ALL, "", 2, CatalogBrowser.Section.Kind.ALL)),
         selectedSectionId = CatalogBrowser.ALL,
-        items = listOf(scream, screamers),
         favoriteIds = emptySet(),
         progressById = emptyMap(),
         query = query,
@@ -45,6 +48,7 @@ class MoviesScreenTest {
         TilfazTheme {
             MoviesScreen(
                 state = MoviesUiState(snapshot(query, if (query.isBlank()) emptyList() else listOf(scream, screamers))),
+                items = flowOf(PagingData.from(listOf(scream, screamers))).collectAsLazyPagingItems(),
                 onEvent = {},
                 onOpenMovie = { opened += it }
             )

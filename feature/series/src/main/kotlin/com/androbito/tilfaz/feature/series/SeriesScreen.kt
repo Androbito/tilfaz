@@ -16,6 +16,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.androbito.tilfaz.core.designsystem.component.BrowserLayout
 import com.androbito.tilfaz.core.designsystem.component.CategoryRow
 import com.androbito.tilfaz.core.designsystem.component.EmptyState
@@ -24,6 +28,7 @@ import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.SuggestionRow
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
+import com.androbito.tilfaz.core.model.Series
 import com.androbito.tilfaz.core.model.TitleText
 import kotlinx.serialization.Serializable
 
@@ -37,11 +42,12 @@ fun NavGraphBuilder.seriesScreen(onOpenSeries: (seriesId: Int) -> Unit) {
 @Composable
 fun SeriesRoute(onOpenSeries: (Int) -> Unit, viewModel: SeriesViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    SeriesScreen(state, viewModel::onEvent, onOpenSeries)
+    val items = viewModel.items.collectAsLazyPagingItems()
+    SeriesScreen(state, items, viewModel::onEvent, onOpenSeries)
 }
 
 @Composable
-fun SeriesScreen(state: SeriesUiState, onEvent: (SeriesEvent) -> Unit, onOpenSeries: (Int) -> Unit) {
+fun SeriesScreen(state: SeriesUiState, items: LazyPagingItems<Series>, onEvent: (SeriesEvent) -> Unit, onOpenSeries: (Int) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.series_title)}")
         val browser = state.browser
@@ -70,12 +76,23 @@ fun SeriesScreen(state: SeriesUiState, onEvent: (SeriesEvent) -> Unit, onOpenSer
                     SuggestionRow(TitleText.clean(series.name), onClick = { onOpenSeries(series.id) })
                 }
             },
-            items = browser.items,
-            itemKey = { it.id },
+            itemCount = { items.itemCount },
+            itemAt = { items[it] },
+            itemKey = items.itemKey { it.id },
             emptyContent = {
-                EmptyState(
-                    title = if (browser.query.isNotBlank()) stringResource(R.string.series_no_results, browser.query) else stringResource(R.string.series_empty)
-                )
+                // While the first page loads the grid is empty too, and that is not "no results".
+                if (items.loadState.refresh !is LoadState.Loading) {
+                    EmptyState(
+                        title = if (browser.query.isNotBlank()) {
+                            stringResource(
+                                R.string.series_no_results,
+                                browser.query
+                            )
+                        } else {
+                            stringResource(R.string.series_empty)
+                        }
+                    )
+                }
             }
         ) { series ->
             PosterCard(

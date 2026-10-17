@@ -9,6 +9,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -16,6 +18,7 @@ import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
 import com.androbito.tilfaz.core.model.Series
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +36,6 @@ class SeriesScreenTest {
     private fun snapshot(query: String, suggestions: List<Series>) = CatalogBrowser.Snapshot(
         sections = listOf(CatalogBrowser.Section(CatalogBrowser.ALL, "", 1, CatalogBrowser.Section.Kind.ALL)),
         selectedSectionId = CatalogBrowser.ALL,
-        items = listOf(breaking),
         favoriteIds = emptySet(),
         progressById = emptyMap(),
         query = query,
@@ -52,7 +54,12 @@ class SeriesScreenTest {
         val opened = mutableListOf<Int>()
         compose.setContent {
             TilfazTheme {
-                SeriesScreen(SeriesUiState(snapshot("brea", listOf(breaking))), onEvent = {}, onOpenSeries = { opened += it })
+                SeriesScreen(
+                    SeriesUiState(snapshot("brea", listOf(breaking))),
+                    items = flowOf(PagingData.from(listOf(breaking))).collectAsLazyPagingItems(),
+                    onEvent = {},
+                    onOpenSeries = { opened += it }
+                )
             }
         }
 

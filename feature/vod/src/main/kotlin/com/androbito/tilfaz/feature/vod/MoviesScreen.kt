@@ -16,6 +16,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.androbito.tilfaz.core.designsystem.component.BrowserLayout
 import com.androbito.tilfaz.core.designsystem.component.CategoryRow
 import com.androbito.tilfaz.core.designsystem.component.EmptyState
@@ -24,6 +28,7 @@ import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.SuggestionRow
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
+import com.androbito.tilfaz.core.model.Movie
 import com.androbito.tilfaz.core.model.TitleText
 import kotlinx.serialization.Serializable
 
@@ -41,11 +46,12 @@ fun NavGraphBuilder.moviesScreen(onOpenMovie: (movieId: Int) -> Unit) {
 @Composable
 fun MoviesRoute(onOpenMovie: (Int) -> Unit, viewModel: MoviesViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    MoviesScreen(state, viewModel::onEvent, onOpenMovie)
+    val items = viewModel.items.collectAsLazyPagingItems()
+    MoviesScreen(state, items, viewModel::onEvent, onOpenMovie)
 }
 
 @Composable
-fun MoviesScreen(state: MoviesUiState, onEvent: (MoviesEvent) -> Unit, onOpenMovie: (Int) -> Unit) {
+fun MoviesScreen(state: MoviesUiState, items: LazyPagingItems<Movie>, onEvent: (MoviesEvent) -> Unit, onOpenMovie: (Int) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.vod_title)}")
         val browser = state.browser
@@ -74,12 +80,16 @@ fun MoviesScreen(state: MoviesUiState, onEvent: (MoviesEvent) -> Unit, onOpenMov
                     SuggestionRow(TitleText.clean(movie.name), onClick = { onOpenMovie(movie.id) })
                 }
             },
-            items = browser.items,
-            itemKey = { it.id },
+            itemCount = { items.itemCount },
+            itemAt = { items[it] },
+            itemKey = items.itemKey { it.id },
             emptyContent = {
-                EmptyState(
-                    title = if (browser.query.isNotBlank()) stringResource(R.string.vod_no_results, browser.query) else stringResource(R.string.vod_empty)
-                )
+                // While the first page loads the grid is empty too, and that is not "no results".
+                if (items.loadState.refresh !is LoadState.Loading) {
+                    EmptyState(
+                        title = if (browser.query.isNotBlank()) stringResource(R.string.vod_no_results, browser.query) else stringResource(R.string.vod_empty)
+                    )
+                }
             }
         ) { movie ->
             PosterCard(

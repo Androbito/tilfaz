@@ -4,6 +4,9 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsFocused
@@ -37,7 +40,8 @@ class BrowserLayoutTest {
                 onQueryChange = {},
                 searchPlaceholder = "Search",
                 sections = {},
-                items = (1..30).toList(),
+                itemCount = { 30 },
+                itemAt = { it + 1 },
                 itemKey = { it },
                 emptyContent = {}
             ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
@@ -83,7 +87,8 @@ class BrowserLayoutTest {
                 searchPlaceholder = "Search",
                 sections = { item { Box(Modifier.size(40.dp).testTag("sections").focusable()) } },
                 suggestions = { item { Box(Modifier.size(40.dp).testTag("suggestions").focusable()) } },
-                items = (1..3).toList(),
+                itemCount = { 3 },
+                itemAt = { it + 1 },
                 itemKey = { it },
                 emptyContent = {}
             ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
@@ -114,5 +119,74 @@ class BrowserLayoutTest {
         compose.waitForIdle()
 
         compose.onNodeWithTag("sections").assertExists()
+    }
+
+    @Test
+    fun anItemNotLoadedYetLeavesAnEmptySlotInsteadOfFailing() {
+        compose.setContent {
+            TilfazTheme {
+                BrowserLayout(
+                    query = "",
+                    onQueryChange = {},
+                    searchPlaceholder = "Search",
+                    sections = {},
+                    itemCount = { 3 },
+                    itemAt = { if (it == 1) null else it + 1 },
+                    itemKey = { it },
+                    emptyContent = {}
+                ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("item1").assertExists()
+        compose.onNodeWithTag("item3").assertExists()
+        compose.onNodeWithTag("item2").assertDoesNotExist()
+    }
+
+    @Test
+    fun withNothingToShowTheEmptyContentTakesTheGrid() {
+        compose.setContent {
+            TilfazTheme {
+                BrowserLayout(
+                    query = "",
+                    onQueryChange = {},
+                    searchPlaceholder = "Search",
+                    sections = {},
+                    itemCount = { 0 },
+                    itemAt = { null as Int? },
+                    itemKey = { it },
+                    emptyContent = { Box(Modifier.size(10.dp).testTag("empty")) }
+                ) { number -> Box(Modifier.size(100.dp).testTag("item$number")) }
+            }
+        }
+
+        compose.onNodeWithTag("empty").assertExists()
+    }
+
+    @Test
+    fun aListThatShrinksWhileTheGridIsBeingBuiltNeverAsksForAKeyBeyondItsEnd() {
+        var count by mutableIntStateOf(300)
+        compose.setContent {
+            TilfazTheme {
+                BrowserLayout(
+                    query = "",
+                    onQueryChange = {},
+                    searchPlaceholder = "Search",
+                    sections = {},
+                    itemCount = { count },
+                    itemAt = { if (it < count) it + 1 else error("asked for item $it of $count") },
+                    // A paged list throws for an index past its end, as the real one does when the search results replace it.
+                    itemKey = { if (it < count) it else error("asked for the key of item $it of $count") },
+                    emptyContent = {}
+                ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
+            }
+        }
+        compose.waitForIdle()
+
+        compose.runOnIdle { count = 5 }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("item5").assertExists()
     }
 }

@@ -3,6 +3,8 @@ package com.androbito.tilfaz.feature.vod
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.VodRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
@@ -12,6 +14,7 @@ import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Movie
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -43,17 +46,19 @@ class MoviesViewModel @Inject constructor(
         repository = vodRepository,
         favoritesRepository = favoritesRepository,
         progressRepository = progressRepository,
+        recent = vodRepository::observeRecent,
         contentType = ContentType.VOD,
         idOf = { it.id },
         nameOf = { it.name },
-        categoryOf = { it.categoryId },
-        addedAtMillisOf = { it.addedAt?.toEpochMilli() },
         favoriteKeyOf = ToggleFavoriteUseCase::vodKey
     )
 
     init {
         savedStateHandle.get<String>(MoviesRoute.ARG_INITIAL_SECTION)?.let(browser::select)
     }
+
+    /** The grid. Cached so it survives a rotation or a return from the details page without being reloaded. */
+    val items: Flow<PagingData<Movie>> = browser.items.cachedIn(viewModelScope)
 
     val state: StateFlow<MoviesUiState> = browser.snapshot
         .map { MoviesUiState(browser = it) }
