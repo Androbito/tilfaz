@@ -1,5 +1,7 @@
 package com.androbito.tilfaz.core.domain.search
 
+import com.androbito.tilfaz.core.model.TitleText
+
 /**
  * Finds titles as the user types them: the words can come in any order and each only needs its beginning, with a title that
  * starts with the query ahead of one that merely has a word starting with it, and a match inside a word last of all.

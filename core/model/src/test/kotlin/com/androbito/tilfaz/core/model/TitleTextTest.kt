@@ -1,4 +1,4 @@
-package com.androbito.tilfaz.core.domain.search
+package com.androbito.tilfaz.core.model
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo

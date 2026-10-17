@@ -48,7 +48,7 @@ import com.androbito.tilfaz.core.designsystem.component.rememberFocus
 import com.androbito.tilfaz.core.designsystem.component.rememberListFocusMemory
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
-import com.androbito.tilfaz.core.domain.search.TitleText
+import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.model.EpgEntry
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
