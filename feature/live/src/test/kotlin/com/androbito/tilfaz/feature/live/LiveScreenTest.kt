@@ -2,10 +2,15 @@ package com.androbito.tilfaz.feature.live
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.requestFocus
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -79,6 +84,28 @@ class LiveScreenTest {
         show(stateWith(favorite = true))
 
         compose.onNodeWithText(string(R.string.live_in_favorites)).assertIsDisplayed()
+    }
+
+    @Test
+    fun theFirstChannelHasFocusWhenTheScreenOpens() {
+        show(stateWith())
+        compose.waitForIdle()
+
+        compose.onNode(hasText(Fixtures.alJazeera.name) and hasClickAction()).assertIsFocused()
+    }
+
+    @Test
+    fun focusReturnsToTheChannelTheUserLeftWhenTheScreenComesBack() {
+        val tester = StateRestorationTester(compose)
+        tester.setContent { TilfazTheme { LiveScreen(state = stateWith(), onEvent = {}, onPlay = {}) } }
+        val secondRow = hasText(Fixtures.beinSports1.name) and hasClickAction()
+        compose.onNode(secondRow).requestFocus()
+        compose.onNode(secondRow).assertIsFocused()
+
+        // Playing a channel disposes this screen; Back recreates it from saved state.
+        tester.emulateSavedInstanceStateRestore()
+
+        compose.onNode(secondRow).assertIsFocused()
     }
 
     private companion object {

@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +35,7 @@ fun <T> BrowserLayout(
     modifier: Modifier = Modifier,
     itemContent: @Composable (T) -> Unit
 ) {
+    val focusMemory = rememberListFocusMemory(initialIndex = 0)
     Row(modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)) {
         Column(Modifier.width(Dimens.SidebarWidth).fillMaxHeight()) {
             TvTextField(
@@ -58,7 +59,10 @@ fun <T> BrowserLayout(
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
                     contentPadding = PaddingValues(start = Dimens.SpaceS, end = Dimens.SpaceS, top = Dimens.SpaceS, bottom = Dimens.SpaceXl)
                 ) {
-                    items(items, key = itemKey) { itemContent(it) }
+                    itemsIndexed(items, key = { _, item -> itemKey(item) }) { index, item ->
+                        // propagateMinConstraints keeps the grid cell's width tight, as if the item were placed directly.
+                        Box(Modifier.rememberFocus(focusMemory, index), propagateMinConstraints = true) { itemContent(item) }
+                    }
                 }
             }
         }

@@ -1,0 +1,64 @@
+package com.androbito.tilfaz.core.designsystem
+
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.junit4.StateRestorationTester
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.unit.dp
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.androbito.tilfaz.core.designsystem.component.BrowserLayout
+import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [34], qualifiers = "w960dp-h540dp-land-television-xhdpi")
+class BrowserLayoutTest {
+
+    @get:Rule
+    val compose = createComposeRule()
+
+    private val browser: @Composable () -> Unit = {
+        TilfazTheme {
+            BrowserLayout(
+                query = "",
+                onQueryChange = {},
+                searchPlaceholder = "Search",
+                sections = {},
+                items = (1..30).toList(),
+                itemKey = { it },
+                emptyContent = {}
+            ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
+        }
+    }
+
+    @Test
+    fun theFirstItemHasFocusWhenTheScreenOpens() {
+        compose.setContent(browser)
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("item1").assertIsFocused()
+    }
+
+    @Test
+    fun focusReturnsToTheItemTheUserLeftWhenTheScreenComesBack() {
+        val tester = StateRestorationTester(compose)
+        tester.setContent(browser)
+        compose.onNodeWithTag("item5").requestFocus()
+        compose.onNodeWithTag("item5").assertIsFocused()
+
+        // Opening a detail page disposes this screen; coming back recreates it from saved state.
+        tester.emulateSavedInstanceStateRestore()
+
+        compose.onNodeWithTag("item5").assertIsFocused()
+    }
+}

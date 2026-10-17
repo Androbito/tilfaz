@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
@@ -42,6 +43,8 @@ import com.androbito.tilfaz.core.designsystem.component.ProgressBar
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.TvTextField
 import com.androbito.tilfaz.core.designsystem.component.rememberCurrentTime
+import com.androbito.tilfaz.core.designsystem.component.rememberFocus
+import com.androbito.tilfaz.core.designsystem.component.rememberListFocusMemory
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.EpgEntry
@@ -133,6 +136,7 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, mod
 
 @Composable
 private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -> Unit, now: Instant, modifier: Modifier) {
+    val focusMemory = rememberListFocusMemory(initialIndex = 0)
     Box(modifier) {
         when {
             state.isLoading -> LoadingState()
@@ -145,7 +149,7 @@ private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPl
                 }
             )
             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
-                items(state.channels, key = { it.id }) { channel ->
+                itemsIndexed(state.channels, key = { _, channel -> channel.id }) { index, channel ->
                     val nowNext = state.nowNext[channel.id]
                     ChannelRow(
                         name = channel.name,
@@ -156,7 +160,7 @@ private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPl
                         onClick = { onPlay(channel.id) },
                         onLongClick = { onEvent(LiveEvent.ToggleFavorite(channel.id)) },
                         isFavorite = channel.id in state.favoriteIds,
-                        modifier = Modifier.onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel.id)) }
+                        modifier = Modifier.rememberFocus(focusMemory, index).onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel.id)) }
                     )
                 }
             }

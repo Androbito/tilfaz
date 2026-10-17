@@ -2,15 +2,24 @@ package com.androbito.tilfaz.core.designsystem
 
 import android.content.Context
 import android.view.inputmethod.InputMethodManager
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -41,6 +50,23 @@ class TvTextFieldTest {
 
     private fun showField() = compose.setContent {
         TilfazTheme { TvTextField(value = "", onValueChange = {}, label = "Server", modifier = Modifier.focusRequester(focus)) }
+    }
+
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun sidewaysKeysMoveFocusOutOfAFieldThatIsNotBeingEdited() {
+        compose.setContent {
+            TilfazTheme {
+                Row {
+                    TvTextField(value = "", onValueChange = {}, label = "Search", modifier = Modifier.width(200.dp).focusRequester(focus))
+                    Box(Modifier.size(80.dp).testTag("neighbour").focusable())
+                }
+            }
+        }
+        compose.runOnIdle { focus.requestFocus() }
+        compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionRight) }
+
+        compose.onNodeWithTag("neighbour").assertIsFocused()
     }
 
     @Test

@@ -99,12 +99,15 @@ fun TvTextField(
                         }
                         return@onPreviewKeyEvent true
                     }
-                    // BasicTextField treats Up/Down as cursor-line movement and swallows them; a TV needs them to leave the field.
+                    // BasicTextField swallows Up/Down (cursor-line movement) and Left/Right (cursor); a TV needs them to leave
+                    // the field, except Left/Right while the user is typing, where they move the cursor.
                     val direction = when (event.key) {
                         Key.DirectionDown -> FocusDirection.Down
                         Key.DirectionUp -> FocusDirection.Up
-                        else -> return@onPreviewKeyEvent false
-                    }
+                        Key.DirectionLeft -> FocusDirection.Left.takeUnless { editing }
+                        Key.DirectionRight -> FocusDirection.Right.takeUnless { editing }
+                        else -> null
+                    } ?: return@onPreviewKeyEvent false
                     if (event.type == KeyEventType.KeyDown) focusManager.moveFocus(direction)
                     true
                 }

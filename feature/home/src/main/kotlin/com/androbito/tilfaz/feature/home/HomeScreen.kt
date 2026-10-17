@@ -36,6 +36,8 @@ import com.androbito.tilfaz.core.designsystem.component.PillTile
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.lastUpdatedLabel
 import com.androbito.tilfaz.core.designsystem.component.rememberCurrentTime
+import com.androbito.tilfaz.core.designsystem.component.rememberFocus
+import com.androbito.tilfaz.core.designsystem.component.rememberListFocusMemory
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.ContentType
@@ -71,6 +73,8 @@ fun HomeRoute(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMod
 @Composable
 fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: HomeNavigation) {
     val now by rememberCurrentTime()
+    // Tiles are numbered in reading order; the LIVE tile (0) takes focus on a fresh start.
+    val focusMemory = rememberListFocusMemory(initialIndex = 0)
     Column(Modifier.fillMaxSize()) {
         TopBar {
             IconButton(onClick = navigation.onOpenSearch) { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.home_search)) }
@@ -98,7 +102,7 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.LIVE).isSyncing,
                 onClick = navigation.onOpenLive,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.LIVE)) },
-                modifier = Modifier.weight(1f).fillMaxSize()
+                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 0)
             )
             HeroTile(
                 title = stringResource(R.string.home_movies),
@@ -108,7 +112,7 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.VOD).isSyncing,
                 onClick = navigation.onOpenMovies,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.VOD)) },
-                modifier = Modifier.weight(1f).fillMaxSize()
+                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 1)
             )
             HeroTile(
                 title = stringResource(R.string.home_series),
@@ -118,7 +122,7 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.SERIES).isSyncing,
                 onClick = navigation.onOpenSeries,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.SERIES)) },
-                modifier = Modifier.weight(1f).fillMaxSize()
+                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 2)
             )
         }
 
@@ -126,9 +130,24 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
             Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceL).height(72.dp),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
         ) {
-            PillTile(stringResource(R.string.home_favorites), Icons.Default.Favorite, navigation.onOpenFavorites, Modifier.weight(1f))
-            PillTile(stringResource(R.string.home_continue), Icons.Default.History, navigation.onOpenContinueWatching, Modifier.weight(1f))
-            PillTile(stringResource(R.string.home_settings), Icons.Default.Settings, navigation.onOpenSettings, Modifier.weight(1f))
+            PillTile(
+                stringResource(R.string.home_favorites),
+                Icons.Default.Favorite,
+                navigation.onOpenFavorites,
+                Modifier.weight(1f).rememberFocus(focusMemory, 3)
+            )
+            PillTile(
+                stringResource(R.string.home_continue),
+                Icons.Default.History,
+                navigation.onOpenContinueWatching,
+                Modifier.weight(1f).rememberFocus(focusMemory, 4)
+            )
+            PillTile(
+                stringResource(R.string.home_settings),
+                Icons.Default.Settings,
+                navigation.onOpenSettings,
+                Modifier.weight(1f).rememberFocus(focusMemory, 5)
+            )
         }
 
         Row(
