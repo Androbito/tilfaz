@@ -1,20 +1,26 @@
 package com.androbito.tilfaz.core.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.androbito.tilfaz.core.data.di.IoDispatcher
 import com.androbito.tilfaz.core.data.mapper.EpgMapper
 import com.androbito.tilfaz.core.data.mapper.toDomain
 import com.androbito.tilfaz.core.data.mapper.toEntities
 import com.androbito.tilfaz.core.data.mapper.toLiveEntities
 import com.androbito.tilfaz.core.data.store.AccountStore
+import com.androbito.tilfaz.core.database.CatalogSearch
 import com.androbito.tilfaz.core.database.dao.CategoryDao
 import com.androbito.tilfaz.core.database.dao.LiveChannelDao
 import com.androbito.tilfaz.core.database.dao.SyncStatusDao
+import com.androbito.tilfaz.core.database.entity.LiveChannelEntity
 import com.androbito.tilfaz.core.domain.repository.LiveRepository
 import com.androbito.tilfaz.core.model.Category
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.EpgEntry
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.SyncStatus
+import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.network.XtreamApi
 import com.androbito.tilfaz.core.network.safeApiCall
 import java.time.Clock
@@ -26,6 +32,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -48,6 +55,22 @@ class DefaultLiveRepository @Inject constructor(
     override fun observeItems(categoryId: String?): Flow<List<LiveChannel>> =
         (if (categoryId == null) channelDao.observeAll() else channelDao.observeByCategory(categoryId))
             .map { rows -> rows.map { it.toDomain() } }
+
+    override fun pagedItems(categoryId: String?): Flow<PagingData<LiveChannel>> =
+        Pager(CatalogPaging.config) { if (categoryId == null) channelDao.pagingAll() else channelDao.pagingByCategory(categoryId) }
+            .flow
+            .map { page -> page.map(LiveChannelEntity::toDomain) }
+
+    override fun observeCount(): Flow<Int> = channelDao.observeCount()
+
+    override fun observeCategoryCounts(): Flow<Map<String?, Int>> =
+        channelDao.observeCategoryCounts().map { rows -> rows.associate { it.categoryId to it.count } }
+
+    override fun search(query: String, limit: Int): Flow<List<LiveChannel>> {
+        val normalized = TitleText.normalize(query)
+        if (normalized.isEmpty()) return flowOf(emptyList())
+        return channelDao.search(CatalogSearch.query("live_channels", normalized, limit)).map { rows -> rows.map { it.toDomain() } }
+    }
 
     override fun observeByIds(ids: Set<Int>): Flow<List<LiveChannel>> =
         channelDao.observeByIds(ids.toList()).map { rows -> rows.map { it.toDomain() } }

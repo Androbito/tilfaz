@@ -17,5 +17,6 @@ dependencies {
 
     testImplementation(projects.core.testing)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.paging.testing)
     testImplementation(libs.androidx.test.ext.junit)
 }

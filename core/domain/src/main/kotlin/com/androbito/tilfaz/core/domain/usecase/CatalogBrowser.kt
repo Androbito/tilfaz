@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.map
  * Pure flows, so ViewModels stay thin and this is unit-tested once.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class CatalogBrowser<T>(
+class CatalogBrowser<T : Any>(
     private val repository: CatalogRepository<T>,
     favoritesRepository: FavoritesRepository,
     progressRepository: WatchProgressRepository,
