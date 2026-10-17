@@ -2,14 +2,13 @@ package com.androbito.tilfaz.core.network
 
 import com.androbito.tilfaz.core.network.dto.AuthResponseDto
 import com.androbito.tilfaz.core.network.dto.CategoryDto
-import com.androbito.tilfaz.core.network.dto.LiveStreamDto
-import com.androbito.tilfaz.core.network.dto.SeriesDto
 import com.androbito.tilfaz.core.network.dto.SeriesInfoResponseDto
 import com.androbito.tilfaz.core.network.dto.ShortEpgResponseDto
 import com.androbito.tilfaz.core.network.dto.VodInfoResponseDto
-import com.androbito.tilfaz.core.network.dto.VodStreamDto
+import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 /**
  * Xtream Codes player API. The server host and the username/password query parameters are added by
@@ -23,14 +22,17 @@ interface XtreamApi {
     @GET("player_api.php?action=get_live_categories")
     suspend fun liveCategories(): List<CategoryDto>
 
+    /** The big lists are tens of megabytes of JSON: they come as a stream, read item by item with [streamArray]. */
+    @Streaming
     @GET("player_api.php?action=get_live_streams")
-    suspend fun liveStreams(): List<LiveStreamDto>
+    suspend fun liveStreams(): ResponseBody
 
     @GET("player_api.php?action=get_vod_categories")
     suspend fun vodCategories(): List<CategoryDto>
 
+    @Streaming
     @GET("player_api.php?action=get_vod_streams")
-    suspend fun vodStreams(): List<VodStreamDto>
+    suspend fun vodStreams(): ResponseBody
 
     @GET("player_api.php?action=get_vod_info")
     suspend fun vodInfo(@Query("vod_id") vodId: Int): VodInfoResponseDto
@@ -38,8 +40,9 @@ interface XtreamApi {
     @GET("player_api.php?action=get_series_categories")
     suspend fun seriesCategories(): List<CategoryDto>
 
+    @Streaming
     @GET("player_api.php?action=get_series")
-    suspend fun series(): List<SeriesDto>
+    suspend fun series(): ResponseBody
 
     @GET("player_api.php?action=get_series_info")
     suspend fun seriesInfo(@Query("series_id") seriesId: Int): SeriesInfoResponseDto

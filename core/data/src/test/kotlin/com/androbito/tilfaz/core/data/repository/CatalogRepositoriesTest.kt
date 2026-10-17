@@ -50,7 +50,16 @@ class CatalogRepositoriesTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, TilfazDatabase::class.java).allowMainThreadQueries().build()
-        vod = DefaultVodRepository(offlineApi, database.categoryDao(), database.movieDao(), database.syncStatusDao(), Clock.systemUTC(), Dispatchers.Unconfined)
+        vod =
+            DefaultVodRepository(
+                offlineApi,
+                database.categoryDao(),
+                database.movieDao(),
+                Json,
+                database.syncStatusDao(),
+                Clock.systemUTC(),
+                Dispatchers.Unconfined
+            )
         val accountStore = AccountStore(
             PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.Unconfined), produceFile = {
                 File(context.cacheDir, "account-${System.nanoTime()}.preferences_pb")
@@ -67,6 +76,7 @@ class CatalogRepositoriesTest {
                 database.categoryDao(),
                 database.liveChannelDao(),
                 accountStore,
+                Json,
                 database.syncStatusDao(),
                 Clock.systemUTC(),
                 Dispatchers.Unconfined

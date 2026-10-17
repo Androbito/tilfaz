@@ -88,10 +88,19 @@ interface LiveChannelDao {
     @Query("DELETE FROM live_channels")
     suspend fun deleteAll()
 
+    /**
+     * Replaces the whole table with what [chunks] yields, in one transaction: a download that breaks halfway throws, and the
+     * old catalog stays as it was. Returns how many rows were stored.
+     */
     @Transaction
-    suspend fun replaceAll(channels: List<LiveChannelEntity>) {
+    suspend fun replaceAll(chunks: Sequence<List<LiveChannelEntity>>): Int {
         deleteAll()
-        insertAll(channels)
+        var stored = 0
+        for (chunk in chunks) {
+            insertAll(chunk)
+            stored += chunk.size
+        }
+        return stored
     }
 }
 
@@ -131,10 +140,19 @@ interface MovieDao {
     @Query("DELETE FROM movies")
     suspend fun deleteAll()
 
+    /**
+     * Replaces the whole table with what [chunks] yields, in one transaction: a download that breaks halfway throws, and the
+     * old catalog stays as it was. Returns how many rows were stored.
+     */
     @Transaction
-    suspend fun replaceAll(movies: List<MovieEntity>) {
+    suspend fun replaceAll(chunks: Sequence<List<MovieEntity>>): Int {
         deleteAll()
-        insertAll(movies)
+        var stored = 0
+        for (chunk in chunks) {
+            insertAll(chunk)
+            stored += chunk.size
+        }
+        return stored
     }
 }
 
@@ -174,10 +192,19 @@ interface SeriesDao {
     @Query("DELETE FROM series")
     suspend fun deleteAll()
 
+    /**
+     * Replaces the whole table with what [chunks] yields, in one transaction: a download that breaks halfway throws, and the
+     * old catalog stays as it was. Returns how many rows were stored.
+     */
     @Transaction
-    suspend fun replaceAll(series: List<SeriesEntity>) {
+    suspend fun replaceAll(chunks: Sequence<List<SeriesEntity>>): Int {
         deleteAll()
-        insertAll(series)
+        var stored = 0
+        for (chunk in chunks) {
+            insertAll(chunk)
+            stored += chunk.size
+        }
+        return stored
     }
 }
 

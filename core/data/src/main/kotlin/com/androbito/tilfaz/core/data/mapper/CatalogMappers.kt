@@ -31,7 +31,8 @@ fun List<CategoryDto>.toEntities(type: ContentType): List<CategoryEntity> = mapI
 
 fun CategoryEntity.toDomain() = Category(id = id, name = name, type = ContentType.valueOf(type), parentId = parentId)
 
-fun List<LiveStreamDto>.toLiveEntities(): List<LiveChannelEntity> = mapIndexedNotNull { index, dto ->
+/** [startIndex] is where this chunk starts in the whole list, so positions stay the provider's order across chunks. */
+fun List<LiveStreamDto>.toLiveEntities(startIndex: Int = 0): List<LiveChannelEntity> = mapIndexedNotNull { index, dto ->
     val id = dto.streamId ?: return@mapIndexedNotNull null
     val name = dto.name?.trim().orEmpty().ifEmpty { "Channel $id" }
     LiveChannelEntity(
@@ -44,7 +45,7 @@ fun List<LiveStreamDto>.toLiveEntities(): List<LiveChannelEntity> = mapIndexedNo
         epgChannelId = dto.epgChannelId,
         hasArchive = dto.tvArchive ?: false,
         archiveDays = dto.tvArchiveDuration ?: 0,
-        position = index
+        position = startIndex + index
     )
 }
 
@@ -59,7 +60,7 @@ fun LiveChannelEntity.toDomain() = LiveChannel(
     archiveDays = archiveDays
 )
 
-fun List<VodStreamDto>.toMovieEntities(): List<MovieEntity> = mapIndexedNotNull { index, dto ->
+fun List<VodStreamDto>.toMovieEntities(startIndex: Int = 0): List<MovieEntity> = mapIndexedNotNull { index, dto ->
     val id = dto.streamId ?: return@mapIndexedNotNull null
     val name = dto.name?.trim().orEmpty().ifEmpty { "Movie $id" }
     MovieEntity(
@@ -72,7 +73,7 @@ fun List<VodStreamDto>.toMovieEntities(): List<MovieEntity> = mapIndexedNotNull 
         year = dto.year ?: YearExtractor.fromTitle(name) ?: YearExtractor.fromDate(dto.releaseDate),
         addedAtMillis = dto.added?.toEpochMillis(),
         containerExtension = dto.containerExtension?.trim()?.trimStart('.').orEmpty(),
-        position = index
+        position = startIndex + index
     )
 }
 
@@ -87,7 +88,7 @@ fun MovieEntity.toDomain() = Movie(
     containerExtension = containerExtension
 )
 
-fun List<SeriesDto>.toSeriesEntities(): List<SeriesEntity> = mapIndexedNotNull { index, dto ->
+fun List<SeriesDto>.toSeriesEntities(startIndex: Int = 0): List<SeriesEntity> = mapIndexedNotNull { index, dto ->
     val id = dto.seriesId ?: return@mapIndexedNotNull null
     val name = dto.name?.trim().orEmpty().ifEmpty { "Series $id" }
     SeriesEntity(
@@ -99,9 +100,10 @@ fun List<SeriesDto>.toSeriesEntities(): List<SeriesEntity> = mapIndexedNotNull {
         ratingOutOfTen = Rating.fromRaw(dto.rating, dto.rating5Based)?.outOfTen,
         year = YearExtractor.fromDate(dto.releaseDate ?: dto.releaseDateAlt) ?: YearExtractor.fromTitle(name),
         lastModifiedMillis = dto.lastModified?.toEpochMillis(),
-        plot = dto.plot,
-        genre = dto.genre,
-        position = index
+        // Only the fallback for a details page that cannot be fetched: the full text comes with the details.
+        plot = dto.plot?.take(PLOT_LIMIT),
+        genre = dto.genre?.take(GENRE_LIMIT),
+        position = startIndex + index
     )
 }
 
@@ -134,3 +136,6 @@ internal object YearExtractor {
     fun fromTitle(title: String): Int? = titleYear.find(title)?.value?.trim('(', ')')?.toIntOrNull()
     fun fromDate(date: String?): Int? = date?.let { anyYear.find(it)?.value?.toIntOrNull() }
 }
+
+private const val PLOT_LIMIT = 400
+private const val GENRE_LIMIT = 100

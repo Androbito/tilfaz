@@ -22,23 +22,25 @@ import com.androbito.tilfaz.core.model.MovieDetails
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.network.XtreamApi
+import com.androbito.tilfaz.core.network.dto.VodStreamDto
 import com.androbito.tilfaz.core.network.safeApiCall
+import com.androbito.tilfaz.core.network.streamArray
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 @Singleton
 class DefaultVodRepository @Inject constructor(
     private val api: XtreamApi,
     private val categoryDao: CategoryDao,
     private val movieDao: MovieDao,
+    private val json: Json,
     syncStatusDao: SyncStatusDao,
     clock: Clock,
     @IoDispatcher private val io: CoroutineDispatcher
@@ -79,16 +81,18 @@ class DefaultVodRepository @Inject constructor(
     override suspend fun refresh(): Result<Unit> = withContext(io) {
         sync.track {
             safeApiCall {
-                coroutineScope {
-                    val categories = async { api.vodCategories() }
-                    val streams = async { api.vodStreams() }
-                    categories.await().toEntities(ContentType.VOD) to streams.await().toMovieEntities()
+                val categories = api.vodCategories().toEntities(ContentType.VOD)
+                // Read as a stream and saved a chunk at a time: the list is far larger than a TV has memory for.
+                val stored = api.vodStreams().use { body ->
+                    movieDao.replaceAll(
+                        json.streamArray(body, VodStreamDto.serializer())
+                            .chunked(CatalogSync.CHUNK_SIZE)
+                            .mapIndexed { index, chunk -> chunk.toMovieEntities(startIndex = index * CatalogSync.CHUNK_SIZE) }
+                    )
                 }
-            }.map { (categories, movies) ->
                 categoryDao.replaceAll(ContentType.VOD.name, categories)
-                movieDao.replaceAll(movies)
                 detailsCache.clear()
-                sync.markSynced(movies.size)
+                sync.markSynced(stored)
             }
         }
     }

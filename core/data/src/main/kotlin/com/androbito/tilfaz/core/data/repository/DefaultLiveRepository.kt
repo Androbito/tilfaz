@@ -22,19 +22,20 @@ import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.network.XtreamApi
+import com.androbito.tilfaz.core.network.dto.LiveStreamDto
 import com.androbito.tilfaz.core.network.safeApiCall
+import com.androbito.tilfaz.core.network.streamArray
 import java.time.Clock
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
 @Singleton
 class DefaultLiveRepository @Inject constructor(
@@ -42,6 +43,7 @@ class DefaultLiveRepository @Inject constructor(
     private val categoryDao: CategoryDao,
     private val channelDao: LiveChannelDao,
     private val accountStore: AccountStore,
+    private val json: Json,
     syncStatusDao: SyncStatusDao,
     clock: Clock,
     @IoDispatcher private val io: CoroutineDispatcher
@@ -76,15 +78,17 @@ class DefaultLiveRepository @Inject constructor(
     override suspend fun refresh(): Result<Unit> = withContext(io) {
         sync.track {
             safeApiCall {
-                coroutineScope {
-                    val categories = async { api.liveCategories() }
-                    val streams = async { api.liveStreams() }
-                    categories.await().toEntities(ContentType.LIVE) to streams.await().toLiveEntities()
+                val categories = api.liveCategories().toEntities(ContentType.LIVE)
+                // Read as a stream and saved a chunk at a time: the list is far larger than a TV has memory for.
+                val stored = api.liveStreams().use { body ->
+                    channelDao.replaceAll(
+                        json.streamArray(body, LiveStreamDto.serializer())
+                            .chunked(CatalogSync.CHUNK_SIZE)
+                            .mapIndexed { index, chunk -> chunk.toLiveEntities(startIndex = index * CatalogSync.CHUNK_SIZE) }
+                    )
                 }
-            }.map { (categories, channels) ->
                 categoryDao.replaceAll(ContentType.LIVE.name, categories)
-                channelDao.replaceAll(channels)
-                sync.markSynced(channels.size)
+                sync.markSynced(stored)
             }
         }
     }

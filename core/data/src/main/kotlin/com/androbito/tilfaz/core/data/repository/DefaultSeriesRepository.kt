@@ -22,13 +22,13 @@ import com.androbito.tilfaz.core.model.SeriesDetails
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.network.XtreamApi
+import com.androbito.tilfaz.core.network.dto.SeriesDto
 import com.androbito.tilfaz.core.network.safeApiCall
+import com.androbito.tilfaz.core.network.streamArray
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -81,16 +81,18 @@ class DefaultSeriesRepository @Inject constructor(
     override suspend fun refresh(): Result<Unit> = withContext(io) {
         sync.track {
             safeApiCall {
-                coroutineScope {
-                    val categories = async { api.seriesCategories() }
-                    val series = async { api.series() }
-                    categories.await().toEntities(ContentType.SERIES) to series.await().toSeriesEntities()
+                val categories = api.seriesCategories().toEntities(ContentType.SERIES)
+                // Read as a stream and saved a chunk at a time: the list is far larger than a TV has memory for.
+                val stored = api.series().use { body ->
+                    seriesDao.replaceAll(
+                        json.streamArray(body, SeriesDto.serializer())
+                            .chunked(CatalogSync.CHUNK_SIZE)
+                            .mapIndexed { index, chunk -> chunk.toSeriesEntities(startIndex = index * CatalogSync.CHUNK_SIZE) }
+                    )
                 }
-            }.map { (categories, series) ->
                 categoryDao.replaceAll(ContentType.SERIES.name, categories)
-                seriesDao.replaceAll(series)
                 detailsCache.clear()
-                sync.markSynced(series.size)
+                sync.markSynced(stored)
             }
         }
     }
