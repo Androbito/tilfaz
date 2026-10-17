@@ -50,6 +50,17 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `preview moves to the first result when the focused channel is filtered out`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.alJazeera.id))
+            viewModel.onEvent(LiveEvent.QueryChanged("bein"))
+            val state = expectMostRecentItem()
+            assertThat(state.channels).containsExactly(Fixtures.beinSports1)
+            assertThat(state.focusedChannel).isEqualTo(Fixtures.beinSports1)
+        }
+    }
+
+    @Test
     fun `favourites category shows only favourited channels`() = runTest {
         viewModel.state.test {
             viewModel.onEvent(LiveEvent.ToggleFavorite(Fixtures.beinSports1.id))
@@ -73,6 +84,16 @@ class LiveViewModelTest {
             assertThat(nowNext.next?.title).isEqualTo("The Debate")
         }
         assertThat(live.epgRequests).containsExactly(Fixtures.alJazeera.id)
+    }
+
+    @Test
+    fun `the channel shown by default gets its EPG without anyone focusing it`() = runTest {
+        live.epg[Fixtures.alJazeera.id] = Result.success(listOf(Fixtures.epg(101, "News Hour", -30, 60)))
+        viewModel.state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.focusedChannelId).isEqualTo(Fixtures.alJazeera.id)
+            assertThat(live.epgRequests).containsExactly(Fixtures.alJazeera.id)
+        }
     }
 
     @Test

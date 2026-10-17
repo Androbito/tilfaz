@@ -22,7 +22,7 @@ object EpgMapper {
         EpgEntry(
             channelId = channelId,
             title = dto.title?.decodeBase64OrSelf()?.trim()?.ifEmpty { null } ?: return@mapNotNull null,
-            description = dto.description?.decodeBase64OrSelf()?.trim()?.ifEmpty { null },
+            description = dto.description?.decodeBase64OrSelf()?.unescapeLineBreaks()?.ifEmpty { null },
             start = start,
             end = end
         )
@@ -31,6 +31,12 @@ object EpgMapper {
     private fun parseText(value: String?, zone: ZoneId): Instant? = value?.let {
         runCatching { LocalDateTime.parse(it.trim(), textFormat).atZone(zone).toInstant() }.getOrNull()
     }
+
+    private val escapedBreak = Regex("""(\\r)?\\n|\\r""")
+
+    /** Some panels send "\r\n" as two literal characters, often ending with a stray "." line. */
+    private fun String.unescapeLineBreaks(): String =
+        replace(escapedBreak, "\n").lines().map { it.trim() }.filter { it.isNotEmpty() && it != "." }.joinToString("\n")
 
     internal fun String.decodeBase64OrSelf(): String = runCatching {
         String(Base64.getDecoder().decode(trim()), Charsets.UTF_8)

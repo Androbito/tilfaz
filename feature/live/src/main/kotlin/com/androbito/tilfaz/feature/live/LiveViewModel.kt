@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -121,11 +122,12 @@ class LiveViewModel @Inject constructor(
             channels = channels,
             favoriteIds = favorites,
             nowNext = nowNext,
-            focusedChannelId = focused ?: channels.firstOrNull()?.id,
+            focusedChannelId = focused?.takeIf { id -> channels.any { it.id == id } } ?: channels.firstOrNull()?.id,
             query = q,
             isLoading = false
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LiveUiState())
+    }.onEach { state -> state.focusedChannelId?.let(::loadEpg) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LiveUiState())
 
     fun onEvent(event: LiveEvent) {
         when (event) {

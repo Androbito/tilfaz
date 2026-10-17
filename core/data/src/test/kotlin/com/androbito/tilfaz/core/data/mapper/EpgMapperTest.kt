@@ -36,6 +36,24 @@ class EpgMapperTest {
     }
 
     @Test
+    fun `turns escaped line breaks sent as literal text into real ones`() {
+        val entries = EpgMapper.toDomain(
+            listOf(
+                EpgListingDto(
+                    title = b64("Fencing"),
+                    description = b64("Opening ceremony.\\r\\n46 nations.\\r\\n."),
+                    startTimestamp = 1L,
+                    stopTimestamp = 2L
+                )
+            ),
+            channelId = 1,
+            serverZone = ZoneId.of("UTC")
+        )
+
+        assertThat(entries.single().description).isEqualTo("Opening ceremony.\n46 nations.")
+    }
+
+    @Test
     fun `falls back to text dates in the server time zone and keeps plain text titles`() {
         val entries = EpgMapper.toDomain(
             listOf(EpgListingDto(title = "Plain title", start = "2026-10-16 22:00:00", end = "2026-10-16 23:00:00")),
