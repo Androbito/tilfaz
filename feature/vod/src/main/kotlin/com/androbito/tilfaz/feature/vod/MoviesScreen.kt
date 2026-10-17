@@ -21,7 +21,9 @@ import com.androbito.tilfaz.core.designsystem.component.CategoryRow
 import com.androbito.tilfaz.core.designsystem.component.EmptyState
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
+import com.androbito.tilfaz.core.designsystem.component.SuggestionRow
 import com.androbito.tilfaz.core.designsystem.component.TopBar
+import com.androbito.tilfaz.core.domain.search.TitleText
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
 import kotlinx.serialization.Serializable
 
@@ -65,6 +67,11 @@ fun MoviesScreen(state: MoviesUiState, onEvent: (MoviesEvent) -> Unit, onOpenMov
                         CatalogBrowser.Section.Kind.PROVIDER -> section.name to null
                     }
                     CategoryRow(name, section.count, section.id == browser.selectedSectionId, { onEvent(MoviesEvent.SelectSection(section.id)) }, icon = icon)
+                }
+            },
+            suggestions = {
+                items(browser.suggestions, key = { it.id }) { movie ->
+                    SuggestionRow(TitleText.clean(movie.name), onClick = { onOpenMovie(movie.id) })
                 }
             },
             items = browser.items,

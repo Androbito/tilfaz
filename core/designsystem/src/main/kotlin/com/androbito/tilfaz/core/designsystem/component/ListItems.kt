@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -70,6 +71,33 @@ fun CategoryRow(
                     color = if (selected) TilfazColors.OnBackground else TilfazColors.OnSurfaceMuted
                 )
             }
+        }
+    }
+}
+
+/** A suggested title under the search box: a magnifier and the title, picked to jump straight to it. */
+@Composable
+fun SuggestionRow(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    FocusableSurface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(60.dp),
+        corner = Dimens.CornerS,
+        containerColor = Color.Transparent,
+        focusedScale = 1.0f
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = Dimens.SpaceM).align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)
+        ) {
+            Icon(Icons.Default.Search, contentDescription = null, tint = TilfazColors.OnSurfaceMuted, modifier = Modifier.size(22.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

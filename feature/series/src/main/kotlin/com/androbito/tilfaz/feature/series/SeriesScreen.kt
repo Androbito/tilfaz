@@ -21,7 +21,9 @@ import com.androbito.tilfaz.core.designsystem.component.CategoryRow
 import com.androbito.tilfaz.core.designsystem.component.EmptyState
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
+import com.androbito.tilfaz.core.designsystem.component.SuggestionRow
 import com.androbito.tilfaz.core.designsystem.component.TopBar
+import com.androbito.tilfaz.core.domain.search.TitleText
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
 import kotlinx.serialization.Serializable
 
@@ -61,6 +63,11 @@ fun SeriesScreen(state: SeriesUiState, onEvent: (SeriesEvent) -> Unit, onOpenSer
                         CatalogBrowser.Section.Kind.PROVIDER -> section.name to null
                     }
                     CategoryRow(name, section.count, section.id == browser.selectedSectionId, { onEvent(SeriesEvent.SelectSection(section.id)) }, icon = icon)
+                }
+            },
+            suggestions = {
+                items(browser.suggestions, key = { it.id }) { series ->
+                    SuggestionRow(TitleText.clean(series.name), onClick = { onOpenSeries(series.id) })
                 }
             },
             items = browser.items,

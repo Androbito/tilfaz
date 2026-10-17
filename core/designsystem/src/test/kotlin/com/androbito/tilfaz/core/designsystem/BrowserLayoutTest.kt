@@ -74,4 +74,45 @@ class BrowserLayoutTest {
 
         compose.onNodeWithTag("item5").assertIsFocused()
     }
+
+    private fun withSuggestions(query: String): @Composable () -> Unit = {
+        TilfazTheme {
+            BrowserLayout(
+                query = query,
+                onQueryChange = {},
+                searchPlaceholder = "Search",
+                sections = { item { Box(Modifier.size(40.dp).testTag("sections").focusable()) } },
+                suggestions = { item { Box(Modifier.size(40.dp).testTag("suggestions").focusable()) } },
+                items = (1..3).toList(),
+                itemKey = { it },
+                emptyContent = {}
+            ) { number -> Box(Modifier.size(100.dp).testTag("item$number").focusable()) }
+        }
+    }
+
+    @Test
+    fun whileTypingTheSuggestionsTakeTheSectionList() {
+        compose.setContent(withSuggestions("scr"))
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("suggestions").assertExists()
+        compose.onNodeWithTag("sections").assertDoesNotExist()
+    }
+
+    @Test
+    fun withoutAQueryTheSectionsAreShown() {
+        compose.setContent(withSuggestions(""))
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("sections").assertExists()
+        compose.onNodeWithTag("suggestions").assertDoesNotExist()
+    }
+
+    @Test
+    fun aBlankQueryCountsAsNoQuery() {
+        compose.setContent(withSuggestions("   "))
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("sections").assertExists()
+    }
 }

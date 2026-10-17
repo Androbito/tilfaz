@@ -22,8 +22,8 @@ import com.androbito.tilfaz.core.designsystem.theme.Dimens
 private const val POSTERS_PER_ROW = 4
 
 /**
- * The two-pane browser used by Movies and Series: a search box and a section list on the left,
- * a poster grid on the right. Features supply the data and the item composable.
+ * The two-pane browser used by Movies and Series: a search box and a section list on the left
+ * (suggestions instead while a query is typed), a poster grid on the right. Features supply the data and the item composable.
  */
 @Composable
 fun <T> BrowserLayout(
@@ -35,6 +35,8 @@ fun <T> BrowserLayout(
     itemKey: (T) -> Any,
     emptyContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    /** Shown in place of [sections] while a query is typed. */
+    suggestions: (LazyListScope.() -> Unit)? = null,
     itemContent: @Composable (T) -> Unit
 ) {
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
@@ -48,7 +50,7 @@ fun <T> BrowserLayout(
                 modifier = Modifier.padding(bottom = Dimens.SpaceS)
             )
             LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
-                sections()
+                if (suggestions != null && query.isNotBlank()) suggestions() else sections()
             }
         }
         Box(Modifier.weight(1f).fillMaxHeight()) {
