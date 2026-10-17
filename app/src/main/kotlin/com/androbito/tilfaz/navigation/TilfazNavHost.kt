@@ -6,6 +6,9 @@ import androidx.navigation.compose.rememberNavController
 import com.androbito.tilfaz.feature.home.HomeNavigation
 import com.androbito.tilfaz.feature.home.HomeRoute
 import com.androbito.tilfaz.feature.home.homeScreen
+import com.androbito.tilfaz.feature.library.FavoritesNavigation
+import com.androbito.tilfaz.feature.library.FavoritesRoute
+import com.androbito.tilfaz.feature.library.favoritesScreen
 import com.androbito.tilfaz.feature.live.LiveRoute
 import com.androbito.tilfaz.feature.live.liveScreen
 import com.androbito.tilfaz.feature.onboarding.SignInRoute
@@ -48,7 +51,7 @@ fun TilfazNavHost(startSignedIn: Boolean) {
                 onOpenSeries = { navController.navigate(SeriesRoute) },
                 onOpenSearch = { navController.navigate(SearchRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
-                onOpenFavorites = { navController.navigate(LiveRoute(initialCategoryId = LiveRoute.FAVORITES)) },
+                onOpenFavorites = { navController.navigate(FavoritesRoute) },
                 onOpenContinueWatching = { navController.navigate(MoviesRoute(initialSectionId = MoviesRoute.CONTINUE_WATCHING)) }
             )
         )
@@ -69,6 +72,14 @@ fun TilfazNavHost(startSignedIn: Boolean) {
 
         searchScreen(
             SearchNavigation(
+                onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
+                onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
+                onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
+            )
+        )
+
+        favoritesScreen(
+            FavoritesNavigation(
                 onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
                 onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
                 onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }

@@ -82,6 +82,7 @@ dependencies {
     implementation(projects.feature.player)
     implementation(projects.feature.settings)
     implementation(projects.feature.search)
+    implementation(projects.feature.library)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

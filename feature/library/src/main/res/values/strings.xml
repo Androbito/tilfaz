@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="favorites_title">Favourites</string>
+    <string name="favorites_live">Live</string>
+    <string name="favorites_movies">Movies</string>
+    <string name="favorites_series">TV shows</string>
+    <string name="favorites_empty_live">No favourite channels yet. Long-press a channel in Live to add one.</string>
+    <string name="favorites_empty_movies">No favourite movies yet. Add one from its page.</string>
+    <string name="favorites_empty_series">No favourite TV shows yet. Add one from its page.</string>
+    <string name="favorites_remove_title">Remove from favourites?</string>
+    <string name="favorites_remove_message">\"%1$s\" will no longer be in your favourites.</string>
+    <string name="favorites_remove_confirm">Remove</string>
+    <string name="favorites_remove_cancel">Keep</string>
+    <string name="favorites_hint">Hold OK or press Menu on an item to remove it</string>
+</resources>
