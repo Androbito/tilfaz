@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 
 abstract class FakeCatalogRepository<T>(
     private val type: ContentType,
+    private val idOf: (T) -> Int,
     private val categoryOf: (T) -> String?,
     private val nameOf: (T) -> String
 ) : CatalogRepository<T> {
@@ -32,6 +33,7 @@ abstract class FakeCatalogRepository<T>(
     override fun observeCategories(): Flow<List<Category>> = categories
     override fun observeItems(categoryId: String?): Flow<List<T>> =
         items.map { list -> if (categoryId == null) list else list.filter { categoryOf(it) == categoryId } }
+    override fun observeByIds(ids: Set<Int>): Flow<List<T>> = items.map { list -> list.filter { idOf(it) in ids } }
     override fun observeSyncStatus(): Flow<SyncStatus> = syncStatus
     override fun search(query: String): Flow<List<T>> =
         items.map { list -> list.filter { nameOf(it).contains(query, ignoreCase = true) } }
@@ -43,7 +45,7 @@ abstract class FakeCatalogRepository<T>(
     }
 }
 
-class FakeLiveRepository : FakeCatalogRepository<LiveChannel>(ContentType.LIVE, { it.categoryId }, { it.name }), LiveRepository {
+class FakeLiveRepository : FakeCatalogRepository<LiveChannel>(ContentType.LIVE, { it.id }, { it.categoryId }, { it.name }), LiveRepository {
     val epg = mutableMapOf<Int, Result<List<EpgEntry>>>()
     val epgRequests = mutableListOf<Int>()
 
@@ -55,7 +57,7 @@ class FakeLiveRepository : FakeCatalogRepository<LiveChannel>(ContentType.LIVE, 
     }
 }
 
-class FakeVodRepository : FakeCatalogRepository<Movie>(ContentType.VOD, { it.categoryId }, { it.name }), VodRepository {
+class FakeVodRepository : FakeCatalogRepository<Movie>(ContentType.VOD, { it.id }, { it.categoryId }, { it.name }), VodRepository {
     var detailsResult: ((Int) -> Result<MovieDetails>)? = null
 
     override suspend fun movie(movieId: Int): Movie? = items.value.firstOrNull { it.id == movieId }
@@ -63,7 +65,7 @@ class FakeVodRepository : FakeCatalogRepository<Movie>(ContentType.VOD, { it.cat
         detailsResult?.invoke(movieId) ?: Result.failure(IllegalStateException("no details configured"))
 }
 
-class FakeSeriesRepository : FakeCatalogRepository<Series>(ContentType.SERIES, { it.categoryId }, { it.name }), SeriesRepository {
+class FakeSeriesRepository : FakeCatalogRepository<Series>(ContentType.SERIES, { it.id }, { it.categoryId }, { it.name }), SeriesRepository {
     var detailsResult: ((Int) -> Result<SeriesDetails>)? = null
 
     override suspend fun series(seriesId: Int): Series? = items.value.firstOrNull { it.id == seriesId }

@@ -49,6 +49,9 @@ class DefaultSeriesRepository @Inject constructor(
         (if (categoryId == null) seriesDao.observeAll() else seriesDao.observeByCategory(categoryId))
             .map { rows -> rows.map { it.toDomain() } }
 
+    override fun observeByIds(ids: Set<Int>): Flow<List<Series>> =
+        seriesDao.observeByIds(ids.toList()).map { rows -> rows.map { it.toDomain() } }
+
     override fun observeSyncStatus(): Flow<SyncStatus> = sync.observe()
 
     override fun search(query: String): Flow<List<Series>> =

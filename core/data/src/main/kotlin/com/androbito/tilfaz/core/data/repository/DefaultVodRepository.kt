@@ -47,6 +47,9 @@ class DefaultVodRepository @Inject constructor(
         (if (categoryId == null) movieDao.observeAll() else movieDao.observeByCategory(categoryId))
             .map { rows -> rows.map { it.toDomain() } }
 
+    override fun observeByIds(ids: Set<Int>): Flow<List<Movie>> =
+        movieDao.observeByIds(ids.toList()).map { rows -> rows.map { it.toDomain() } }
+
     override fun observeSyncStatus(): Flow<SyncStatus> = sync.observe()
 
     override fun search(query: String): Flow<List<Movie>> =

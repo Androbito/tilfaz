@@ -14,6 +14,10 @@ import kotlinx.coroutines.flow.Flow
 interface CatalogRepository<T> {
     fun observeCategories(): Flow<List<Category>>
     fun observeItems(categoryId: String?): Flow<List<T>>
+
+    /** The items with these ids, in no particular order. Loads only those rows, not the catalog. */
+    fun observeByIds(ids: Set<Int>): Flow<List<T>>
+
     fun observeSyncStatus(): Flow<SyncStatus>
     fun search(query: String): Flow<List<T>>
     suspend fun refresh(): Result<Unit>

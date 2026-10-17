@@ -49,6 +49,9 @@ class DefaultLiveRepository @Inject constructor(
         (if (categoryId == null) channelDao.observeAll() else channelDao.observeByCategory(categoryId))
             .map { rows -> rows.map { it.toDomain() } }
 
+    override fun observeByIds(ids: Set<Int>): Flow<List<LiveChannel>> =
+        channelDao.observeByIds(ids.toList()).map { rows -> rows.map { it.toDomain() } }
+
     override fun observeSyncStatus(): Flow<SyncStatus> = sync.observe()
 
     override fun search(query: String): Flow<List<LiveChannel>> =
