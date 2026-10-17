@@ -14,6 +14,10 @@ interface FavoritesRepository {
 
 interface WatchProgressRepository {
     fun observeContinueWatching(type: ContentType): Flow<List<WatchProgress>>
+
+    /** Every saved progress whose key starts with [prefix], finished ones included, most recent first. */
+    fun observeByKeyPrefix(prefix: String): Flow<List<WatchProgress>>
+
     suspend fun progress(playableKey: String): WatchProgress?
     suspend fun save(progress: WatchProgress)
     suspend fun clear(playableKey: String)

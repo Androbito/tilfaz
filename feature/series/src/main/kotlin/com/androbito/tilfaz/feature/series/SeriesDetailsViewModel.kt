@@ -14,10 +14,15 @@ import com.androbito.tilfaz.core.model.SeriesDetails
 import com.androbito.tilfaz.core.model.WatchProgress
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -30,15 +35,23 @@ data class SeriesDetailsUiState(
     val failed: Boolean = false,
     val isFavorite: Boolean = false,
     val selectedSeason: Int? = null,
-    val progressByEpisodeId: Map<String, WatchProgress> = emptyMap()
+    val progressByEpisodeId: Map<String, WatchProgress> = emptyMap(),
+    /** "More like this": other series from the same provider category, the only grouping Xtream guarantees. */
+    val related: List<Series> = emptyList()
 ) {
     val episodes: List<Episode> get() = details?.seasons?.firstOrNull { it.number == selectedSeason }?.episodes.orEmpty()
 
-    /** The episode the big Play button should start: the first unfinished one with progress, else the first episode. */
+    /**
+     * What the big Play button starts: the episode most recently left unfinished; failing that, the one after the
+     * episode most recently finished; failing that (nothing watched, or the last episode was the one finished), the first.
+     */
     val nextEpisode: Episode? get() {
         val all = details?.seasons?.flatMap { it.episodes }.orEmpty()
-        val inProgress = all.firstOrNull { progressByEpisodeId[it.id]?.let { p -> !p.isFinished } == true }
-        return inProgress ?: all.firstOrNull()
+        val recent = progressByEpisodeId.entries.sortedByDescending { it.value.updatedAt }
+        val inProgress = recent.firstOrNull { !it.value.isFinished && it.value.positionMs > 0 }?.key
+        if (inProgress != null) all.firstOrNull { it.id == inProgress }?.let { return it }
+        val lastFinished = recent.firstOrNull { it.value.isFinished }?.key
+        return all.getOrNull(all.indexOfFirst { it.id == lastFinished } + 1) ?: all.firstOrNull()
     }
 }
 
@@ -68,13 +81,23 @@ class SeriesDetailsViewModel @Inject constructor(
         val season: Int? = null
     )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val related: Flow<List<Series>> = loaded
+        .map { it.series?.categoryId }
+        .distinctUntilChanged()
+        .flatMapLatest { categoryId ->
+            if (categoryId == null) flowOf(emptyList()) else seriesRepository.observeItems(categoryId)
+        }
+        .map { list -> list.filter { it.id != seriesId }.take(RELATED_LIMIT) }
+
     val state: StateFlow<SeriesDetailsUiState> = combine(
         loaded,
         favoritesRepository.observeKeys(ContentType.SERIES).map { ToggleFavoriteUseCase.seriesKey(seriesId) in it },
-        progressRepository.observeContinueWatching(ContentType.SERIES).map { list ->
-            list.filter { it.playableKey.startsWith("series:$seriesId:") }.associateBy { it.playableKey.substringAfterLast(':') }
-        }
-    ) { loaded, favorite, progress ->
+        progressRepository.observeByKeyPrefix("series:$seriesId:").map { list ->
+            list.associateBy { it.playableKey.substringAfterLast(':') }
+        },
+        related
+    ) { loaded, favorite, progress, related ->
         SeriesDetailsUiState(
             series = loaded.details?.series ?: loaded.series,
             details = loaded.details,
@@ -82,7 +105,8 @@ class SeriesDetailsViewModel @Inject constructor(
             failed = loaded.failed,
             isFavorite = favorite,
             selectedSeason = loaded.season ?: loaded.details?.seasons?.firstOrNull()?.number,
-            progressByEpisodeId = progress
+            progressByEpisodeId = progress,
+            related = related
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SeriesDetailsUiState())
 
@@ -105,5 +129,9 @@ class SeriesDetailsViewModel @Inject constructor(
                 .onSuccess { details -> loaded.update { it.copy(details = details, loading = false) } }
                 .onFailure { loaded.update { it.copy(loading = false, failed = true) } }
         }
+    }
+
+    private companion object {
+        const val RELATED_LIMIT = 20
     }
 }

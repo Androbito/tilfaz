@@ -62,7 +62,10 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         )
 
         seriesScreen(onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) })
-        seriesDetailsScreen(onPlayEpisode = { seriesId, episodeId, start -> navController.navigate(PlayerRoute.episode(seriesId, episodeId, start)) })
+        seriesDetailsScreen(
+            onPlayEpisode = { seriesId, episodeId, start -> navController.navigate(PlayerRoute.episode(seriesId, episodeId, start)) },
+            onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
+        )
 
         searchScreen(
             SearchNavigation(

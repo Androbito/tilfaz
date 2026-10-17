@@ -32,6 +32,9 @@ class FakeWatchProgressRepository : WatchProgressRepository {
     override fun observeContinueWatching(type: ContentType): Flow<List<WatchProgress>> =
         saved.map { map -> map.values.filter { it.contentType == type && !it.isFinished }.sortedByDescending { it.updatedAt } }
 
+    override fun observeByKeyPrefix(prefix: String): Flow<List<WatchProgress>> =
+        saved.map { map -> map.values.filter { it.playableKey.startsWith(prefix) }.sortedByDescending { it.updatedAt } }
+
     override suspend fun progress(playableKey: String): WatchProgress? = saved.value[playableKey]
     override suspend fun save(progress: WatchProgress) = saved.update { it + (progress.playableKey to progress) }
     override suspend fun clear(playableKey: String) = saved.update { it - playableKey }

@@ -30,6 +30,9 @@ interface WatchProgressDao {
     @Query("SELECT * FROM watch_progress WHERE type = :type ORDER BY updatedAtMillis DESC LIMIT :limit")
     fun observeByType(type: String, limit: Int): Flow<List<WatchProgressEntity>>
 
+    @Query("SELECT * FROM watch_progress WHERE playableKey LIKE :prefix || '%' ORDER BY updatedAtMillis DESC")
+    fun observeByKeyPrefix(prefix: String): Flow<List<WatchProgressEntity>>
+
     @Query("SELECT * FROM watch_progress WHERE playableKey = :key")
     suspend fun byKey(key: String): WatchProgressEntity?
 

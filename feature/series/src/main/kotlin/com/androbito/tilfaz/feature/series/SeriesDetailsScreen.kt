@@ -50,9 +50,11 @@ import com.androbito.tilfaz.core.designsystem.component.EmptyState
 import com.androbito.tilfaz.core.designsystem.component.ErrorState
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
+import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.ProgressBar
 import com.androbito.tilfaz.core.designsystem.component.ProvideMinimalBringIntoView
 import com.androbito.tilfaz.core.designsystem.component.RatingBadge
+import com.androbito.tilfaz.core.designsystem.component.ScoreLine
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.formatDuration
@@ -76,17 +78,21 @@ data class SeriesDetailsRoute(val seriesId: Int) {
     }
 }
 
-fun NavGraphBuilder.seriesDetailsScreen(onPlayEpisode: (seriesId: Int, episodeId: String, startPositionMs: Long) -> Unit) {
-    composable<SeriesDetailsRoute> { SeriesDetailsRoute(onPlayEpisode) }
+fun NavGraphBuilder.seriesDetailsScreen(
+    onPlayEpisode: (seriesId: Int, episodeId: String, startPositionMs: Long) -> Unit,
+    onOpenSeries: (seriesId: Int) -> Unit
+) {
+    composable<SeriesDetailsRoute> { SeriesDetailsRoute(onPlayEpisode, onOpenSeries) }
 }
 
 @Composable
-fun SeriesDetailsRoute(onPlayEpisode: (Int, String, Long) -> Unit, viewModel: SeriesDetailsViewModel = hiltViewModel()) {
+fun SeriesDetailsRoute(onPlayEpisode: (Int, String, Long) -> Unit, onOpenSeries: (Int) -> Unit, viewModel: SeriesDetailsViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     SeriesDetailsRoute(
         state = state,
         onEvent = viewModel::onEvent,
-        onPlayEpisode = onPlayEpisode
+        onPlayEpisode = onPlayEpisode,
+        onOpenSeries = onOpenSeries
     )
 }
 
@@ -94,7 +100,8 @@ fun SeriesDetailsRoute(onPlayEpisode: (Int, String, Long) -> Unit, viewModel: Se
 fun SeriesDetailsRoute(
     state: SeriesDetailsUiState,
     onEvent: (SeriesDetailsEvent) -> Unit,
-    onPlayEpisode: (Int, String, Long) -> Unit
+    onPlayEpisode: (Int, String, Long) -> Unit,
+    onOpenSeries: (Int) -> Unit
 ) {
     SeriesDetailsScreen(
         state = state,
@@ -102,12 +109,13 @@ fun SeriesDetailsRoute(
         onPlay = { episode ->
             val progress = state.progressByEpisodeId[episode.id]
             onPlayEpisode(episode.seriesId, episode.id, progress?.takeUnless { it.isFinished }?.positionMs ?: 0L)
-        }
+        },
+        onOpenSeries = onOpenSeries
     )
 }
 
 @Composable
-fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEvent) -> Unit, onPlay: (Episode) -> Unit) {
+fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEvent) -> Unit, onPlay: (Episode) -> Unit, onOpenSeries: (Int) -> Unit) {
     val series = state.series
     when {
         state.isLoading && series == null -> { LoadingState(); return }
@@ -154,6 +162,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                             }
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
                                 Text(series.name, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
+                                series.rating?.let { ScoreLine(it) }
                                 if (details != null) {
                                     InfoRow(stringResource(R.string.series_directed_by), details.director)
                                     InfoRow(stringResource(R.string.series_release_date), details.releaseDate)
@@ -220,6 +229,21 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                     } else if (details != null) {
                         item { EmptyState(title = stringResource(R.string.series_no_episodes), modifier = Modifier.height(240.dp)) }
                     }
+                    if (state.related.isNotEmpty()) {
+                        item {
+                            Text(stringResource(R.string.series_related), style = MaterialTheme.typography.titleLarge, color = TilfazColors.Accent)
+                        }
+                        item {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                                contentPadding = PaddingValues(vertical = Dimens.SpaceS, horizontal = Dimens.SpaceS)
+                            ) {
+                                items(state.related, key = { it.id }) { related ->
+                                    PosterCard(related.name, related.posterUrl, onClick = { onOpenSeries(related.id) }, ratingBadge = related.rating?.badge)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -275,7 +299,8 @@ private fun SeriesDetailsRoutePreview() {
         SeriesDetailsRoute(
             state = sampleUiState,
             onEvent = {},
-            onPlayEpisode = { _, _, _ -> }
+            onPlayEpisode = { _, _, _ -> },
+            onOpenSeries = {}
         )
     }
 }

@@ -51,6 +51,9 @@ class RoomWatchProgressRepository @Inject constructor(
     override fun observeContinueWatching(type: ContentType): Flow<List<WatchProgress>> =
         dao.observeByType(type.name, CONTINUE_WATCHING_LIMIT).map { rows -> rows.map { it.toDomain() }.filterNot { it.isFinished } }
 
+    override fun observeByKeyPrefix(prefix: String): Flow<List<WatchProgress>> =
+        dao.observeByKeyPrefix(prefix).map { rows -> rows.map { it.toDomain() } }
+
     override suspend fun progress(playableKey: String): WatchProgress? = withContext(io) { dao.byKey(playableKey)?.toDomain() }
 
     override suspend fun save(progress: WatchProgress) = withContext(io) { dao.upsert(progress.toEntity()) }
