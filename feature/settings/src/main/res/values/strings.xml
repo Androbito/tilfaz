@@ -23,6 +23,7 @@
     <string name="settings_account_unlimited">Unlimited</string>
     <string name="settings_account_connections">Connections</string>
     <string name="settings_account_formats">Formats allowed by server</string>
+    <string name="settings_account_refreshing">Refreshing…</string>
     <string name="settings_account_refresh">Refresh account info</string>
     <string name="settings_sign_out">Sign out</string>
     <string name="settings_sign_out_confirm">Sign out and delete cached catalog?</string>

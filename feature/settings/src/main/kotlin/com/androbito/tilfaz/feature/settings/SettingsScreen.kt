@@ -15,7 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,6 +60,19 @@ fun SettingsRoute(onSignedOut: () -> Unit, viewModel: SettingsViewModel = hiltVi
 
 @Composable
 fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
+    val signOutFocus = remember { FocusRequester() }
+    val cancelFocus = remember { FocusRequester() }
+    var restoreSignOutFocus by remember { mutableStateOf(false) }
+    // The button that was pressed disappears when the confirmation shows (and vice versa), so focus has to be handed over.
+    LaunchedEffect(state.confirmSignOut) {
+        withFrameNanos { } // the new button joins the focus tree once its first frame is laid out
+        if (state.confirmSignOut) {
+            cancelFocus.requestFocus()
+        } else if (restoreSignOutFocus) {
+            signOutFocus.requestFocus()
+            restoreSignOutFocus = false
+        }
+    }
     ProvideMinimalBringIntoView {
         Column(Modifier.fillMaxSize()) {
             TopBar(title = "Tilfaz · ${stringResource(R.string.settings_title)}")
@@ -88,7 +105,11 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                 }
                 Setting(stringResource(R.string.settings_user_agent), stringResource(R.string.settings_user_agent_hint)) {
                     var draft by remember(state.settings.userAgent) { mutableStateOf(state.settings.userAgent) }
-                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         TvTextField(
                             value = draft,
                             onValueChange = { draft = it },
@@ -125,7 +146,9 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
                     OutlinedButton(onClick = {
                         onEvent(SettingsEvent.RefreshStatus)
-                    }, enabled = !state.isRefreshingStatus) { Text(stringResource(R.string.settings_account_refresh)) }
+                    }, enabled = !state.isRefreshingStatus) {
+                        Text(stringResource(if (state.isRefreshingStatus) R.string.settings_account_refreshing else R.string.settings_account_refresh))
+                    }
                     if (state.confirmSignOut) {
                         Text(
                             stringResource(R.string.settings_sign_out_confirm),
@@ -133,9 +156,17 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                             modifier = Modifier.padding(top = Dimens.SpaceS)
                         )
                         TilfazButton(onClick = { onEvent(SettingsEvent.SignOutConfirmed) }) { Text(stringResource(R.string.settings_sign_out_yes)) }
-                        OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutCancelled) }) { Text(stringResource(R.string.settings_cancel)) }
+                        OutlinedButton(
+                            onClick = {
+                                restoreSignOutFocus = true
+                                onEvent(SettingsEvent.SignOutCancelled)
+                            },
+                            modifier = Modifier.focusRequester(cancelFocus)
+                        ) { Text(stringResource(R.string.settings_cancel)) }
                     } else {
-                        OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutRequested) }) { Text(stringResource(R.string.settings_sign_out)) }
+                        OutlinedButton(onClick = { onEvent(SettingsEvent.SignOutRequested) }, modifier = Modifier.focusRequester(signOutFocus)) {
+                            Text(stringResource(R.string.settings_sign_out))
+                        }
                     }
                 }
             }
