@@ -14,6 +14,15 @@ val devCredentials = Properties().apply {
         ?.let { load(StringReader(it)) }
 }
 
+val devCredentialKeys = setOf("SERVER_URL", "USERNAME", "PASSWORD")
+if (devCredentials.isNotEmpty()) {
+    val unknown = devCredentials.stringPropertyNames() - devCredentialKeys
+    val missing = devCredentialKeys - devCredentials.stringPropertyNames()
+    if (unknown.isNotEmpty() || missing.isNotEmpty()) {
+        logger.warn("dev-credentials.properties: unknown keys $unknown, missing keys $missing (expected $devCredentialKeys)")
+    }
+}
+
 fun devCredentialField(key: String): String {
     val value = devCredentials.getProperty(key, "").replace("\\", "\\\\").replace("\"", "\\\"")
     return "\"$value\""
