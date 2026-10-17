@@ -9,6 +9,9 @@
     <string name="series_empty">No series in this section</string>
     <string name="series_no_results">No series matches \"%1$s\"</string>
     <string name="series_related">More like this</string>
+    <string name="series_show_episodes">Episodes</string>
+    <string name="series_watched">Watched</string>
+    <string name="series_next_up">Next up</string>
     <string name="series_play_episode">Play %1$s</string>
     <string name="series_season">Season %1$d</string>
     <string name="series_episodes">Episodes (%1$d)</string>

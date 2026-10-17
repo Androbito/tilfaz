@@ -1,11 +1,20 @@
 package com.androbito.tilfaz.feature.series
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,20 +27,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +64,7 @@ import coil3.compose.AsyncImage
 import com.androbito.tilfaz.core.designsystem.component.EmptyState
 import com.androbito.tilfaz.core.designsystem.component.ErrorState
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
+import com.androbito.tilfaz.core.designsystem.component.ListFocusMemory
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.ProgressBar
@@ -128,14 +144,40 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
     }
     if (series == null) return
     val details = state.details
+    var episodesOpen by rememberSaveable { mutableStateOf(false) }
     val playFocus = remember { FocusRequester() }
+    val episodesButtonFocus = remember { FocusRequester() }
+    val nextEpisodeFocus = remember { FocusRequester() }
     val episodeFocus = rememberListFocusMemory()
-    // Play takes focus on a fresh open; coming back from an episode, focus returns to that episode instead.
+    // A fresh open puts focus on the episode that would play next; a restore after the player is left to episodeFocus.
+    var focusNextEpisode by remember { mutableStateOf(false) }
+    var nextEpisodeRowReady by remember { mutableStateOf(false) }
+    var focusEpisodesButton by remember { mutableStateOf(false) }
+
+    // Play takes focus on a fresh open of the page. After returning from the player with the panel open it must not.
     LaunchedEffect(state.nextEpisode != null) {
-        if (state.nextEpisode != null && episodeFocus.index < 0) {
+        if (state.nextEpisode != null && !episodesOpen) {
             withFrameNanos { } // the button joins the focus tree once its first frame is laid out
             playFocus.requestFocus()
         }
+    }
+    LaunchedEffect(focusNextEpisode, nextEpisodeRowReady) {
+        if (focusNextEpisode && nextEpisodeRowReady) {
+            nextEpisodeFocus.requestFocus()
+            focusNextEpisode = false
+        }
+    }
+    LaunchedEffect(focusEpisodesButton) {
+        if (focusEpisodesButton) {
+            withFrameNanos { } // the page becomes focusable again once the panel is gone
+            episodesButtonFocus.requestFocus()
+            focusEpisodesButton = false
+        }
+    }
+    BackHandler(enabled = episodesOpen) {
+        episodesOpen = false
+        nextEpisodeRowReady = false
+        focusEpisodesButton = true
     }
 
     ProvideMinimalBringIntoView {
@@ -143,7 +185,8 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
             details?.backdropUrls?.firstOrNull()?.let { backdrop ->
                 AsyncImage(model = backdrop, contentDescription = null, contentScale = ContentScale.Crop, alpha = 0.18f, modifier = Modifier.fillMaxSize())
             }
-            Column(Modifier.fillMaxSize()) {
+            // While the panel is open the page behind it must not take focus, or Left would walk out of the panel.
+            Column(Modifier.fillMaxSize().focusProperties { canFocus = !episodesOpen }) {
                 TopBar(title = "Tilfaz", showClock = false)
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceS),
@@ -168,13 +211,26 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     InfoRow(stringResource(R.string.series_release_date), details.releaseDate)
                                     InfoRow(stringResource(R.string.series_genre), details.genre)
                                     InfoRow(stringResource(R.string.series_cast), details.cast)
-                                    InfoRow(stringResource(R.string.series_plot), details.plot, maxLines = 6)
+                                    InfoRow(stringResource(R.string.series_plot), details.plot, maxLines = 3)
                                 }
                                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
                                     state.nextEpisode?.let { next ->
                                         TilfazButton(onClick = { onPlay(next) }, modifier = Modifier.focusRequester(playFocus)) {
                                             Icon(Icons.Default.PlayArrow, contentDescription = null)
                                             Text(stringResource(R.string.series_play_episode, next.code), modifier = Modifier.padding(start = Dimens.SpaceS))
+                                        }
+                                    }
+                                    if (details != null && details.seasons.isNotEmpty()) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                state.nextEpisode?.let { onEvent(SeriesDetailsEvent.SelectSeason(it.seasonNumber)) }
+                                                episodesOpen = true
+                                                focusNextEpisode = true
+                                            },
+                                            modifier = Modifier.focusRequester(episodesButtonFocus)
+                                        ) {
+                                            Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
+                                            Text(stringResource(R.string.series_show_episodes), modifier = Modifier.padding(start = Dimens.SpaceS))
                                         }
                                     }
                                     OutlinedButton(onClick = { onEvent(SeriesDetailsEvent.ToggleFavorite) }) {
@@ -192,41 +248,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                             }
                         }
                     }
-                    if (details != null && details.seasons.isNotEmpty()) {
-                        item {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-                                items(details.seasons, key = { it.number }) { season ->
-                                    FocusableSurface(
-                                        onClick = { onEvent(SeriesDetailsEvent.SelectSeason(season.number)) },
-                                        selected = season.number == state.selectedSeason,
-                                        corner = Dimens.CornerS,
-                                        focusedScale = 1.0f
-                                    ) {
-                                        Text(
-                                            stringResource(R.string.series_season, season.number),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            modifier = Modifier.padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceS)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        item {
-                            Text(
-                                stringResource(R.string.series_episodes, state.episodes.size),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = TilfazColors.OnSurfaceMuted
-                            )
-                        }
-                        itemsIndexed(state.episodes, key = { _, episode -> episode.id }) { index, episode ->
-                            EpisodeRow(
-                                episode,
-                                state.progressByEpisodeId[episode.id],
-                                onClick = { onPlay(episode) },
-                                modifier = Modifier.rememberFocus(episodeFocus, index)
-                            )
-                        }
-                    } else if (details != null) {
+                    if (details != null && details.seasons.isEmpty()) {
                         item { EmptyState(title = stringResource(R.string.series_no_episodes), modifier = Modifier.height(240.dp)) }
                     }
                     if (state.related.isNotEmpty()) {
@@ -246,12 +268,88 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                     }
                 }
             }
+
+            AnimatedVisibility(visible = episodesOpen, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize().background(TilfazColors.Scrim))
+            }
+            AnimatedVisibility(
+                visible = episodesOpen,
+                enter = slideInHorizontally { it },
+                exit = slideOutHorizontally { it },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Row(Modifier.fillMaxSize()) {
+                    Spacer(Modifier.weight(1f - PANEL_WIDTH_FRACTION))
+                    EpisodesPanel(
+                        state = state,
+                        seasons = details?.seasons.orEmpty(),
+                        episodeFocus = episodeFocus,
+                        nextEpisodeFocus = nextEpisodeFocus,
+                        onNextEpisodeRowReady = { nextEpisodeRowReady = true },
+                        onPlay = onPlay,
+                        onEvent = onEvent,
+                        modifier = Modifier.weight(PANEL_WIDTH_FRACTION).fillMaxHeight()
+                    )
+                }
+            }
+        }
+    }
+}
+
+private const val PANEL_WIDTH_FRACTION = 0.58f
+
+@Composable
+private fun EpisodesPanel(
+    state: SeriesDetailsUiState,
+    seasons: List<Season>,
+    episodeFocus: ListFocusMemory,
+    nextEpisodeFocus: FocusRequester,
+    onNextEpisodeRowReady: () -> Unit,
+    onPlay: (Episode) -> Unit,
+    onEvent: (SeriesDetailsEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val nextEpisodeId = state.nextEpisode?.id
+    Column(
+        modifier.background(TilfazColors.Surface).padding(Dimens.SpaceL).focusGroup(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
+    ) {
+        Text(stringResource(R.string.series_episodes, state.episodes.size), style = MaterialTheme.typography.titleLarge, color = TilfazColors.OnSurfaceMuted)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
+            items(seasons, key = { it.number }) { season ->
+                FocusableSurface(
+                    onClick = { onEvent(SeriesDetailsEvent.SelectSeason(season.number)) },
+                    selected = season.number == state.selectedSeason,
+                    corner = Dimens.CornerS,
+                    focusedScale = 1.0f
+                ) {
+                    Text(
+                        stringResource(R.string.series_season, season.number),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceS)
+                    )
+                }
+            }
+        }
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
+            itemsIndexed(state.episodes, key = { _, episode -> episode.id }) { index, episode ->
+                val isNext = episode.id == nextEpisodeId
+                EpisodeRow(
+                    episode = episode,
+                    progress = state.progressByEpisodeId[episode.id],
+                    isNext = isNext,
+                    onClick = { onPlay(episode) },
+                    modifier = Modifier
+                        .rememberFocus(episodeFocus, index)
+                        .then(if (isNext) Modifier.focusRequester(nextEpisodeFocus).onGloballyPositioned { onNextEpisodeRowReady() } else Modifier)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun EpisodeRow(episode: Episode, progress: WatchProgress?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun EpisodeRow(episode: Episode, progress: WatchProgress?, isNext: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     FocusableSurface(onClick = onClick, modifier = modifier.fillMaxWidth(), corner = Dimens.CornerS, focusedScale = 1.0f) {
         Row(
             Modifier.fillMaxWidth().padding(Dimens.SpaceM),
@@ -259,13 +357,15 @@ private fun EpisodeRow(episode: Episode, progress: WatchProgress?, onClick: () -
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                Modifier.width(160.dp).height(90.dp).clip(RoundedCornerShape(Dimens.CornerS)).background(TilfazColors.SurfaceVariant),
+                Modifier.width(128.dp).height(72.dp).clip(RoundedCornerShape(Dimens.CornerS)).background(TilfazColors.SurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 // Shown while the thumbnail loads and whenever the panel has none.
-                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = TilfazColors.OnSurfaceMuted, modifier = Modifier.size(36.dp))
+                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = TilfazColors.OnSurfaceMuted, modifier = Modifier.size(32.dp))
                 AsyncImage(model = episode.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                if (progress != null) ProgressBar(progress.fraction, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp))
+                if (progress != null && !progress.isFinished) {
+                    ProgressBar(progress.fraction, Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp))
+                }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
                 Text(
@@ -277,7 +377,15 @@ private fun EpisodeRow(episode: Episode, progress: WatchProgress?, onClick: () -
                 episode.plot?.let {
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                formatDuration(episode.durationSeconds)?.let { Text(it, style = MaterialTheme.typography.labelLarge, color = TilfazColors.Accent) }
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+                    formatDuration(episode.durationSeconds)?.let { Text(it, style = MaterialTheme.typography.labelLarge, color = TilfazColors.Accent) }
+                    when {
+                        progress?.isFinished == true ->
+                            Text(stringResource(R.string.series_watched), style = MaterialTheme.typography.labelLarge, color = TilfazColors.Success)
+                        isNext ->
+                            Text(stringResource(R.string.series_next_up), style = MaterialTheme.typography.labelLarge, color = TilfazColors.OnBackground)
+                    }
+                }
             }
         }
     }
