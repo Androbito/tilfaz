@@ -155,4 +155,70 @@ class PlayerTracksTest {
         assertThat(chosen.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT)).isTrue()
         assertThat(chosen.overrides.values.map { it.mediaTrackGroup }).isEqualTo(listOf(tracks.groups[1].mediaTrackGroup))
     }
+
+    @Test
+    fun `a track whose label is only a language code is named from it`() {
+        val untagged = Tracks(listOf(group(text(null, label = "ita")), group(text("und", label = "tha"))))
+
+        val options = untagged.toOptions(TrackKind.SUBTITLE)
+
+        assertThat(options.map { it.label }).isEqualTo(listOf("Italian", "Thai"))
+        assertThat(options.map { it.detail }).isEqualTo(listOf(null, null))
+        assertThat(options[0].language).isEqualTo("it")
+    }
+
+    @Test
+    fun `a label that only writes the language in its own tongue is dropped`() {
+        val french = Tracks(listOf(group(text("fr", label = "Français")), group(text("fr", label = "French (Forced)"))))
+
+        val options = french.toOptions(TrackKind.SUBTITLE)
+
+        assertThat(options.map { it.label }).isEqualTo(listOf("French", "French"))
+        assertThat(options.map { it.detail }).isEqualTo(listOf(null, "French (Forced)"))
+    }
+
+    private fun subtitle(language: String, selectionFlags: Int = 0, roleFlags: Int = 0) =
+        Format.Builder().setSampleMimeType(MimeTypes.APPLICATION_SUBRIP).setLanguage(language)
+            .setSelectionFlags(selectionFlags).setRoleFlags(roleFlags).build()
+
+    private val forced = subtitle("fre", C.SELECTION_FLAG_FORCED or C.SELECTION_FLAG_DEFAULT)
+    private val full = subtitle("fre")
+    private val hearingImpaired = subtitle("fre", roleFlags = C.ROLE_FLAG_DESCRIBES_MUSIC_AND_SOUND)
+
+    @Test
+    fun `when the player started on a forced subtitle the full one in that language is offered instead`() {
+        val tracks = Tracks(listOf(group(forced, selected = 0), group(hearingImpaired), group(full)))
+
+        val better = tracks.fullSubtitleInsteadOfForced("fr")
+
+        assertThat(better?.id).isEqualTo("2:0")
+    }
+
+    @Test
+    fun `a subtitle that is not forced is left alone`() {
+        val tracks = Tracks(listOf(group(forced), group(full, selected = 0)))
+
+        assertThat(tracks.fullSubtitleInsteadOfForced("fr")).isNull()
+    }
+
+    @Test
+    fun `with only a forced track in that language nothing is changed`() {
+        val tracks = Tracks(listOf(group(forced, selected = 0), group(subtitle("eng"))))
+
+        assertThat(tracks.fullSubtitleInsteadOfForced("fr")).isNull()
+    }
+
+    @Test
+    fun `a hearing impaired track is taken only when no plain one exists`() {
+        val tracks = Tracks(listOf(group(forced, selected = 0), group(hearingImpaired)))
+
+        assertThat(tracks.fullSubtitleInsteadOfForced("fr")?.id).isEqualTo("1:0")
+    }
+
+    @Test
+    fun `without a subtitle language nothing is changed`() {
+        val tracks = Tracks(listOf(group(forced, selected = 0), group(full)))
+
+        assertThat(tracks.fullSubtitleInsteadOfForced(null)).isNull()
+    }
 }

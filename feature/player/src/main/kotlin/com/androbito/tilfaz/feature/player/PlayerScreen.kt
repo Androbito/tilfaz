@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
@@ -120,13 +121,23 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         val exo = factory.create(source, state.settings)
         if (state.startPositionMs > 0) exo.seekTo(state.startPositionMs)
         exo.setPlaybackSpeed(speed) // a zap or retry keeps the speed the user chose
+        var subtitleChecked = false
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 isBuffering = playbackState == Player.STATE_BUFFERING
                 if (playbackState == Player.STATE_READY) durationMs = exo.duration.coerceAtLeast(0)
             }
             override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
-            override fun onTracksChanged(newTracks: Tracks) { tracks = newTracks }
+            override fun onTracksChanged(newTracks: Tracks) {
+                tracks = newTracks
+                // Once per playback, so a track the user picks afterwards is never overridden.
+                if (!subtitleChecked && newTracks.groups.any { it.type == C.TRACK_TYPE_TEXT }) {
+                    subtitleChecked = true
+                    newTracks.fullSubtitleInsteadOfForced(state.settings.subtitleLanguage)?.let {
+                        exo.trackSelectionParameters = exo.trackSelectionParameters.choosing(newTracks, it)
+                    }
+                }
+            }
             override fun onCues(cueGroup: CueGroup) { cues = cueGroup }
             override fun onPlayerError(error: PlaybackException) { onEvent(PlayerEvent.PlaybackFailed(error.toPlayerError())) }
         }

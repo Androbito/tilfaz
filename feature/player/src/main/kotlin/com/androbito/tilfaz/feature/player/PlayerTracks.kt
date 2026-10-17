@@ -5,6 +5,8 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import java.util.Locale
 
@@ -21,7 +23,9 @@ data class TrackOption(
     val label: String,
     val detail: String?,
     val language: String?,
-    val isSelected: Boolean
+    val isSelected: Boolean,
+    val isForced: Boolean = false,
+    val isHearingImpaired: Boolean = false
 )
 
 fun Tracks.toOptions(kind: TrackKind): List<TrackOption> {
@@ -32,16 +36,21 @@ fun Tracks.toOptions(kind: TrackKind): List<TrackOption> {
             // A track the device cannot play would be a dead end in the list.
             if (!group.isTrackSupported(trackIndex)) continue
             val format = group.getTrackFormat(trackIndex)
-            val language = format.language?.takeIf { it.isNotBlank() && it != "und" }
-            val name = language?.let(::languageName)
+            val tagged = format.language?.takeIf { it.isNotBlank() && it != "und" }
+            // Some files leave the language empty and put just its code in the label instead.
+            val labelCode = format.label?.trim()?.takeIf { tagged == null && it.length in 2..3 && it.all(Char::isLetter) && languageName(it) != null }
+            val language = tagged ?: labelCode?.let(::twoLetterCode)
+            val name = (tagged ?: labelCode)?.let(::languageName)
             options += TrackOption(
                 id = "$groupIndex:$trackIndex",
                 kind = kind,
                 label = name ?: "Track ${options.size + 1}",
-                // Many streams label a track with just its language, which the row already says.
-                detail = detailOf(kind, format.label?.takeUnless { it.equals(name, ignoreCase = true) }, format.channelCount, format.sampleMimeType),
+                // A label that only repeats the language (in English, as a code, or in its own tongue) adds nothing.
+                detail = detailOf(kind, format.label?.takeUnless { it.repeatsLanguage(tagged ?: labelCode, name) }, format.channelCount, format.sampleMimeType),
                 language = language,
-                isSelected = group.isTrackSelected(trackIndex)
+                isSelected = group.isTrackSelected(trackIndex),
+                isForced = format.selectionFlags and C.SELECTION_FLAG_FORCED != 0,
+                isHearingImpaired = format.roleFlags and C.ROLE_FLAG_DESCRIBES_MUSIC_AND_SOUND != 0
             )
         }
     }
@@ -51,6 +60,16 @@ fun Tracks.toOptions(kind: TrackKind): List<TrackOption> {
 private fun languageName(code: String): String? =
     Locale.forLanguageTag(code).getDisplayLanguage(Locale.getDefault()).takeIf { it.isNotBlank() && !it.equals(code, ignoreCase = true) }
         ?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+private fun String.repeatsLanguage(code: String?, name: String?): Boolean {
+    if (code == null) return false
+    val ownName = Locale.forLanguageTag(code).let { it.getDisplayLanguage(it) }
+    return trim().let { it.equals(name, ignoreCase = true) || it.equals(code, ignoreCase = true) || it.equals(ownName, ignoreCase = true) }
+}
+
+/** "ita" -> "it": the code the player's language preference uses. Unknown codes are kept as they are. */
+private fun twoLetterCode(code: String): String =
+    if (code.length == 2) code else Locale.getISOLanguages().firstOrNull { Locale(it).isO3Language == code } ?: code
 
 private fun detailOf(kind: TrackKind, label: String?, channels: Int, mimeType: String?): String? {
     val parts = when (kind) {
@@ -111,4 +130,19 @@ fun TrackSelectionParameters.choosing(tracks: Tracks, kind: TrackKind, option: T
     builder.setOverrideForType(TrackSelectionOverride(tracks.groups[groupIndex].mediaTrackGroup, trackIndex))
     if (kind == TrackKind.SUBTITLE) builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
     return builder.build()
+}
+
+/**
+ * Files often flag a "Forced" subtitle (only the foreign lines) as the default one, and the player starts on it, which looks
+ * like missing subtitles. When that is the track playing, this is the full subtitle in the same language to use instead:
+ * a plain one if there is one, else a hearing impaired one. Null when nothing needs changing.
+ */
+@OptIn(UnstableApi::class)
+fun Tracks.fullSubtitleInsteadOfForced(language: String?): TrackOption? {
+    if (language == null) return null
+    val wanted = Util.normalizeLanguageCode(language)
+    val sameLanguage = toOptions(TrackKind.SUBTITLE).filter { it.language?.let(Util::normalizeLanguageCode) == wanted }
+    if (sameLanguage.none { it.isSelected && it.isForced }) return null
+    val full = sameLanguage.filter { !it.isForced }
+    return full.firstOrNull { !it.isHearingImpaired } ?: full.firstOrNull()
 }
