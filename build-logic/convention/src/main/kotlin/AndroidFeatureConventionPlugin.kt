@@ -28,6 +28,10 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("coil-compose").get())
 
                 add("testImplementation", project(":core:testing"))
+                add("testImplementation", libs.findLibrary("robolectric").get())
+                add("testImplementation", libs.findLibrary("androidx-compose-ui-test-junit4").get())
+                add("testImplementation", libs.findLibrary("androidx-test-ext-junit").get())
+                add("debugImplementation", libs.findLibrary("androidx-compose-ui-test-manifest").get())
             }
         }
     }

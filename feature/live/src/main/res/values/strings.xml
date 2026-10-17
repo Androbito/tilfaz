@@ -7,6 +7,7 @@
     <string name="live_history">CHANNELS HISTORY</string>
     <string name="live_now">Now</string>
     <string name="live_next">Next</string>
+    <string name="live_in_favorites">In your favourites</string>
     <string name="live_press_ok">Press OK to watch · long press to favourite</string>
     <string name="live_empty_category">No channels in this category</string>
     <string name="live_empty_favorites">Long-press a channel to add it here</string>

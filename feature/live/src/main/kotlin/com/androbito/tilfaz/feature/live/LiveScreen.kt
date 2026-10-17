@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
@@ -29,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.CategoryRow
@@ -81,13 +83,23 @@ fun LiveScreen(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -
     val now by rememberCurrentTime()
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.live_title)}")
-        Row(Modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceL)) {
-            CategoryColumn(state, onEvent, Modifier.width(Dimens.SidebarWidth).fillMaxHeight())
+        Row(Modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
+            CategoryColumn(state, onEvent, Modifier.width(SidebarWidth).fillMaxHeight())
             ChannelColumn(state, onEvent, onPlay, now, Modifier.weight(1f).fillMaxHeight())
-            PreviewPane(state.focusedChannel, state.focusedChannelId?.let { state.nowNext[it] }, now, Modifier.width(420.dp).fillMaxHeight())
+            PreviewPane(
+                channel = state.focusedChannel,
+                nowNext = state.focusedChannelId?.let { state.nowNext[it] },
+                now = now,
+                isFavorite = state.focusedChannelId in state.favoriteIds,
+                modifier = Modifier.width(PreviewWidth).fillMaxHeight()
+            )
         }
     }
 }
+
+// The three columns share 960dp on a 1080p TV; the channel list gets what these two leave, enough for logo, name and programme.
+private val SidebarWidth = 270.dp
+private val PreviewWidth = 300.dp
 
 @Composable
 private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, modifier: Modifier) {
@@ -153,11 +165,11 @@ private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPl
 }
 
 @Composable
-private fun PreviewPane(channel: LiveChannel?, nowNext: NowNext?, now: Instant, modifier: Modifier) {
+private fun PreviewPane(channel: LiveChannel?, nowNext: NowNext?, now: Instant, isFavorite: Boolean, modifier: Modifier) {
     Column(modifier.padding(start = Dimens.SpaceM), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
         if (channel == null) return
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-            ChannelLogo(channel.logoUrl, Modifier.size(96.dp))
+            ChannelLogo(channel.logoUrl, Modifier.size(72.dp))
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
                 Text(channel.name, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), maxLines = 2)
                 if (channel.hasArchive && channel.archiveDays > 0) {
@@ -173,8 +185,14 @@ private fun PreviewPane(channel: LiveChannel?, nowNext: NowNext?, now: Instant, 
             nowNext == null -> Text(stringResource(R.string.live_epg_unavailable), color = TilfazColors.OnSurfaceMuted)
             nowNext.now == null && nowNext.next == null -> Text(stringResource(R.string.live_epg_unavailable), color = TilfazColors.OnSurfaceMuted)
             else -> {
-                nowNext.now?.let { ProgrammeBlock(stringResource(R.string.live_now), it, now) }
-                nowNext.next?.let { ProgrammeBlock(stringResource(R.string.live_next), it, null) }
+                nowNext.now?.let { ProgrammeBlock(stringResource(R.string.live_now), it, now, descriptionLines = 3) }
+                nowNext.next?.let { ProgrammeBlock(stringResource(R.string.live_next), it, null, descriptionLines = 0) }
+            }
+        }
+        if (isFavorite) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Favorite, contentDescription = null, tint = TilfazColors.Danger, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.live_in_favorites), style = MaterialTheme.typography.bodyMedium)
             }
         }
         Text(stringResource(R.string.live_press_ok), style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted)
@@ -182,7 +200,7 @@ private fun PreviewPane(channel: LiveChannel?, nowNext: NowNext?, now: Instant, 
 }
 
 @Composable
-private fun ProgrammeBlock(label: String, entry: EpgEntry, now: Instant?) {
+private fun ProgrammeBlock(label: String, entry: EpgEntry, now: Instant?, descriptionLines: Int) {
     val fmt = DateTimeFormatter.ofPattern("HH:mm")
     val zone = ZoneId.systemDefault()
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
@@ -193,6 +211,8 @@ private fun ProgrammeBlock(label: String, entry: EpgEntry, now: Instant?) {
         )
         Text(entry.title, style = MaterialTheme.typography.titleLarge, maxLines = 2)
         if (now != null) ProgressBar(entry.progressAt(now), Modifier.fillMaxWidth().padding(vertical = Dimens.SpaceXs).height(4.dp))
-        entry.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = 6) }
+        if (descriptionLines > 0) {
+            entry.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = descriptionLines) }
+        }
     }
 }
