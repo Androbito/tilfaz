@@ -24,14 +24,15 @@ import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -67,6 +68,8 @@ import com.androbito.tilfaz.core.model.TitleText
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -124,8 +127,16 @@ fun LiveScreen(
     val now by rememberCurrentTime()
     // The account allows one connection: once a channel is opened full screen, the small video goes away at once so that
     // the two never stream together. It is allowed back when this screen is shown again.
-    var previewSuspended by remember { mutableStateOf(false) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { previewSuspended = false }
+    // Saved with the screen: when Back brings it again it is rebuilt still suspended, so it waits out the pause once more and
+    // does not start a stream that the settling focus would cut a moment later.
+    var previewSuspended by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        scope.launch {
+            delay(LiveViewModel.PREVIEW_DELAY_MS)
+            previewSuspended = false
+        }
+    }
     val play: (LiveChannel) -> Unit = { channel ->
         previewSuspended = true
         onPlay(channel)
@@ -258,7 +269,7 @@ private fun PreviewPane(
     Column(modifier.padding(start = Dimens.SpaceM), verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
         if (channel == null) return
         // The small live video, or the channel's logo while nothing is playing (scrolling, or just opened).
-        Box(Modifier.fillMaxWidth().aspectRatio(VIDEO_ASPECT).clip(RoundedCornerShape(Dimens.CornerS)).background(TilfazColors.Surface)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(VIDEO_ASPECT).background(TilfazColors.Surface, RoundedCornerShape(Dimens.CornerS))) {
             if (video != null) {
                 preview(video, Modifier.fillMaxSize()) { onOpenVideo(video) }
             } else {
@@ -268,7 +279,12 @@ private fun PreviewPane(
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
             ChannelLogo(channel.logoUrl, Modifier.size(40.dp))
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
-                Text(channel.name, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
+                Text(
+                    channel.name,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
                 if (channel.hasArchive && channel.archiveDays > 0) {
                     Text(
                         stringResource(R.string.live_archive_days, channel.archiveDays),
@@ -282,7 +298,7 @@ private fun PreviewPane(
             nowNext == null -> Text(stringResource(R.string.live_epg_unavailable), color = TilfazColors.OnSurfaceMuted)
             nowNext.now == null && nowNext.next == null -> Text(stringResource(R.string.live_epg_unavailable), color = TilfazColors.OnSurfaceMuted)
             else -> {
-                nowNext.now?.let { ProgrammeBlock(stringResource(R.string.live_now), it, now, descriptionLines = 3) }
+                nowNext.now?.let { ProgrammeBlock(stringResource(R.string.live_now), it, now, descriptionLines = 2) }
                 nowNext.next?.let { ProgrammeBlock(stringResource(R.string.live_next), it, null, descriptionLines = 0) }
             }
         }
@@ -292,7 +308,13 @@ private fun PreviewPane(
                 Text(stringResource(R.string.live_in_favorites), style = MaterialTheme.typography.bodyMedium)
             }
         }
-        Text(stringResource(R.string.live_press_ok), style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted)
+        Text(
+            stringResource(R.string.live_press_ok),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TilfazColors.OnSurfaceMuted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -306,7 +328,7 @@ private fun ProgrammeBlock(label: String, entry: EpgEntry, now: Instant?, descri
             style = MaterialTheme.typography.labelLarge,
             color = TilfazColors.Accent
         )
-        Text(entry.title, style = MaterialTheme.typography.titleLarge, maxLines = 2)
+        Text(entry.title, style = MaterialTheme.typography.titleMedium, maxLines = if (descriptionLines > 0) 2 else 1, overflow = TextOverflow.Ellipsis)
         if (now != null) ProgressBar(entry.progressAt(now), Modifier.fillMaxWidth().padding(vertical = Dimens.SpaceXs).height(4.dp))
         if (descriptionLines > 0) {
             entry.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted, maxLines = descriptionLines) }

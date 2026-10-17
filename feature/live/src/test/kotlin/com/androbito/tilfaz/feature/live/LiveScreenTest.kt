@@ -100,6 +100,56 @@ class LiveScreenTest {
     }
 
     @Test
+    fun theRightPaneStillFitsWithALongChannelNameLongProgrammeTitlesAndTheSmallVideo() {
+        val long = Fixtures.alJazeera.copy(name = "|AR| BEIN SPORTS GLOBAL HD NX WITH A VERY LONG EXTRA NAME THAT WRAPS")
+        val longText = "Diving - 1M Springboard Final - Asian Games with a very long title that needs more than one line"
+        val state = stateWith().copy(
+            focusedChannel = long,
+            previewChannel = long,
+            nowNext = mapOf(
+                long.id to NowNext(
+                    now = Fixtures.epg(long.id, longText, -30, 60).copy(description = longDescription),
+                    next = Fixtures.epg(long.id, longText, 30, 60).copy(description = longDescription)
+                )
+            )
+        )
+        compose.setContent {
+            TilfazTheme {
+                LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}, preview = previewSlot(mutableListOf()))
+            }
+        }
+        compose.waitForIdle()
+
+        val screen = compose.onRoot().fetchSemanticsNode().boundsInRoot
+        val hint = compose.onNodeWithText(string(R.string.live_press_ok), substring = true).fetchSemanticsNode().boundsInRoot
+        assertThat(hint.height).isGreaterThan(0f)
+        assertThat(hint.bottom).isLessThanOrEqualTo(screen.bottom)
+    }
+
+    @Test
+    fun comingBackFromFullScreenTheSmallVideoWaitsOutThePauseAgain() {
+        val onScreen = mutableListOf<Int>()
+        val state = stateWith().copy(previewChannel = Fixtures.alJazeera)
+        val tester = StateRestorationTester(compose)
+        compose.mainClock.autoAdvance = false
+        tester.setContent {
+            TilfazTheme {
+                LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}, preview = previewSlot(onScreen))
+            }
+        }
+        compose.mainClock.advanceTimeByFrame()
+        pressOk(hasText(Fixtures.beinSports1.name) and hasClickAction()) // opens full screen: the small video goes away
+
+        // The screen is rebuilt when Back brings it again; a stream started this instant would be cut a moment later.
+        tester.emulateSavedInstanceStateRestore()
+        compose.mainClock.advanceTimeByFrame()
+        assertThat(onScreen).isEqualTo(emptyList())
+
+        compose.mainClock.advanceTimeBy(LiveViewModel.PREVIEW_DELAY_MS + 100)
+        assertThat(onScreen).isEqualTo(listOf(Fixtures.alJazeera.id))
+    }
+
+    @Test
     fun aFavouritedChannelSaysSoInThePreview() {
         show(stateWith(favorite = true))
 
