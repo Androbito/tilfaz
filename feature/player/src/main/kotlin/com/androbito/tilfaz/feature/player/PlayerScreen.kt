@@ -160,6 +160,8 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         }
     }
 
+    OnStopEffect { player?.pause() }
+
     // Position ticker: drives the progress bar, the saved resume position and the auto-hide of controls.
     LaunchedEffect(player) {
         val exo = player ?: return@LaunchedEffect

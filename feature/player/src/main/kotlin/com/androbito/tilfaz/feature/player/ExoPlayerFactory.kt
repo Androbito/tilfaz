@@ -1,6 +1,8 @@
 package com.androbito.tilfaz.feature.player
 
+import android.app.ActivityManager
 import android.content.Context
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -44,7 +46,9 @@ class ExoPlayerFactory @Inject constructor(
         val buffer = settings.bufferProfile
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(buffer.minBufferMs, buffer.maxBufferMs, buffer.playbackBufferMs, buffer.playbackBufferMs * 2)
-            .setPrioritizeTimeOverSizeThresholds(true)
+            // Time alone would let a high bitrate film outgrow the app's memory; the size cap wins over the time target.
+            .setTargetBufferBytes(BufferLimits.targetBytes((context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).memoryClass))
+            .setPrioritizeTimeOverSizeThresholds(false)
             .build()
 
         val renderers = DefaultRenderersFactory(context)
@@ -54,6 +58,9 @@ class ExoPlayerFactory @Inject constructor(
         return ExoPlayer.Builder(context, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(mediaDataSourceFactory))
             .setLoadControl(loadControl)
+            // Declared as film audio with focus handling: when something else takes the audio, the player pauses
+            // instead of carrying on silently, and the system knows what this stream is.
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true)
             .setHandleAudioBecomingNoisy(false)
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
