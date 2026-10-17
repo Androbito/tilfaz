@@ -1,5 +1,6 @@
 package com.androbito.tilfaz.feature.player
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -52,9 +52,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
-import com.androbito.tilfaz.core.designsystem.component.ProgressBar
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
-import com.androbito.tilfaz.core.designsystem.component.formatPlayerTime
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.StreamFormat
@@ -95,6 +93,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     var durationMs by remember { mutableLongStateOf(0L) }
     var controlsVisible by remember { mutableStateOf(true) }
     var controlsShownAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var scrub by remember { mutableStateOf<ScrubState?>(null) }
 
     fun showControls() {
         controlsVisible = true
@@ -137,6 +136,27 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         }
     }
 
+    fun commitScrub() {
+        val target = scrub?.targetMs ?: return
+        player?.seekTo(target)
+        scrub = null
+    }
+
+    // The cursor lands by itself once the user stops pressing; each press restarts the wait.
+    LaunchedEffect(scrub?.lastPressAtMs) {
+        if (scrub == null) return@LaunchedEffect
+        delay(SCRUB_COMMIT_DELAY_MS)
+        commitScrub()
+    }
+    BackHandler(enabled = scrub != null) { scrub = null }
+
+    fun stepScrub(direction: Int) {
+        val exo = player ?: return
+        if (durationMs <= 0) return
+        scrub = SeekScrubber.step(scrub, direction, exo.currentPosition, durationMs, System.currentTimeMillis())
+        showControls()
+    }
+
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -151,21 +171,17 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                 val exo = player
                 when (event.key) {
                     Key.DirectionCenter, Key.Enter, Key.MediaPlayPause -> {
-                        if (state.isLive) showControls() else { exo?.let { if (it.isPlaying) it.pause() else it.play() }; showControls() }
+                        when {
+                            state.isLive -> showControls()
+                            scrub != null -> commitScrub()
+                            else -> { exo?.let { if (it.isPlaying) it.pause() else it.play() }; showControls() }
+                        }
                         true
                     }
                     Key.MediaPlay -> { exo?.play(); true }
                     Key.MediaPause -> { exo?.pause(); true }
-                    Key.DirectionLeft, Key.MediaRewind -> if (!state.isLive &&
-                        exo != null
-                    ) { exo.seekTo((exo.currentPosition - SEEK_STEP_MS).coerceAtLeast(0)); showControls(); true } else {
-                        false
-                    }
-                    Key.DirectionRight, Key.MediaFastForward -> if (!state.isLive &&
-                        exo != null
-                    ) { exo.seekTo(exo.currentPosition + SEEK_STEP_MS); showControls(); true } else {
-                        false
-                    }
+                    Key.DirectionLeft, Key.MediaRewind -> if (!state.isLive && exo != null) { stepScrub(-1); true } else false
+                    Key.DirectionRight, Key.MediaFastForward -> if (!state.isLive && exo != null) { stepScrub(+1); true } else false
                     Key.DirectionUp, Key.ChannelUp -> if (state.isLive) { onEvent(PlayerEvent.ZapNext); true } else false
                     Key.DirectionDown, Key.ChannelDown -> if (state.isLive) { onEvent(PlayerEvent.ZapPrevious); true } else false
                     else -> false
@@ -187,13 +203,13 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            InfoOverlay(state, positionMs, durationMs, isPlaying)
+            InfoOverlay(state, positionMs, durationMs, isPlaying, scrub)
         }
     }
 }
 
 @Composable
-private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long, isPlaying: Boolean) {
+private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long, isPlaying: Boolean, scrub: ScrubState?) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -226,11 +242,7 @@ private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long
                 )
             }
         } else if (durationMs > 0) {
-            ProgressBar(positionMs.toFloat() / durationMs, Modifier.fillMaxWidth().height(6.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatPlayerTime(positionMs), style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                Text(formatPlayerTime(durationMs), style = MaterialTheme.typography.bodyMedium, color = Color.White)
-            }
+            PlayerSeekBar(positionMs = positionMs, durationMs = durationMs, scrub = scrub, modifier = Modifier.fillMaxWidth())
         }
         Text(
             stringResource(if (state.isLive) R.string.player_hint_live else R.string.player_hint_vod),
@@ -281,4 +293,6 @@ private fun ErrorOverlay(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, o
 }
 
 private const val CONTROLS_TIMEOUT_MS = 5_000L
-private const val SEEK_STEP_MS = 10_000L
+
+// How long the seek cursor waits after the last press before the seek happens.
+private const val SCRUB_COMMIT_DELAY_MS = 900L

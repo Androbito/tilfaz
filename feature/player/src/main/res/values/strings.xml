@@ -16,5 +16,5 @@
     <string name="player_now">Now</string>
     <string name="player_next">Next</string>
     <string name="player_hint_live">OK: info · Up/Down: change channel · Back: exit</string>
-    <string name="player_hint_vod">OK: pause · Left/Right: seek 10 s · Back: exit</string>
+    <string name="player_hint_vod">OK: pause · Left/Right: seek, hold to go faster · Back: exit</string>
 </resources>
