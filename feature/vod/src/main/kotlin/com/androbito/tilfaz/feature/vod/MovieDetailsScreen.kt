@@ -42,13 +42,13 @@ import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.ProvideMinimalBringIntoView
 import com.androbito.tilfaz.core.designsystem.component.RatingBadge
+import com.androbito.tilfaz.core.designsystem.component.ScoreLine
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.formatDuration
 import com.androbito.tilfaz.core.designsystem.component.formatPlayerTime
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
-import com.androbito.tilfaz.core.model.Rating
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -167,16 +167,6 @@ fun MovieDetailsScreen(
                 }
             }
         }
-    }
-}
-
-/** "7.1 / 10" with filled and empty stars, the way the user is used to seeing scores on detail pages. */
-@Composable
-private fun ScoreLine(rating: Rating) {
-    val filled = rating.outOfFive.toInt().coerceIn(0, 5)
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceS)) {
-        Text("★".repeat(filled) + "☆".repeat(5 - filled), style = MaterialTheme.typography.titleLarge, color = TilfazColors.Accent)
-        Text(stringResource(R.string.vod_score, rating.outOfTen), style = MaterialTheme.typography.titleMedium, color = TilfazColors.OnSurfaceMuted)
     }
 }
 

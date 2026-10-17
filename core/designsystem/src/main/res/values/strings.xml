@@ -12,5 +12,6 @@
     <string name="ds_days_ago">%1$d d ago</string>
     <string name="ds_favorite">Favourite</string>
     <string name="ds_rating_content_description">Rating %1$s out of 10</string>
+    <string name="ds_score">%1$.1f / 10</string>
     <string name="ds_no_program">No programme info</string>
 </resources>
