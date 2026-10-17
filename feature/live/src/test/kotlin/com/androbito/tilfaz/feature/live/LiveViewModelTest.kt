@@ -184,4 +184,74 @@ class LiveViewModelTest {
             assertThat(mainDispatcher.dispatcher.scheduler.currentTime).isEqualTo(0L)
         }
     }
+
+    private fun advance(ms: Long) {
+        mainDispatcher.dispatcher.scheduler.advanceTimeBy(ms)
+        mainDispatcher.dispatcher.scheduler.runCurrent()
+    }
+
+    @Test
+    fun `the preview starts only after focus has rested on a channel`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.beinSports1))
+            assertThat(viewModel.state.value.previewChannel).isNull()
+
+            advance(LiveViewModel.PREVIEW_DELAY_MS - 1)
+            assertThat(viewModel.state.value.previewChannel).isNull()
+
+            advance(1)
+            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.beinSports1)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `the preview stops the moment focus moves and starts again for the new channel after the pause`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.beinSports1))
+            advance(LiveViewModel.PREVIEW_DELAY_MS)
+            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.beinSports1)
+
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.alJazeera))
+            assertThat(viewModel.state.value.previewChannel).isNull()
+
+            advance(LiveViewModel.PREVIEW_DELAY_MS)
+            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.alJazeera)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `scrolling past channels never starts a preview for the ones passed`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.beinSports1))
+            advance(LiveViewModel.PREVIEW_DELAY_MS / 2)
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.alJazeera))
+            advance(LiveViewModel.PREVIEW_DELAY_MS / 2)
+            assertThat(viewModel.state.value.previewChannel).isNull()
+
+            advance(LiveViewModel.PREVIEW_DELAY_MS)
+            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.alJazeera)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `the channel shown when the screen opens is previewed after the pause too`() = runTest {
+        viewModel.state.test {
+            advance(LiveViewModel.PREVIEW_DELAY_MS)
+            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.alJazeera)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `an empty list has nothing to preview`() = runTest {
+        live.items.value = emptyList()
+        viewModel.state.test {
+            advance(LiveViewModel.PREVIEW_DELAY_MS)
+            assertThat(viewModel.state.value.previewChannel).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }

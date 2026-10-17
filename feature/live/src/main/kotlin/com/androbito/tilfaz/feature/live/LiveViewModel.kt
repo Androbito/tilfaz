@@ -20,6 +20,7 @@ import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -57,6 +58,8 @@ data class LiveUiState(
     val nowNext: Map<Int, NowNext> = emptyMap(),
     /** The channel the preview pane describes: the one with focus, or else the first of the list. */
     val focusedChannel: LiveChannel? = null,
+    /** The channel whose small live video should play: the focused one, once focus has rested on it. Null while scrolling. */
+    val previewChannel: LiveChannel? = null,
     /** What was typed, shown at once; the list follows once the typing pauses. */
     val query: String = "",
     /** While a query is typed: the best few channel names, each once, to tune straight to. */
@@ -156,19 +159,37 @@ class LiveViewModel @Inject constructor(
 
     private val suggestions: Flow<List<LiveChannel>> = searchResults.map { (_, found) -> distinctByName(found) }
 
+    /**
+     * The small video follows focus, but stops at once when focus moves and starts the new channel only after it has rested:
+     * the account allows one connection and a provider keeps a cut-off one busy for a while, so scrolling must not open a stream
+     * per channel passed.
+     */
+    private val previewChannel: Flow<LiveChannel?> = combine(explicitFocus, firstChannel) { focused, first -> focused ?: first }
+        .distinctUntilChanged()
+        .flatMapLatest { channel ->
+            flow {
+                emit(null)
+                if (channel != null) {
+                    delay(PREVIEW_DELAY_MS)
+                    emit(channel)
+                }
+            }
+        }
+
     val state: StateFlow<LiveUiState> = combine(
         categories,
         selectedCategoryId,
         favoriteIds,
         combine(nowNext, explicitFocus, firstChannel) { nn, focused, first -> Triple(nn, focused, first) },
-        combine(query, suggestions) { q, s -> q to s }
-    ) { categories, selected, favorites, (nowNext, focused, first), (q, suggestions) ->
+        combine(query, suggestions, previewChannel) { q, s, preview -> Triple(q, s, preview) }
+    ) { categories, selected, favorites, (nowNext, focused, first), (q, suggestions, preview) ->
         LiveUiState(
             categories = categories,
             selectedCategoryId = selected,
             favoriteIds = favorites,
             nowNext = nowNext,
             focusedChannel = focused ?: first,
+            previewChannel = preview,
             query = q,
             suggestions = suggestions,
             isLoading = false
@@ -219,6 +240,9 @@ class LiveViewModel @Inject constructor(
     companion object {
         /** How long typing must pause before the database is asked. */
         const val SEARCH_DELAY_MS = 200L
+
+        /** How long focus must rest on a channel before its small video starts. */
+        const val PREVIEW_DELAY_MS = 1_500L
         private const val SUGGESTION_LIMIT = 8
         private const val SEARCH_RESULT_LIMIT = 300
     }

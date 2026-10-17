@@ -7,6 +7,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
@@ -32,6 +33,40 @@ class ExoPlayerFactory @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
     fun create(source: StreamSource, settings: PlaybackSettings): ExoPlayer {
+        val buffer = settings.bufferProfile
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(buffer.minBufferMs, buffer.maxBufferMs, buffer.playbackBufferMs, buffer.playbackBufferMs * 2)
+            // Time alone would let a high bitrate film outgrow the app's memory; the size cap wins over the time target.
+            .setTargetBufferBytes(BufferLimits.targetBytes((context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).memoryClass))
+            .setPrioritizeTimeOverSizeThresholds(false)
+            .build()
+
+        // Declared as film audio with focus handling: when something else takes the audio, the player pauses
+        // instead of carrying on silently, and the system knows what this stream is.
+        return build(source, loadControl, ownsAudio = true, trackSelection = trackSelectionFor(settings))
+    }
+
+    /**
+     * The small live video of the Live screen: it has no audio track at all (so it can neither make a sound nor take audio
+     * focus from the full screen player), decodes a small picture, and keeps a small buffer. It starts by itself and must be
+     * released as soon as it is not shown, because the account allows a single connection.
+     */
+    fun createPreview(source: StreamSource): ExoPlayer {
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(PREVIEW_MIN_BUFFER_MS, PREVIEW_MAX_BUFFER_MS, PREVIEW_START_BUFFER_MS, PREVIEW_START_BUFFER_MS * 2)
+            .setTargetBufferBytes(PREVIEW_BUFFER_BYTES)
+            .setPrioritizeTimeOverSizeThresholds(false)
+            .build()
+
+        val trackSelection = TrackSelectionParameters.DEFAULT.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
+            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+            .setMaxVideoSize(PREVIEW_MAX_WIDTH, PREVIEW_MAX_HEIGHT)
+            .build()
+        return build(source, loadControl, ownsAudio = false, trackSelection = trackSelection)
+    }
+
+    private fun build(source: StreamSource, loadControl: DefaultLoadControl, ownsAudio: Boolean, trackSelection: TrackSelectionParameters): ExoPlayer {
         val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
             .setUserAgent(source.userAgent)
             .setDefaultRequestProperties(mapOf("Accept" to "*/*"))
@@ -43,14 +78,6 @@ class ExoPlayerFactory @Inject constructor(
             dataSourceFactory
         }
 
-        val buffer = settings.bufferProfile
-        val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(buffer.minBufferMs, buffer.maxBufferMs, buffer.playbackBufferMs, buffer.playbackBufferMs * 2)
-            // Time alone would let a high bitrate film outgrow the app's memory; the size cap wins over the time target.
-            .setTargetBufferBytes(BufferLimits.targetBytes((context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).memoryClass))
-            .setPrioritizeTimeOverSizeThresholds(false)
-            .build()
-
         val renderers = DefaultRenderersFactory(context)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)
@@ -58,14 +85,12 @@ class ExoPlayerFactory @Inject constructor(
         return ExoPlayer.Builder(context, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(mediaDataSourceFactory))
             .setLoadControl(loadControl)
-            // Declared as film audio with focus handling: when something else takes the audio, the player pauses
-            // instead of carrying on silently, and the system knows what this stream is.
-            .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), true)
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), ownsAudio)
             .setHandleAudioBecomingNoisy(false)
-            .setWakeMode(C.WAKE_MODE_NETWORK)
+            .setWakeMode(if (ownsAudio) C.WAKE_MODE_NETWORK else C.WAKE_MODE_NONE)
             .build()
             .apply {
-                trackSelectionParameters = trackSelectionFor(settings)
+                trackSelectionParameters = trackSelection
                 setMediaItem(source.toMediaItem())
                 playWhenReady = true
             }
@@ -84,8 +109,14 @@ class ExoPlayerFactory @Inject constructor(
         return builder.build()
     }
 
-    private companion object {
-        const val LIVE_TARGET_OFFSET_MS = 6_000L
+    companion object {
+        const val PREVIEW_MAX_WIDTH = 640
+        const val PREVIEW_MAX_HEIGHT = 360
+        private const val PREVIEW_MIN_BUFFER_MS = 1_500
+        private const val PREVIEW_MAX_BUFFER_MS = 5_000
+        private const val PREVIEW_START_BUFFER_MS = 500
+        private const val PREVIEW_BUFFER_BYTES = 8 * 1024 * 1024
+        private const val LIVE_TARGET_OFFSET_MS = 6_000L
     }
 }
 
