@@ -50,6 +50,7 @@ class ExoPlayerFactory @Inject constructor(
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
             .apply {
+                trackSelectionParameters = trackSelectionFor(settings)
                 setMediaItem(source.toMediaItem())
                 playWhenReady = true
             }

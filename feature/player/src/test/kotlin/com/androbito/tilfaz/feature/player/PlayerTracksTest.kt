@@ -4,6 +4,7 @@ import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.TrackGroup
+import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -112,5 +113,46 @@ class PlayerTracksTest {
 
         assertThat(parameters.preferredTextLanguages).contains("en")
         assertThat(parameters.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT)).isFalse()
+    }
+
+    @Test
+    fun `a stream label that only repeats the language is dropped from the detail`() {
+        val repeated = Tracks(listOf(group(audio("ar", label = "Arabic"), selected = 0)))
+
+        assertThat(repeated.toOptions(TrackKind.AUDIO)[0].detail).isEqualTo("Stereo · AAC")
+    }
+
+    @Test
+    fun `choosing an audio track overrides the selection for that track only`() {
+        val english = tracks.toOptions(TrackKind.AUDIO)[1]
+
+        val chosen = TrackSelectionParameters.DEFAULT.choosing(tracks, english)
+
+        val override = chosen.overrides.values.single()
+        assertThat(override.mediaTrackGroup).isEqualTo(tracks.groups[1].mediaTrackGroup)
+        assertThat(override.trackIndices).isEqualTo(listOf(0))
+    }
+
+    @Test
+    fun `choosing a subtitle turns the text renderer on`() {
+        val french = tracks.toOptions(TrackKind.SUBTITLE)[0]
+        val off = TrackSelectionParameters.DEFAULT.buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build()
+
+        val chosen = off.choosing(tracks, french)
+
+        assertThat(chosen.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT)).isFalse()
+        assertThat(chosen.overrides.values.single().mediaTrackGroup).isEqualTo(tracks.groups[2].mediaTrackGroup)
+    }
+
+    @Test
+    fun `choosing no subtitle disables text and drops the subtitle override`() {
+        val french = tracks.toOptions(TrackKind.SUBTITLE)[0]
+        val english = tracks.toOptions(TrackKind.AUDIO)[1]
+        val withBoth = TrackSelectionParameters.DEFAULT.choosing(tracks, english).choosing(tracks, french)
+
+        val chosen = withBoth.choosing(tracks, TrackKind.SUBTITLE, null)
+
+        assertThat(chosen.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT)).isTrue()
+        assertThat(chosen.overrides.values.map { it.mediaTrackGroup }).isEqualTo(listOf(tracks.groups[1].mediaTrackGroup))
     }
 }

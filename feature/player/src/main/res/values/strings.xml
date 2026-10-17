@@ -15,11 +15,11 @@
     <string name="player_live">LIVE</string>
     <string name="player_now">Now</string>
     <string name="player_next">Next</string>
-    <string name="player_hint_live">OK: info · Up/Down: change channel · Back: exit</string>
-    <string name="player_hint_vod">OK: pause · Left/Right: seek, hold to go faster · Back: exit</string>
+    <string name="player_hint_live">OK: info · Up/Down: change channel · Menu: options · Back: exit</string>
+    <string name="player_hint_vod">OK: pause · Left/Right: seek, hold to go faster · Up: options · Back: exit</string>
     <string name="player_options_title">Options</string>
     <string name="player_options_audio">Audio</string>
     <string name="player_options_subtitles">Subtitles</string>
     <string name="player_options_off">Off</string>
-    <string name="player_options_none_found">None in this stream</string>
+    <string name="player_options_none_found">None</string>
 </resources>

@@ -57,6 +57,9 @@ sealed interface PlayerEvent {
     data object ZapNext : PlayerEvent
     data object ZapPrevious : PlayerEvent
     data class ProgressTick(val positionMs: Long, val durationMs: Long) : PlayerEvent
+
+    /** The user picked a track in the options: that language becomes the preference (null: subtitles off). */
+    data class RememberLanguage(val kind: TrackKind, val language: String?) : PlayerEvent
 }
 
 @HiltViewModel
@@ -100,6 +103,14 @@ class PlayerViewModel @Inject constructor(
             PlayerEvent.ZapNext -> zap(+1)
             PlayerEvent.ZapPrevious -> zap(-1)
             is PlayerEvent.ProgressTick -> saveProgress(event.positionMs, event.durationMs)
+            is PlayerEvent.RememberLanguage -> viewModelScope.launch {
+                settingsRepository.update {
+                    when (event.kind) {
+                        TrackKind.AUDIO -> it.copy(audioLanguage = event.language)
+                        TrackKind.SUBTITLE -> it.copy(subtitleLanguage = event.language)
+                    }
+                }
+            }
         }
     }
 

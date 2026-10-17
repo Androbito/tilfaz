@@ -134,4 +134,23 @@ class PlayerViewModelTest {
             assertThat(expectMostRecentItem().error).isNull()
         }
     }
+
+    @Test
+    fun `picking an audio or subtitle language is remembered as the preference`() = runTest {
+        val vm = viewModel(PlayerRoute.movie(Fixtures.movie.id, 0L))
+        vm.onEvent(PlayerEvent.RememberLanguage(TrackKind.AUDIO, "ar"))
+        vm.onEvent(PlayerEvent.RememberLanguage(TrackKind.SUBTITLE, "fr"))
+
+        assertThat(settings.settings.value.audioLanguage).isEqualTo("ar")
+        assertThat(settings.settings.value.subtitleLanguage).isEqualTo("fr")
+    }
+
+    @Test
+    fun `switching subtitles off clears the subtitle preference`() = runTest {
+        settings.settings.value = settings.settings.value.copy(subtitleLanguage = "fr")
+        val vm = viewModel(PlayerRoute.movie(Fixtures.movie.id, 0L))
+        vm.onEvent(PlayerEvent.RememberLanguage(TrackKind.SUBTITLE, null))
+
+        assertThat(settings.settings.value.subtitleLanguage).isNull()
+    }
 }

@@ -4,12 +4,16 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -42,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
@@ -94,6 +99,9 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     var controlsVisible by remember { mutableStateOf(true) }
     var controlsShownAt by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var scrub by remember { mutableStateOf<ScrubState?>(null) }
+    var tracks by remember { mutableStateOf(Tracks.EMPTY) }
+    var optionsOpen by remember { mutableStateOf(false) }
+    var optionsPage by remember { mutableStateOf<OptionsPage>(OptionsPage.Root) }
 
     fun showControls() {
         controlsVisible = true
@@ -111,6 +119,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                 if (playbackState == Player.STATE_READY) durationMs = exo.duration.coerceAtLeast(0)
             }
             override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
+            override fun onTracksChanged(newTracks: Tracks) { tracks = newTracks }
             override fun onPlayerError(error: PlaybackException) { onEvent(PlayerEvent.PlaybackFailed(error.toPlayerError())) }
         }
         exo.addListener(listener)
@@ -121,6 +130,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             exo.removeListener(listener)
             exo.release()
             player = null
+            tracks = Tracks.EMPTY
         }
     }
 
@@ -157,8 +167,22 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         showControls()
     }
 
+    fun openOptions() {
+        scrub = null
+        optionsPage = OptionsPage.Root
+        optionsOpen = true
+    }
+
+    fun choose(kind: TrackKind, option: TrackOption?) {
+        val exo = player ?: return
+        exo.trackSelectionParameters = exo.trackSelectionParameters.choosing(tracks, kind, option)
+        onEvent(PlayerEvent.RememberLanguage(kind, option?.language))
+    }
+
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    // The panel took focus with it when it left the screen; the player surface needs it back for the remote.
+    LaunchedEffect(optionsOpen) { if (!optionsOpen) focusRequester.requestFocus() }
 
     Box(
         Modifier
@@ -167,7 +191,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             .focusRequester(focusRequester)
             .focusable()
             .onKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown || state.error != null) return@onKeyEvent false
+                if (event.type != KeyEventType.KeyDown || state.error != null || optionsOpen) return@onKeyEvent false
                 val exo = player
                 when (event.key) {
                     Key.DirectionCenter, Key.Enter, Key.MediaPlayPause -> {
@@ -182,7 +206,9 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                     Key.MediaPause -> { exo?.pause(); true }
                     Key.DirectionLeft, Key.MediaRewind -> if (!state.isLive && exo != null) { stepScrub(-1); true } else false
                     Key.DirectionRight, Key.MediaFastForward -> if (!state.isLive && exo != null) { stepScrub(+1); true } else false
-                    Key.DirectionUp, Key.ChannelUp -> if (state.isLive) { onEvent(PlayerEvent.ZapNext); true } else false
+                    Key.Menu -> { openOptions(); true }
+                    Key.DirectionUp -> if (state.isLive) { onEvent(PlayerEvent.ZapNext); true } else { openOptions(); true }
+                    Key.ChannelUp -> if (state.isLive) { onEvent(PlayerEvent.ZapNext); true } else false
                     Key.DirectionDown, Key.ChannelDown -> if (state.isLive) { onEvent(PlayerEvent.ZapPrevious); true } else false
                     else -> false
                 }
@@ -198,12 +224,28 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         }
 
         AnimatedVisibility(
-            visible = controlsVisible && state.error == null,
+            visible = controlsVisible && state.error == null && !optionsOpen,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             InfoOverlay(state, positionMs, durationMs, isPlaying, scrub)
+        }
+
+        AnimatedVisibility(visible = optionsOpen, enter = slideInHorizontally { it }, exit = slideOutHorizontally { it }, modifier = Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxSize()) {
+                Spacer(Modifier.weight(1f - OPTIONS_PANEL_WIDTH_FRACTION))
+                PlayerOptionsPanel(
+                    page = optionsPage,
+                    onPage = { optionsPage = it },
+                    onClose = { optionsOpen = false },
+                    audio = tracks.toOptions(TrackKind.AUDIO),
+                    subtitles = tracks.toOptions(TrackKind.SUBTITLE),
+                    onSelectAudio = { choose(TrackKind.AUDIO, it) },
+                    onSelectSubtitle = { choose(TrackKind.SUBTITLE, it) },
+                    modifier = Modifier.weight(OPTIONS_PANEL_WIDTH_FRACTION).fillMaxHeight()
+                )
+            }
         }
     }
 }
@@ -293,6 +335,8 @@ private fun ErrorOverlay(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, o
 }
 
 private const val CONTROLS_TIMEOUT_MS = 5_000L
+
+private const val OPTIONS_PANEL_WIDTH_FRACTION = 0.38f
 
 // How long the seek cursor waits after the last press before the seek happens.
 private const val SCRUB_COMMIT_DELAY_MS = 900L

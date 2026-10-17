@@ -2,6 +2,7 @@ package com.androbito.tilfaz.feature.player
 
 import androidx.media3.common.C
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
 import com.androbito.tilfaz.core.model.PlaybackSettings
@@ -32,11 +33,13 @@ fun Tracks.toOptions(kind: TrackKind): List<TrackOption> {
             if (!group.isTrackSupported(trackIndex)) continue
             val format = group.getTrackFormat(trackIndex)
             val language = format.language?.takeIf { it.isNotBlank() && it != "und" }
+            val name = language?.let(::languageName)
             options += TrackOption(
                 id = "$groupIndex:$trackIndex",
                 kind = kind,
-                label = language?.let(::languageName) ?: "Track ${options.size + 1}",
-                detail = detailOf(kind, format.label, format.channelCount, format.sampleMimeType),
+                label = name ?: "Track ${options.size + 1}",
+                // Many streams label a track with just its language, which the row already says.
+                detail = detailOf(kind, format.label?.takeUnless { it.equals(name, ignoreCase = true) }, format.channelCount, format.sampleMimeType),
                 language = language,
                 isSelected = group.isTrackSelected(trackIndex)
             )
@@ -92,5 +95,20 @@ fun trackSelectionFor(settings: PlaybackSettings): TrackSelectionParameters {
     } else {
         builder.setPreferredTextLanguage(subtitleLanguage).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
     }
+    return builder.build()
+}
+
+fun TrackSelectionParameters.choosing(tracks: Tracks, option: TrackOption): TrackSelectionParameters = choosing(tracks, option.kind, option)
+
+/** The selection with [option] picked for [kind]; a null option switches subtitles off (audio always keeps a track). */
+fun TrackSelectionParameters.choosing(tracks: Tracks, kind: TrackKind, option: TrackOption?): TrackSelectionParameters {
+    val builder = buildUpon().clearOverridesOfType(kind.trackType)
+    if (option == null) {
+        if (kind == TrackKind.SUBTITLE) builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+        return builder.build()
+    }
+    val (groupIndex, trackIndex) = option.id.split(":").map(String::toInt)
+    builder.setOverrideForType(TrackSelectionOverride(tracks.groups[groupIndex].mediaTrackGroup, trackIndex))
+    if (kind == TrackKind.SUBTITLE) builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
     return builder.build()
 }

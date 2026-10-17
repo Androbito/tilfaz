@@ -110,22 +110,17 @@ private fun OptionRows(rows: List<OptionRow>, pageKey: OptionsPage) {
                     horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        row.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    row.detail?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TilfazColors.OnSurfaceMuted,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
+                    Column(Modifier.weight(1f)) {
+                        Text(row.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        row.detail?.let {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TilfazColors.OnSurfaceMuted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                     if (row.selected) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(20.dp))
