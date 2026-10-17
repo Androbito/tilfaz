@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -65,6 +67,8 @@ fun NavGraphBuilder.homeScreen(navigation: HomeNavigation) {
 @Composable
 fun HomeRoute(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Also when the app comes back after a long time in the background: the view model outlives the screen.
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onEvent(HomeEvent.Shown) }
     HomeScreen(state = state, onEvent = viewModel::onEvent, navigation = navigation)
 }
 

@@ -15,6 +15,7 @@ import com.androbito.tilfaz.core.model.Series
 import com.androbito.tilfaz.core.model.SeriesDetails
 import com.androbito.tilfaz.core.model.SyncStatus
 import com.androbito.tilfaz.core.model.TitleText
+import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -50,7 +51,8 @@ abstract class FakeCatalogRepository<T : Any>(
 
     override suspend fun refresh(): Result<Unit> {
         refreshCalls++
-        refreshResult.onSuccess { syncStatus.update { it.copy(itemCount = items.value.size) } }
+        // Like the real repositories: a successful refresh records when it happened, a failed one records nothing.
+        refreshResult.onSuccess { syncStatus.update { it.copy(itemCount = items.value.size, lastSyncedAt = Fixtures.fixedClock.instant()) } }
         return refreshResult
     }
 }

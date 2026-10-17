@@ -36,20 +36,24 @@ data class HomeUiState(
 sealed interface HomeEvent {
     data class Refresh(val type: ContentType) : HomeEvent
     data object RefreshAll : HomeEvent
+
+    /** Home came to the front: anything never downloaded, or a day old, is downloaded again behind what is shown. */
+    data object Shown : HomeEvent
     data class ErrorShown(val type: ContentType) : HomeEvent
 }
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     accountRepository: AccountRepository,
-    liveRepository: LiveRepository,
-    vodRepository: VodRepository,
-    seriesRepository: SeriesRepository,
+    private val liveRepository: LiveRepository,
+    private val vodRepository: VodRepository,
+    private val seriesRepository: SeriesRepository,
     private val syncCatalog: SyncCatalogUseCase,
     private val clock: Clock
 ) : ViewModel() {
 
     private val errors = MutableStateFlow<Map<ContentType, DomainError>>(emptyMap())
+    private val repositories get() = listOf(liveRepository, vodRepository, seriesRepository)
 
     val state: StateFlow<HomeUiState> = combine(
         accountRepository.observeAccount(),
@@ -65,18 +69,14 @@ class HomeViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
-    init {
-        // What is stored is shown at once; behind it, anything never downloaded or a day old is downloaded again.
-        viewModelScope.launch {
-            val statuses = listOf(liveRepository, vodRepository, seriesRepository).map { it.observeSyncStatus().first() }
-            val due = CatalogRefreshPolicy.due(statuses, clock.instant())
-            if (due.isNotEmpty()) sync(due)
-        }
-    }
-
     fun onEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.Refresh -> viewModelScope.launch { sync(setOf(event.type)) }
+            HomeEvent.Shown -> viewModelScope.launch {
+                // What is stored is shown at once; only what is due is downloaded, and a failed download is not recorded, so it is retried.
+                val due = CatalogRefreshPolicy.due(repositories.map { it.observeSyncStatus().first() }, clock.instant())
+                if (due.isNotEmpty()) sync(due)
+            }
             HomeEvent.RefreshAll -> viewModelScope.launch { sync(ContentType.entries.toSet()) }
             is HomeEvent.ErrorShown -> errors.update { it - event.type }
         }

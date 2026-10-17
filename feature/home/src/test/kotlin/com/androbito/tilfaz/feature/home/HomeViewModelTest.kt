@@ -29,9 +29,12 @@ class HomeViewModelTest {
 
     private fun viewModel() = HomeViewModel(account, live, vod, series, SyncCatalogUseCase(live, vod, series), Fixtures.fixedClock)
 
+    /** A view model whose Home has been shown, which is when stale catalogs are looked for. */
+    private fun shown() = viewModel().also { it.onEvent(HomeEvent.Shown) }
+
     @Test
     fun `empty cache triggers a full sync on start`() = runTest {
-        viewModel()
+        shown()
 
         assertThat(live.refreshCalls).isEqualTo(1)
         assertThat(vod.refreshCalls).isEqualTo(1)
@@ -44,7 +47,7 @@ class HomeViewModelTest {
         vod.syncStatus.value = SyncStatus(ContentType.VOD, Fixtures.now, itemCount = 9000)
         series.syncStatus.value = SyncStatus(ContentType.SERIES, Fixtures.now, itemCount = 300)
 
-        viewModel()
+        shown()
 
         assertThat(live.refreshCalls + vod.refreshCalls + series.refreshCalls).isEqualTo(0)
     }
@@ -55,7 +58,7 @@ class HomeViewModelTest {
         vod.syncStatus.value = SyncStatus(ContentType.VOD, Fixtures.fixedClock.instant().minusSeconds(2 * 3_600), itemCount = 9000)
         series.syncStatus.value = SyncStatus(ContentType.SERIES, Fixtures.fixedClock.instant().minusSeconds(48 * 3_600), itemCount = 300)
 
-        viewModel()
+        shown()
 
         assertThat(live.refreshCalls).isEqualTo(1)
         assertThat(vod.refreshCalls).isEqualTo(0)
@@ -63,9 +66,37 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `coming back to Home does not download again what is fresh or already downloading`() = runTest {
+        val vm = viewModel()
+
+        vm.onEvent(HomeEvent.Shown) // nothing cached: everything is downloaded
+        vm.onEvent(HomeEvent.Shown) // the first download has just saved, so nothing is due any more
+
+        assertThat(live.refreshCalls).isEqualTo(1)
+        assertThat(vod.refreshCalls).isEqualTo(1)
+        assertThat(series.refreshCalls).isEqualTo(1)
+    }
+
+    @Test
+    fun `a catalog that becomes a day old while the app stays open is refreshed when Home is shown again`() = runTest {
+        live.syncStatus.value = SyncStatus(ContentType.LIVE, Fixtures.fixedClock.instant().minusSeconds(3_600), itemCount = 500)
+        vod.syncStatus.value = SyncStatus(ContentType.VOD, Fixtures.fixedClock.instant().minusSeconds(3_600), itemCount = 9000)
+        series.syncStatus.value = SyncStatus(ContentType.SERIES, Fixtures.fixedClock.instant().minusSeconds(3_600), itemCount = 300)
+        val vm = viewModel()
+        vm.onEvent(HomeEvent.Shown)
+        assertThat(live.refreshCalls).isEqualTo(0)
+
+        live.syncStatus.value = SyncStatus(ContentType.LIVE, Fixtures.fixedClock.instant().minusSeconds(25 * 3_600), itemCount = 500)
+        vm.onEvent(HomeEvent.Shown)
+
+        assertThat(live.refreshCalls).isEqualTo(1)
+        assertThat(vod.refreshCalls).isEqualTo(0)
+    }
+
+    @Test
     fun `state exposes account name, expiry and per type sync status`() = runTest {
         live.items.value = Fixtures.liveChannels
-        val vm = viewModel()
+        val vm = shown()
 
         vm.state.test {
             val state = expectMostRecentItem()
@@ -78,7 +109,7 @@ class HomeViewModelTest {
     @Test
     fun `a failed refresh is reported for that type only and can be dismissed`() = runTest {
         vod.refreshResult = Result.failure(DomainException(DomainError.Network))
-        val vm = viewModel()
+        val vm = shown()
 
         vm.state.test {
             assertThat(expectMostRecentItem().syncErrors).isEqualTo(mapOf(ContentType.VOD to DomainError.Network))
