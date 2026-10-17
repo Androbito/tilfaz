@@ -124,4 +124,13 @@ class SettingsScreenTest {
             )
         )
     }
+
+    @Test
+    fun theCatalogsCanBeRefreshedByHand() {
+        show()
+
+        pressOk(button(R.string.settings_catalog_refresh))
+
+        assertThat(events).isEqualTo(listOf(SettingsEvent.RefreshCatalogs))
+    }
 }

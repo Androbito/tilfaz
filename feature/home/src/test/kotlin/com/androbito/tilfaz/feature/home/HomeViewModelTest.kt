@@ -27,7 +27,7 @@ class HomeViewModelTest {
     private val vod = FakeVodRepository()
     private val series = FakeSeriesRepository()
 
-    private fun viewModel() = HomeViewModel(account, live, vod, series, SyncCatalogUseCase(live, vod, series))
+    private fun viewModel() = HomeViewModel(account, live, vod, series, SyncCatalogUseCase(live, vod, series), Fixtures.fixedClock)
 
     @Test
     fun `empty cache triggers a full sync on start`() = runTest {
@@ -47,6 +47,19 @@ class HomeViewModelTest {
         viewModel()
 
         assertThat(live.refreshCalls + vod.refreshCalls + series.refreshCalls).isEqualTo(0)
+    }
+
+    @Test
+    fun `a catalog saved more than a day ago is refreshed on start, the fresh ones are not`() = runTest {
+        live.syncStatus.value = SyncStatus(ContentType.LIVE, Fixtures.fixedClock.instant().minusSeconds(25 * 3_600), itemCount = 500)
+        vod.syncStatus.value = SyncStatus(ContentType.VOD, Fixtures.fixedClock.instant().minusSeconds(2 * 3_600), itemCount = 9000)
+        series.syncStatus.value = SyncStatus(ContentType.SERIES, Fixtures.fixedClock.instant().minusSeconds(48 * 3_600), itemCount = 300)
+
+        viewModel()
+
+        assertThat(live.refreshCalls).isEqualTo(1)
+        assertThat(vod.refreshCalls).isEqualTo(0)
+        assertThat(series.refreshCalls).isEqualTo(1)
     }
 
     @Test

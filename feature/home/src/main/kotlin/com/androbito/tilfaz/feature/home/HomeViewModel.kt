@@ -6,12 +6,14 @@ import com.androbito.tilfaz.core.domain.repository.AccountRepository
 import com.androbito.tilfaz.core.domain.repository.LiveRepository
 import com.androbito.tilfaz.core.domain.repository.SeriesRepository
 import com.androbito.tilfaz.core.domain.repository.VodRepository
+import com.androbito.tilfaz.core.domain.usecase.CatalogRefreshPolicy
 import com.androbito.tilfaz.core.domain.usecase.SyncCatalogUseCase
 import com.androbito.tilfaz.core.model.AccountStatus
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.SyncStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,7 +45,8 @@ class HomeViewModel @Inject constructor(
     liveRepository: LiveRepository,
     vodRepository: VodRepository,
     seriesRepository: SeriesRepository,
-    private val syncCatalog: SyncCatalogUseCase
+    private val syncCatalog: SyncCatalogUseCase,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val errors = MutableStateFlow<Map<ContentType, DomainError>>(emptyMap())
@@ -63,11 +66,11 @@ class HomeViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     init {
-        // First launch after sign-in: nothing is cached yet, fetch everything without waiting for a click.
+        // What is stored is shown at once; behind it, anything never downloaded or a day old is downloaded again.
         viewModelScope.launch {
             val statuses = listOf(liveRepository, vodRepository, seriesRepository).map { it.observeSyncStatus().first() }
-            val missing = statuses.filter { !it.hasData && !it.isSyncing }.map { it.contentType }.toSet()
-            if (missing.isNotEmpty()) sync(missing)
+            val due = CatalogRefreshPolicy.due(statuses, clock.instant())
+            if (due.isNotEmpty()) sync(due)
         }
     }
 

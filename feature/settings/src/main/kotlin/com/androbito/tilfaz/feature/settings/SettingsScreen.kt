@@ -200,6 +200,10 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                     InfoLine(stringResource(R.string.settings_account_connections), "${status.activeConnections} / ${status.maxConnections}")
                     InfoLine(stringResource(R.string.settings_account_formats), status.allowedOutputFormats.joinToString { it.extension }.ifEmpty { "-" })
                 }
+                OutlinedButton(onClick = { onEvent(SettingsEvent.RefreshCatalogs) }, enabled = !state.isRefreshingCatalogs) {
+                    Text(stringResource(if (state.isRefreshingCatalogs) R.string.settings_account_refreshing else R.string.settings_catalog_refresh))
+                }
+                Text(stringResource(R.string.settings_catalog_refresh_hint), style = MaterialTheme.typography.bodyMedium, color = TilfazColors.OnSurfaceMuted)
                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
                     OutlinedButton(onClick = {
                         onEvent(SettingsEvent.RefreshStatus)

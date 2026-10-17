@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.androbito.tilfaz.core.domain.repository.AccountRepository
 import com.androbito.tilfaz.core.domain.repository.PlaybackSettingsRepository
+import com.androbito.tilfaz.core.domain.usecase.SyncCatalogUseCase
 import com.androbito.tilfaz.core.model.Account
 import com.androbito.tilfaz.core.model.AccountStatus
 import com.androbito.tilfaz.core.model.BufferProfile
@@ -26,6 +27,7 @@ data class SettingsUiState(
     val account: Account? = null,
     val status: AccountStatus? = null,
     val isRefreshingStatus: Boolean = false,
+    val isRefreshingCatalogs: Boolean = false,
     val confirmSignOut: Boolean = false,
     val signedOut: Boolean = false
 )
@@ -42,6 +44,7 @@ sealed interface SettingsEvent {
     data class SetSubtitleColor(val color: SubtitleColor) : SettingsEvent
     data class SetSubtitleBackground(val background: SubtitleBackground) : SettingsEvent
     data object RefreshStatus : SettingsEvent
+    data object RefreshCatalogs : SettingsEvent
     data object SignOutRequested : SettingsEvent
     data object SignOutCancelled : SettingsEvent
     data object SignOutConfirmed : SettingsEvent
@@ -50,12 +53,18 @@ sealed interface SettingsEvent {
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: PlaybackSettingsRepository,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val syncCatalog: SyncCatalogUseCase
 ) : ViewModel() {
 
     private val transient = MutableStateFlow(Transient())
 
-    private data class Transient(val refreshing: Boolean = false, val confirmSignOut: Boolean = false, val signedOut: Boolean = false)
+    private data class Transient(
+        val refreshing: Boolean = false,
+        val refreshingCatalogs: Boolean = false,
+        val confirmSignOut: Boolean = false,
+        val signedOut: Boolean = false
+    )
 
     val state: StateFlow<SettingsUiState> = combine(
         settingsRepository.observe(),
@@ -63,7 +72,7 @@ class SettingsViewModel @Inject constructor(
         accountRepository.observeStatus(),
         transient
     ) { settings, account, status, t ->
-        SettingsUiState(settings, account, status, t.refreshing, t.confirmSignOut, t.signedOut)
+        SettingsUiState(settings, account, status, t.refreshing, t.refreshingCatalogs, t.confirmSignOut, t.signedOut)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     fun onEvent(event: SettingsEvent) {
@@ -82,6 +91,11 @@ class SettingsViewModel @Inject constructor(
                 transient.value = transient.value.copy(refreshing = true)
                 accountRepository.refreshStatus()
                 transient.value = transient.value.copy(refreshing = false)
+            }
+            SettingsEvent.RefreshCatalogs -> viewModelScope.launch {
+                transient.value = transient.value.copy(refreshingCatalogs = true)
+                syncCatalog()
+                transient.value = transient.value.copy(refreshingCatalogs = false)
             }
             SettingsEvent.SignOutRequested -> transient.value = transient.value.copy(confirmSignOut = true)
             SettingsEvent.SignOutCancelled -> transient.value = transient.value.copy(confirmSignOut = false)
