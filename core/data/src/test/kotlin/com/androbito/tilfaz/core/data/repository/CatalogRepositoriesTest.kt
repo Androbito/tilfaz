@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.core.data.repository
 
 import android.content.Context
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.paging.testing.asSnapshot
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -10,13 +11,19 @@ import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
+import com.androbito.tilfaz.core.data.store.AccountStore
+import com.androbito.tilfaz.core.data.store.SecretCodec
 import com.androbito.tilfaz.core.database.TilfazDatabase
+import com.androbito.tilfaz.core.database.entity.LiveChannelEntity
 import com.androbito.tilfaz.core.database.entity.MovieEntity
 import com.androbito.tilfaz.core.database.entity.SeriesEntity
 import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.network.XtreamApi
+import java.io.File
 import java.lang.reflect.Proxy
 import java.time.Clock
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -32,6 +39,7 @@ class CatalogRepositoriesTest {
     private lateinit var database: TilfazDatabase
     private lateinit var vod: DefaultVodRepository
     private lateinit var series: DefaultSeriesRepository
+    private lateinit var live: DefaultLiveRepository
 
     /** Browsing the cache must never reach the network. */
     private val offlineApi = Proxy.newProxyInstance(XtreamApi::class.java.classLoader, arrayOf(XtreamApi::class.java)) { _, method, _ ->
@@ -43,6 +51,26 @@ class CatalogRepositoriesTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         database = Room.inMemoryDatabaseBuilder(context, TilfazDatabase::class.java).allowMainThreadQueries().build()
         vod = DefaultVodRepository(offlineApi, database.categoryDao(), database.movieDao(), database.syncStatusDao(), Clock.systemUTC(), Dispatchers.Unconfined)
+        val accountStore = AccountStore(
+            PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.Unconfined), produceFile = {
+                File(context.cacheDir, "account-${System.nanoTime()}.preferences_pb")
+            }),
+            object : SecretCodec {
+                override fun encrypt(plain: String) = plain
+
+                override fun decrypt(encoded: String) = encoded
+            }
+        )
+        live =
+            DefaultLiveRepository(
+                offlineApi,
+                database.categoryDao(),
+                database.liveChannelDao(),
+                accountStore,
+                database.syncStatusDao(),
+                Clock.systemUTC(),
+                Dispatchers.Unconfined
+            )
         series =
             DefaultSeriesRepository(
                 offlineApi,
@@ -133,5 +161,63 @@ class CatalogRepositoriesTest {
         series.search("break", limit = 5).test { assertThat(awaitItem().map { it.name }).containsExactly("Breaking Point") }
         series.observeCount().test { assertThat(awaitItem()).isEqualTo(2) }
         series.observeRelated("5", excludeId = 1, limit = 3).test { assertThat(awaitItem().map { it.name }).containsExactly("Other") }
+    }
+
+    // ---- live channels
+
+    private fun channel(id: Int, name: String, category: String? = "1", position: Int = id) = LiveChannelEntity(
+        id = id, number = id, name = name, nameNormalized = TitleText.searchKey(name), logoUrl = "http://logo/$id.png",
+        categoryId = category, epgChannelId = null, hasArchive = false, archiveDays = 0, position = position
+    )
+
+    private suspend fun givenChannels(vararg channels: LiveChannelEntity) = database.liveChannelDao().insertAll(channels.toList())
+
+    @Test
+    fun `live channels are paged, counted and searched like the other catalogs`() = runTest {
+        givenChannels(channel(1, "|AR| AL JAZEERA HD", "2"), channel(2, "BEIN SPORTS 1", "1"), channel(3, "-----| SPORT |-----", "1"))
+
+        assertThat(live.pagedItems("1").asSnapshot().map { it.name }).containsExactly("BEIN SPORTS 1", "-----| SPORT |-----")
+        live.observeCategoryCounts().test { assertThat(awaitItem()).isEqualTo(mapOf<String?, Int>("2" to 1, "1" to 2)) }
+        live.search("jaz", limit = 5).test { assertThat(awaitItem().map { it.name }).containsExactly("|AR| AL JAZEERA HD") }
+        live.search("sport", limit = 5).test { assertThat(awaitItem().map { it.name }).containsExactly("BEIN SPORTS 1") }
+    }
+
+    @Test
+    fun `the first channel of a category, or of all of them`() = runTest {
+        givenChannels(channel(1, "one", "1", position = 0), channel(2, "two", "2", position = 1), channel(3, "three", "2", position = 2))
+
+        assertThat(live.firstOf(null)?.name).isEqualTo("one")
+        assertThat(live.firstOf("2")?.name).isEqualTo("two")
+        assertThat(live.firstOf("9")).isNull()
+    }
+
+    @Test
+    fun `channel up and down move to the neighbours in the same category and wrap around`() = runTest {
+        givenChannels(
+            channel(1, "a", "1", position = 0),
+            channel(2, "b", "2", position = 1),
+            channel(3, "c", "1", position = 2),
+            channel(4, "d", "1", position = 3)
+        )
+
+        assertThat(live.neighbour(1, "1", forward = true)?.name).isEqualTo("c")
+        assertThat(live.neighbour(4, "1", forward = true)?.name).isEqualTo("a")
+        assertThat(live.neighbour(1, "1", forward = false)?.name).isEqualTo("d")
+        assertThat(live.neighbour(3, "1", forward = false)?.name).isEqualTo("a")
+    }
+
+    @Test
+    fun `without a category the neighbours come from every channel`() = runTest {
+        givenChannels(channel(1, "a", "1", position = 0), channel(2, "b", "2", position = 1))
+
+        assertThat(live.neighbour(1, null, forward = true)?.name).isEqualTo("b")
+        assertThat(live.neighbour(2, null, forward = true)?.name).isEqualTo("a")
+    }
+
+    @Test
+    fun `a lone channel is its own neighbour`() = runTest {
+        givenChannels(channel(1, "only"))
+
+        assertThat(live.neighbour(1, "1", forward = true)?.name).isEqualTo("only")
     }
 }

@@ -38,6 +38,15 @@ interface CatalogRepository<T : Any> {
 }
 
 interface LiveRepository : CatalogRepository<LiveChannel> {
+    /** The first channel of a category (null: of all of them) in the provider's order. */
+    suspend fun firstOf(categoryId: String?): LiveChannel?
+
+    /**
+     * The channel after ([forward]) or before [channelId] among those of [categoryId] (null: all of them), wrapping around at
+     * the ends. Channel up and down need only this, never the whole list.
+     */
+    suspend fun neighbour(channelId: Int, categoryId: String?, forward: Boolean): LiveChannel?
+
     suspend fun channel(channelId: Int): LiveChannel?
     suspend fun shortEpg(channelId: Int, limit: Int = 4): Result<List<EpgEntry>>
 }

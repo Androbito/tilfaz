@@ -63,6 +63,16 @@ class FakeLiveRepository : FakeCatalogRepository<LiveChannel>(ContentType.LIVE, 
 
     override suspend fun channel(channelId: Int): LiveChannel? = items.value.firstOrNull { it.id == channelId }
 
+    override suspend fun firstOf(categoryId: String?): LiveChannel? =
+        items.value.firstOrNull { categoryId == null || it.categoryId == categoryId }
+
+    override suspend fun neighbour(channelId: Int, categoryId: String?, forward: Boolean): LiveChannel? {
+        val list = items.value.filter { categoryId == null || it.categoryId == categoryId }
+        val index = list.indexOfFirst { it.id == channelId }
+        if (index < 0) return null
+        return list[(index + if (forward) 1 else -1 + list.size) % list.size]
+    }
+
     override suspend fun shortEpg(channelId: Int, limit: Int): Result<List<EpgEntry>> {
         epgRequests += channelId
         return epg[channelId] ?: Result.success(emptyList())

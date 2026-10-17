@@ -67,6 +67,24 @@ interface LiveChannelDao {
     @Query("SELECT * FROM live_channels WHERE id = :id")
     suspend fun byId(id: Int): LiveChannelEntity?
 
+    @Query("SELECT * FROM live_channels WHERE (:categoryId IS NULL OR categoryId = :categoryId) ORDER BY position LIMIT 1")
+    suspend fun first(categoryId: String?): LiveChannelEntity?
+
+    @Query("SELECT * FROM live_channels WHERE (:categoryId IS NULL OR categoryId = :categoryId) ORDER BY position DESC LIMIT 1")
+    suspend fun last(categoryId: String?): LiveChannelEntity?
+
+    @Query(
+        "SELECT * FROM live_channels WHERE (:categoryId IS NULL OR categoryId = :categoryId) " +
+            "AND position > (SELECT position FROM live_channels WHERE id = :id) ORDER BY position LIMIT 1"
+    )
+    suspend fun after(id: Int, categoryId: String?): LiveChannelEntity?
+
+    @Query(
+        "SELECT * FROM live_channels WHERE (:categoryId IS NULL OR categoryId = :categoryId) " +
+            "AND position < (SELECT position FROM live_channels WHERE id = :id) ORDER BY position DESC LIMIT 1"
+    )
+    suspend fun before(id: Int, categoryId: String?): LiveChannelEntity?
+
     @Query("SELECT COUNT(*) FROM live_channels")
     suspend fun count(): Int
 

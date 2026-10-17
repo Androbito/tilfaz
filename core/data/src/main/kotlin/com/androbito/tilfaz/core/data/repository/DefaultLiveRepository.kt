@@ -93,6 +93,14 @@ class DefaultLiveRepository @Inject constructor(
         }
     }
 
+    override suspend fun firstOf(categoryId: String?): LiveChannel? = withContext(io) { channelDao.first(categoryId)?.toDomain() }
+
+    override suspend fun neighbour(channelId: Int, categoryId: String?, forward: Boolean): LiveChannel? = withContext(io) {
+        val next = if (forward) channelDao.after(channelId, categoryId) else channelDao.before(channelId, categoryId)
+        // Past either end the list starts over, so a lone channel is its own neighbour.
+        (next ?: if (forward) channelDao.first(categoryId) else channelDao.last(categoryId))?.toDomain()
+    }
+
     override suspend fun channel(channelId: Int): LiveChannel? = withContext(io) { channelDao.byId(channelId)?.toDomain() }
 
     override suspend fun shortEpg(channelId: Int, limit: Int): Result<List<EpgEntry>> = withContext(io) {
