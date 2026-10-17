@@ -43,11 +43,45 @@ data class PlaybackSettings(
     val liveFormat: StreamFormat = StreamFormat.MPEG_TS,
     val userAgent: String = DEFAULT_USER_AGENT,
     val bufferProfile: BufferProfile = BufferProfile.BALANCED,
-    val resumePlayback: Boolean = true
+    val resumePlayback: Boolean = true,
+    /** ISO 639 code ("ar", "en"…) preferred for audio, or null to keep the stream's default. */
+    val audioLanguage: String? = null,
+    /** ISO 639 code preferred for subtitles, or null for none unless the user turns them on. */
+    val subtitleLanguage: String? = null,
+    val subtitleStyle: SubtitleStyle = SubtitleStyle()
 ) {
     companion object {
         const val DEFAULT_USER_AGENT = "TilfazTV/1.0 (Android TV)"
     }
+}
+
+data class SubtitleStyle(
+    val size: SubtitleSize = SubtitleSize.MEDIUM,
+    val textColor: SubtitleColor = SubtitleColor.WHITE,
+    val background: SubtitleBackground = SubtitleBackground.TRANSLUCENT
+)
+
+/** [fractionOfVideoHeight] is the text height as a share of the video height, so it scales with the screen. */
+enum class SubtitleSize(val fractionOfVideoHeight: Float) {
+    SMALL(0.04f),
+    MEDIUM(0.0533f),
+    LARGE(0.07f),
+    EXTRA_LARGE(0.09f)
+}
+
+enum class SubtitleColor(val argb: Int) {
+    WHITE(0xFFFFFFFF.toInt()),
+    YELLOW(0xFFFFE066.toInt()),
+    CYAN(0xFF7DE3FF.toInt()),
+    GREEN(0xFF8CF29A.toInt())
+}
+
+enum class SubtitleBackground(val argb: Int) {
+    NONE(0x00000000),
+    TRANSLUCENT(0x99000000.toInt()),
+    BLACK(0xFF000000.toInt()),
+    GRAY(0xCC4A4A4A.toInt()),
+    BLUE(0xCC10306B.toInt())
 }
 
 enum class BufferProfile(val minBufferMs: Int, val maxBufferMs: Int, val playbackBufferMs: Int) {
