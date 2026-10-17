@@ -74,7 +74,7 @@ fun CategoryRow(
     }
 }
 
-/** Channel entry: logo, name, now-playing title with a thin progress bar. */
+/** Channel entry: logo, name, now-playing title with a thin progress bar (hidden when the list has no EPG to show). */
 @Composable
 fun ChannelRow(
     name: String,
@@ -85,7 +85,8 @@ fun ChannelRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
-    isFavorite: Boolean = false
+    isFavorite: Boolean = false,
+    showProgramme: Boolean = true
 ) {
     FocusableSurface(
         onClick = onClick,
@@ -109,14 +110,16 @@ fun ChannelRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = nowTitle ?: stringResource(R.string.ds_no_program),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (selected) TilfazColors.OnBackground else TilfazColors.OnSurfaceMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (progress != null) {
+                if (showProgramme) {
+                    Text(
+                        text = nowTitle ?: stringResource(R.string.ds_no_program),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (selected) TilfazColors.OnBackground else TilfazColors.OnSurfaceMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (showProgramme && progress != null) {
                     ProgressBar(progress, Modifier.fillMaxWidth().height(3.dp).padding(top = 2.dp), color = if (selected) Color.White else TilfazColors.Accent)
                 }
             }

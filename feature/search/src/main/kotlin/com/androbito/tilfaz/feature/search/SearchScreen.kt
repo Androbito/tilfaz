@@ -74,15 +74,23 @@ fun SearchScreen(state: SearchUiState, onQueryChanged: (String) -> Unit, navigat
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
             ) {
                 if (state.channels.isNotEmpty()) {
-                    item { SectionTitle(stringResource(R.string.search_channels), state.channels.size) }
+                    item {
+                        SectionTitle(stringResource(R.string.search_channels), listed = minOf(state.channels.size, MAX_CHANNELS), total = state.channels.size)
+                    }
                     items(state.channels.take(MAX_CHANNELS), key = { "c${it.id}" }) { channel ->
-                        ChannelRow(channel.name, channel.logoUrl, nowTitle = null, progress = null, selected = false, onClick = {
-                            navigation.onPlayChannel(channel.id)
-                        })
+                        ChannelRow(
+                            channel.name,
+                            channel.logoUrl,
+                            nowTitle = null,
+                            progress = null,
+                            selected = false,
+                            onClick = { navigation.onPlayChannel(channel.id) },
+                            showProgramme = false
+                        )
                     }
                 }
                 if (state.movies.isNotEmpty()) {
-                    item { SectionTitle(stringResource(R.string.search_movies), state.movies.size) }
+                    item { SectionTitle(stringResource(R.string.search_movies), listed = state.movies.size, total = state.movies.size) }
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), contentPadding = PaddingValues(vertical = Dimens.SpaceS)) {
                             items(state.movies, key = { it.id }) { movie ->
@@ -92,7 +100,7 @@ fun SearchScreen(state: SearchUiState, onQueryChanged: (String) -> Unit, navigat
                     }
                 }
                 if (state.series.isNotEmpty()) {
-                    item { SectionTitle(stringResource(R.string.search_series), state.series.size) }
+                    item { SectionTitle(stringResource(R.string.search_series), listed = state.series.size, total = state.series.size) }
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), contentPadding = PaddingValues(vertical = Dimens.SpaceS)) {
                             items(state.series, key = { it.id }) { series ->
@@ -107,8 +115,15 @@ fun SearchScreen(state: SearchUiState, onQueryChanged: (String) -> Unit, navigat
 }
 
 @Composable
-private fun SectionTitle(text: String, count: Int) {
-    Text("$text · $count", style = MaterialTheme.typography.titleLarge, color = TilfazColors.Accent)
+private fun SectionTitle(text: String, listed: Int, total: Int) {
+    val title = if (listed <
+        total
+    ) {
+        stringResource(R.string.search_section_truncated, text, listed, total)
+    } else {
+        stringResource(R.string.search_section, text, total)
+    }
+    Text(title, style = MaterialTheme.typography.titleLarge, color = TilfazColors.Accent)
 }
 
 private const val MAX_CHANNELS = 30
