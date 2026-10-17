@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Theaters
 import androidx.compose.runtime.Composable
@@ -54,7 +53,6 @@ class HomeNavigation(
     val onOpenLive: () -> Unit,
     val onOpenMovies: () -> Unit,
     val onOpenSeries: () -> Unit,
-    val onOpenSearch: () -> Unit,
     val onOpenSettings: () -> Unit,
     val onOpenFavorites: () -> Unit,
     val onOpenContinueWatching: () -> Unit
@@ -77,7 +75,6 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
     Column(Modifier.fillMaxSize()) {
         TopBar {
-            IconButton(onClick = navigation.onOpenSearch) { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.home_search)) }
             IconButton(onClick = navigation.onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.home_settings)) }
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = Dimens.SpaceM)) {
                 Text(state.accountName, style = MaterialTheme.typography.titleMedium)

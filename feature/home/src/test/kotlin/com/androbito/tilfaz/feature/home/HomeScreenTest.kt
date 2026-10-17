@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.feature.home
 
 import android.content.Context
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -22,7 +23,7 @@ class HomeScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private val navigation = HomeNavigation({}, {}, {}, {}, {}, {}, {})
+    private val navigation = HomeNavigation({}, {}, {}, {}, {}, {})
 
     private fun string(id: Int) = ApplicationProvider.getApplicationContext<Context>().getString(id)
 
@@ -45,5 +46,12 @@ class HomeScreenTest {
         tester.emulateSavedInstanceStateRestore()
 
         compose.onNode(movies).assertIsFocused()
+    }
+
+    @Test
+    fun thereIsNoSearchButtonOnHome() {
+        compose.setContent { TilfazTheme { HomeScreen(state = HomeUiState(), onEvent = {}, navigation = navigation) } }
+
+        compose.onAllNodes(hasContentDescription("Search")).assertCountEquals(0)
     }
 }
