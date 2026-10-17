@@ -4,10 +4,15 @@ import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import com.androbito.tilfaz.core.model.BufferProfile
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
+import com.androbito.tilfaz.core.model.SubtitleBackground
+import com.androbito.tilfaz.core.model.SubtitleColor
+import com.androbito.tilfaz.core.model.SubtitleSize
+import com.androbito.tilfaz.core.model.SubtitleStyle
 import com.androbito.tilfaz.core.testing.fake.FakeAccountRepository
 import com.androbito.tilfaz.core.testing.fake.FakePlaybackSettingsRepository
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
@@ -33,6 +38,33 @@ class SettingsViewModelTest {
             assertThat(s.liveFormat).isEqualTo(StreamFormat.HLS)
             assertThat(s.bufferProfile).isEqualTo(BufferProfile.STABLE)
             assertThat(s.resumePlayback).isFalse()
+        }
+    }
+
+    @Test
+    fun `preferred languages are persisted and can be cleared`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(SettingsEvent.SetAudioLanguage("ar"))
+            viewModel.onEvent(SettingsEvent.SetSubtitleLanguage("en"))
+            val chosen = expectMostRecentItem().settings
+            assertThat(chosen.audioLanguage).isEqualTo("ar")
+            assertThat(chosen.subtitleLanguage).isEqualTo("en")
+
+            viewModel.onEvent(SettingsEvent.SetSubtitleLanguage(null))
+            assertThat(expectMostRecentItem().settings.subtitleLanguage).isNull()
+        }
+    }
+
+    @Test
+    fun `each subtitle style choice changes only itself`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(SettingsEvent.SetSubtitleSize(SubtitleSize.EXTRA_LARGE))
+            viewModel.onEvent(SettingsEvent.SetSubtitleColor(SubtitleColor.CYAN))
+            viewModel.onEvent(SettingsEvent.SetSubtitleBackground(SubtitleBackground.NONE))
+
+            assertThat(expectMostRecentItem().settings.subtitleStyle).isEqualTo(
+                SubtitleStyle(SubtitleSize.EXTRA_LARGE, SubtitleColor.CYAN, SubtitleBackground.NONE)
+            )
         }
     }
 

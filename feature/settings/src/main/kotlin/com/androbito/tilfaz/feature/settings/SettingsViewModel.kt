@@ -9,6 +9,9 @@ import com.androbito.tilfaz.core.model.AccountStatus
 import com.androbito.tilfaz.core.model.BufferProfile
 import com.androbito.tilfaz.core.model.PlaybackSettings
 import com.androbito.tilfaz.core.model.StreamFormat
+import com.androbito.tilfaz.core.model.SubtitleBackground
+import com.androbito.tilfaz.core.model.SubtitleColor
+import com.androbito.tilfaz.core.model.SubtitleSize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +36,11 @@ sealed interface SettingsEvent {
     data class SetUserAgent(val value: String) : SettingsEvent
     data object ResetUserAgent : SettingsEvent
     data class SetResume(val enabled: Boolean) : SettingsEvent
+    data class SetAudioLanguage(val language: String?) : SettingsEvent
+    data class SetSubtitleLanguage(val language: String?) : SettingsEvent
+    data class SetSubtitleSize(val size: SubtitleSize) : SettingsEvent
+    data class SetSubtitleColor(val color: SubtitleColor) : SettingsEvent
+    data class SetSubtitleBackground(val background: SubtitleBackground) : SettingsEvent
     data object RefreshStatus : SettingsEvent
     data object SignOutRequested : SettingsEvent
     data object SignOutCancelled : SettingsEvent
@@ -65,6 +73,11 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.SetUserAgent -> update { it.copy(userAgent = event.value.trim().ifEmpty { PlaybackSettings.DEFAULT_USER_AGENT }) }
             SettingsEvent.ResetUserAgent -> update { it.copy(userAgent = PlaybackSettings.DEFAULT_USER_AGENT) }
             is SettingsEvent.SetResume -> update { it.copy(resumePlayback = event.enabled) }
+            is SettingsEvent.SetAudioLanguage -> update { it.copy(audioLanguage = event.language) }
+            is SettingsEvent.SetSubtitleLanguage -> update { it.copy(subtitleLanguage = event.language) }
+            is SettingsEvent.SetSubtitleSize -> update { it.copy(subtitleStyle = it.subtitleStyle.copy(size = event.size)) }
+            is SettingsEvent.SetSubtitleColor -> update { it.copy(subtitleStyle = it.subtitleStyle.copy(textColor = event.color)) }
+            is SettingsEvent.SetSubtitleBackground -> update { it.copy(subtitleStyle = it.subtitleStyle.copy(background = event.background)) }
             SettingsEvent.RefreshStatus -> viewModelScope.launch {
                 transient.value = transient.value.copy(refreshing = true)
                 accountRepository.refreshStatus()

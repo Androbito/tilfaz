@@ -39,6 +39,9 @@ import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.BufferProfile
 import com.androbito.tilfaz.core.model.StreamFormat
+import com.androbito.tilfaz.core.model.SubtitleBackground
+import com.androbito.tilfaz.core.model.SubtitleColor
+import com.androbito.tilfaz.core.model.SubtitleSize
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -129,6 +132,60 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
                     )
                 }
 
+                SectionTitle(stringResource(R.string.settings_section_subtitles))
+
+                Setting(stringResource(R.string.settings_audio_language), stringResource(R.string.settings_audio_language_hint)) {
+                    ChoiceRow(
+                        options = listOf<Pair<String?, String>>(null to stringResource(R.string.settings_lang_auto)) + languageOptions(),
+                        selected = state.settings.audioLanguage,
+                        onSelect = { onEvent(SettingsEvent.SetAudioLanguage(it)) }
+                    )
+                }
+                Setting(stringResource(R.string.settings_subtitle_language)) {
+                    ChoiceRow(
+                        options = listOf<Pair<String?, String>>(null to stringResource(R.string.settings_off)) + languageOptions(),
+                        selected = state.settings.subtitleLanguage,
+                        onSelect = { onEvent(SettingsEvent.SetSubtitleLanguage(it)) }
+                    )
+                }
+                Setting(stringResource(R.string.settings_subtitle_size)) {
+                    ChoiceRow(
+                        options = listOf(
+                            SubtitleSize.SMALL to stringResource(R.string.settings_size_small),
+                            SubtitleSize.MEDIUM to stringResource(R.string.settings_size_medium),
+                            SubtitleSize.LARGE to stringResource(R.string.settings_size_large),
+                            SubtitleSize.EXTRA_LARGE to stringResource(R.string.settings_size_extra_large)
+                        ),
+                        selected = state.settings.subtitleStyle.size,
+                        onSelect = { onEvent(SettingsEvent.SetSubtitleSize(it)) }
+                    )
+                }
+                Setting(stringResource(R.string.settings_subtitle_color)) {
+                    ChoiceRow(
+                        options = listOf(
+                            SubtitleColor.WHITE to stringResource(R.string.settings_color_white),
+                            SubtitleColor.YELLOW to stringResource(R.string.settings_color_yellow),
+                            SubtitleColor.CYAN to stringResource(R.string.settings_color_cyan),
+                            SubtitleColor.GREEN to stringResource(R.string.settings_color_green)
+                        ),
+                        selected = state.settings.subtitleStyle.textColor,
+                        onSelect = { onEvent(SettingsEvent.SetSubtitleColor(it)) }
+                    )
+                }
+                Setting(stringResource(R.string.settings_subtitle_background)) {
+                    ChoiceRow(
+                        options = listOf(
+                            SubtitleBackground.NONE to stringResource(R.string.settings_background_none),
+                            SubtitleBackground.TRANSLUCENT to stringResource(R.string.settings_background_translucent),
+                            SubtitleBackground.BLACK to stringResource(R.string.settings_background_black),
+                            SubtitleBackground.GRAY to stringResource(R.string.settings_background_gray),
+                            SubtitleBackground.BLUE to stringResource(R.string.settings_background_blue)
+                        ),
+                        selected = state.settings.subtitleStyle.background,
+                        onSelect = { onEvent(SettingsEvent.SetSubtitleBackground(it)) }
+                    )
+                }
+
                 SectionTitle(stringResource(R.string.settings_section_account))
                 state.account?.let { account ->
                     InfoLine(stringResource(R.string.settings_account_server), account.serverUrl)
@@ -173,6 +230,13 @@ fun SettingsScreen(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
         }
     }
 }
+
+@Composable
+private fun languageOptions(): List<Pair<String?, String>> = listOf(
+    "ar" to stringResource(R.string.settings_lang_arabic),
+    "en" to stringResource(R.string.settings_lang_english),
+    "fr" to stringResource(R.string.settings_lang_french)
+)
 
 @Composable
 private fun SectionTitle(text: String) {

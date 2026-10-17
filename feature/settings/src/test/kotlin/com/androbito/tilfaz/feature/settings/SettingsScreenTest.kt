@@ -17,7 +17,12 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
+import com.androbito.tilfaz.core.model.SubtitleBackground
+import com.androbito.tilfaz.core.model.SubtitleColor
+import com.androbito.tilfaz.core.model.SubtitleSize
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,11 +49,14 @@ class SettingsScreenTest {
         compose.waitForIdle()
     }
 
+    private val events = mutableListOf<SettingsEvent>()
+
     private fun show() = compose.setContent {
         TilfazTheme {
             SettingsScreen(
                 state = state,
                 onEvent = { event ->
+                    events += event
                     state = when (event) {
                         SettingsEvent.SignOutRequested -> state.copy(confirmSignOut = true)
                         SettingsEvent.SignOutCancelled -> state.copy(confirmSignOut = false)
@@ -84,5 +92,36 @@ class SettingsScreenTest {
         show()
 
         compose.onNodeWithText(string(R.string.settings_account_refreshing)).assertExists()
+    }
+
+    @Test
+    fun theLanguageRowsAreSeparateChoicesForAudioAndSubtitles() {
+        show()
+
+        // Both rows list the same languages; the audio row comes first on the page.
+        val english = hasText(string(R.string.settings_lang_english)) and hasClickAction()
+        compose.onAllNodes(english)[0].requestFocus()
+        compose.onAllNodes(english)[0].performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.onAllNodes(english)[1].requestFocus()
+        compose.onAllNodes(english)[1].performKeyInput { pressKey(Key.DirectionCenter) }
+
+        assertThat(events).isEqualTo(listOf(SettingsEvent.SetAudioLanguage("en"), SettingsEvent.SetSubtitleLanguage("en")))
+    }
+
+    @Test
+    fun subtitleSizeColourAndBackgroundCanBeChosenHere() {
+        show()
+
+        pressOk(button(R.string.settings_size_large))
+        pressOk(button(R.string.settings_color_yellow))
+        pressOk(button(R.string.settings_background_blue))
+
+        assertThat(events).isEqualTo(
+            listOf(
+                SettingsEvent.SetSubtitleSize(SubtitleSize.LARGE),
+                SettingsEvent.SetSubtitleColor(SubtitleColor.YELLOW),
+                SettingsEvent.SetSubtitleBackground(SubtitleBackground.BLUE)
+            )
+        )
     }
 }
