@@ -17,6 +17,7 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
@@ -30,7 +31,7 @@ import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
  * points at and how far that is from where playback is; nothing is sought until the scrub is committed.
  */
 @Composable
-fun PlayerSeekBar(positionMs: Long, durationMs: Long, scrub: ScrubState?, modifier: Modifier = Modifier) {
+fun PlayerSeekBar(positionMs: Long, durationMs: Long, scrub: ScrubState?, modifier: Modifier = Modifier, seekable: Boolean = true) {
     fun fractionOf(ms: Long) = if (durationMs <= 0) 0f else (ms.toFloat() / durationMs).coerceIn(0f, 1f)
     val played = fractionOf(positionMs)
     val cursor = fractionOf(scrub?.targetMs ?: positionMs)
@@ -38,6 +39,14 @@ fun PlayerSeekBar(positionMs: Long, durationMs: Long, scrub: ScrubState?, modifi
     Column(modifier, verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXs)) {
         // The bubble's row is always reserved so the bar does not jump when a scrub starts.
         Box(Modifier.fillMaxWidth().height(BubbleRowHeight)) {
+            if (!seekable) {
+                Text(
+                    stringResource(R.string.player_not_seekable),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TilfazColors.OnSurfaceMuted,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
+            }
             if (scrub != null) {
                 Row(
                     Modifier

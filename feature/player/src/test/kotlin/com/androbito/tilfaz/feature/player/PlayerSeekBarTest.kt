@@ -17,6 +17,8 @@ class PlayerSeekBarTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private fun string(id: Int) = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().getString(id)
+
     private val half = 30 * 60 * 1_000L
     private val total = 2 * 60 * 60 * 1_000L
 
@@ -42,5 +44,19 @@ class PlayerSeekBarTest {
         compose.setContent { TilfazTheme { PlayerSeekBar(positionMs = half, durationMs = total, scrub = null) } }
 
         compose.onNodeWithText("+2:00").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFileThatCannotBeSoughtSaysSoInsteadOfOfferingACursor() {
+        compose.setContent { TilfazTheme { PlayerSeekBar(positionMs = half, durationMs = total, scrub = null, seekable = false) } }
+
+        compose.onNodeWithText(string(R.string.player_not_seekable)).assertIsDisplayed()
+    }
+
+    @Test
+    fun aSeekableFileShowsNoSuchMessage() {
+        compose.setContent { TilfazTheme { PlayerSeekBar(positionMs = half, durationMs = total, scrub = null) } }
+
+        compose.onNodeWithText(string(R.string.player_not_seekable)).assertDoesNotExist()
     }
 }

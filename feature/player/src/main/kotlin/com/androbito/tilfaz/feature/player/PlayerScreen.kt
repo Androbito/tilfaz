@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
@@ -106,6 +107,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     var tracks by remember { mutableStateOf(Tracks.EMPTY) }
     var cues by remember { mutableStateOf(CueGroup.EMPTY_TIME_ZERO) }
     var optionsOpen by remember { mutableStateOf(false) }
+    var seekable by remember { mutableStateOf(true) }
     var optionsPage by remember { mutableStateOf<OptionsPage>(OptionsPage.Root) }
     var speed by remember { mutableFloatStateOf(1f) }
     var aspect by remember { mutableStateOf(AspectMode.FIT) }
@@ -142,6 +144,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
                 }
             }
             override fun onCues(cueGroup: CueGroup) { cues = cueGroup }
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) { seekable = exo.isCurrentMediaItemSeekable }
             override fun onPlayerError(error: PlaybackException) { onEvent(PlayerEvent.PlaybackFailed(error.toPlayerError())) }
         }
         exo.addListener(listener)
@@ -186,6 +189,11 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     fun stepScrub(direction: Int) {
         val exo = player ?: return
         if (durationMs <= 0) return
+        // The bar says why nothing moves; a cursor on a file that cannot be sought would only jump back to the start.
+        if (!seekable) {
+            showControls()
+            return
+        }
         scrub = SeekScrubber.step(scrub, direction, exo.currentPosition, durationMs, System.currentTimeMillis())
         showControls()
     }
@@ -264,7 +272,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            InfoOverlay(state, positionMs, durationMs, isPlaying, scrub)
+            InfoOverlay(state, positionMs, durationMs, isPlaying, scrub, seekable)
         }
 
         AnimatedVisibility(visible = optionsOpen, enter = slideInHorizontally { it }, exit = slideOutHorizontally { it }, modifier = Modifier.fillMaxSize()) {
@@ -295,7 +303,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
 }
 
 @Composable
-private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long, isPlaying: Boolean, scrub: ScrubState?) {
+private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long, isPlaying: Boolean, scrub: ScrubState?, seekable: Boolean) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -328,7 +336,7 @@ private fun InfoOverlay(state: PlayerUiState, positionMs: Long, durationMs: Long
                 )
             }
         } else if (durationMs > 0) {
-            PlayerSeekBar(positionMs = positionMs, durationMs = durationMs, scrub = scrub, modifier = Modifier.fillMaxWidth())
+            PlayerSeekBar(positionMs = positionMs, durationMs = durationMs, scrub = scrub, modifier = Modifier.fillMaxWidth(), seekable = seekable)
         }
         Text(
             stringResource(if (state.isLive) R.string.player_hint_live else R.string.player_hint_vod),
