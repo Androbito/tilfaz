@@ -29,8 +29,6 @@ import kotlinx.serialization.Serializable
 data class MoviesRoute(val initialSectionId: String? = null) {
     companion object {
         const val ARG_INITIAL_SECTION = "initialSectionId"
-        const val CONTINUE_WATCHING = CatalogBrowser.CONTINUE_WATCHING
-        const val FAVORITES = CatalogBrowser.FAVORITES
     }
 }
 

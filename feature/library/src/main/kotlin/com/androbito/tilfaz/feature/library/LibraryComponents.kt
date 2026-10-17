@@ -36,6 +36,12 @@ import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 
+/** Room for the focus ring and the zoom of a focused card, so the first and last cards of a shelf are not clipped. */
+internal val ShelfPadding = PaddingValues(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceM)
+
+// Narrower than the 180dp poster of the browsers: the shelves of a page share a 540dp-tall screen.
+internal val PosterWidth = 132.dp
+
 /** The question shown over a library page before a change is made, e.g. "Remove from favourites?". */
 data class Confirmation(val title: String, val message: String, val confirmLabel: String, val cancelLabel: String)
 

@@ -6,8 +6,11 @@ import androidx.navigation.compose.rememberNavController
 import com.androbito.tilfaz.feature.home.HomeNavigation
 import com.androbito.tilfaz.feature.home.HomeRoute
 import com.androbito.tilfaz.feature.home.homeScreen
+import com.androbito.tilfaz.feature.library.ContinueWatchingNavigation
+import com.androbito.tilfaz.feature.library.ContinueWatchingRoute
 import com.androbito.tilfaz.feature.library.FavoritesNavigation
 import com.androbito.tilfaz.feature.library.FavoritesRoute
+import com.androbito.tilfaz.feature.library.continueWatchingScreen
 import com.androbito.tilfaz.feature.library.favoritesScreen
 import com.androbito.tilfaz.feature.live.LiveRoute
 import com.androbito.tilfaz.feature.live.liveScreen
@@ -52,7 +55,7 @@ fun TilfazNavHost(startSignedIn: Boolean) {
                 onOpenSearch = { navController.navigate(SearchRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenFavorites = { navController.navigate(FavoritesRoute) },
-                onOpenContinueWatching = { navController.navigate(MoviesRoute(initialSectionId = MoviesRoute.CONTINUE_WATCHING)) }
+                onOpenContinueWatching = { navController.navigate(ContinueWatchingRoute) }
             )
         )
 
@@ -83,6 +86,13 @@ fun TilfazNavHost(startSignedIn: Boolean) {
                 onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
                 onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
                 onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
+            )
+        )
+
+        continueWatchingScreen(
+            ContinueWatchingNavigation(
+                onPlayMovie = { movieId, start -> navController.navigate(PlayerRoute.movie(movieId, start)) },
+                onPlayEpisode = { seriesId, episodeId, start -> navController.navigate(PlayerRoute.episode(seriesId, episodeId, start)) }
             )
         )
 

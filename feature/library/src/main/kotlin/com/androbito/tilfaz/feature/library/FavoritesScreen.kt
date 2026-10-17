@@ -2,7 +2,6 @@ package com.androbito.tilfaz.feature.library
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -131,12 +130,6 @@ fun FavoritesScreen(state: FavoritesUiState, onEvent: (FavoritesEvent) -> Unit, 
         }
     }
 }
-
-/** Room for the focus ring and the zoom of a focused card, so the first and last cards are not clipped. */
-private val ShelfPadding = PaddingValues(horizontal = Dimens.SpaceM, vertical = Dimens.SpaceM)
-
-// Narrower than the 180dp poster of the browsers: three shelves have to share a 540dp-tall screen.
-private val PosterWidth = 132.dp
 
 @Composable
 private fun ChannelCard(channel: LiveChannel, onClick: () -> Unit, onLongClick: () -> Unit, modifier: Modifier = Modifier) {

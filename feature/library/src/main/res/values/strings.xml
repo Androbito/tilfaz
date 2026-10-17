@@ -12,4 +12,14 @@
     <string name="favorites_remove_confirm">Remove</string>
     <string name="favorites_remove_cancel">Keep</string>
     <string name="favorites_hint">Hold OK or press Menu on an item to remove it</string>
+    <string name="continue_title">Continue watching</string>
+    <string name="continue_movies">Movies</string>
+    <string name="continue_series">TV shows</string>
+    <string name="continue_empty_movies">No movie in progress. Start one and it waits for you here.</string>
+    <string name="continue_empty_series">No TV show in progress. Start an episode and it waits for you here.</string>
+    <string name="continue_mark_title">Mark as watched?</string>
+    <string name="continue_mark_message">\"%1$s\" will leave Continue watching.</string>
+    <string name="continue_mark_confirm">Mark as watched</string>
+    <string name="continue_mark_cancel">Keep</string>
+    <string name="continue_hint">Hold OK or press Menu on an item to mark it as watched</string>
 </resources>

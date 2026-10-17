@@ -59,7 +59,6 @@ import kotlinx.serialization.Serializable
 data class LiveRoute(val initialCategoryId: String? = null) {
     companion object {
         const val ARG_INITIAL_CATEGORY = "initialCategoryId"
-        const val FAVORITES = LiveCategoryUi.FAVORITES_ID
     }
 }
 
