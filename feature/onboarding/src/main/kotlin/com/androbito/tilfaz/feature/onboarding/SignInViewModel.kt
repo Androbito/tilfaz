@@ -46,10 +46,13 @@ sealed interface SignInEvent {
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val signIn: SignInUseCase
+    private val signIn: SignInUseCase,
+    prefill: SignInPrefill
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SignInUiState())
+    private val _state = MutableStateFlow(
+        SignInUiState(serverUrl = prefill.serverUrl, username = prefill.username, password = prefill.password)
+    )
     val state: StateFlow<SignInUiState> = _state.asStateFlow()
 
     fun onEvent(event: SignInEvent) {

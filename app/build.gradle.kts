@@ -1,11 +1,30 @@
+import java.io.StringReader
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.tilfaz.android.application)
     alias(libs.plugins.tilfaz.android.hilt)
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Optional, gitignored file with a test account to prefill the sign-in form (see dev-credentials.properties.example).
+// Read through providers so editing it invalidates the configuration cache.
+val devCredentials = Properties().apply {
+    providers.fileContents(rootProject.layout.projectDirectory.file("dev-credentials.properties")).asText.orNull
+        ?.let { load(StringReader(it)) }
+}
+
+fun devCredentialField(key: String): String {
+    val value = devCredentials.getProperty(key, "").replace("\\", "\\\\").replace("\"", "\\\"")
+    return "\"$value\""
+}
+
 android {
     namespace = "com.androbito.tilfaz"
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.androbito.tilfaz"
@@ -20,9 +39,16 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Signing is configured from CI secrets; see docs/release.md.
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            // Never ship a test account.
+            buildConfigField("String", "DEV_SERVER_URL", "\"\"")
+            buildConfigField("String", "DEV_USERNAME", "\"\"")
+            buildConfigField("String", "DEV_PASSWORD", "\"\"")
         }
         debug {
             applicationIdSuffix = ".debug"
+            buildConfigField("String", "DEV_SERVER_URL", devCredentialField("SERVER_URL"))
+            buildConfigField("String", "DEV_USERNAME", devCredentialField("USERNAME"))
+            buildConfigField("String", "DEV_PASSWORD", devCredentialField("PASSWORD"))
         }
     }
 

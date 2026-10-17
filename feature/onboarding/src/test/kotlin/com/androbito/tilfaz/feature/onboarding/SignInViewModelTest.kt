@@ -19,12 +19,29 @@ class SignInViewModelTest {
     @get:Rule val mainDispatcher = MainDispatcherRule()
 
     private val repository = FakeAccountRepository()
-    private val viewModel by lazy { SignInViewModel(SignInUseCase(repository)) }
+    private val viewModel by lazy { SignInViewModel(SignInUseCase(repository), SignInPrefill.None) }
 
     private fun fill() {
         viewModel.onEvent(SignInEvent.ServerChanged("tv.example.com:8080"))
         viewModel.onEvent(SignInEvent.UsernameChanged("ayoub"))
         viewModel.onEvent(SignInEvent.PasswordChanged("s3cret"))
+    }
+
+    @Test
+    fun `fields start empty when there is no prefill`() {
+        assertThat(viewModel.state.value.serverUrl).isEqualTo("")
+        assertThat(viewModel.state.value.username).isEqualTo("")
+        assertThat(viewModel.state.value.password).isEqualTo("")
+    }
+
+    @Test
+    fun `fields start filled from the prefill so manual testing skips typing`() {
+        val prefilled = SignInViewModel(SignInUseCase(repository), SignInPrefill("http://10.0.2.2:3001", "dev", "pw"))
+
+        assertThat(prefilled.state.value.serverUrl).isEqualTo("http://10.0.2.2:3001")
+        assertThat(prefilled.state.value.username).isEqualTo("dev")
+        assertThat(prefilled.state.value.password).isEqualTo("pw")
+        assertThat(prefilled.state.value.canSubmit).isTrue()
     }
 
     @Test
