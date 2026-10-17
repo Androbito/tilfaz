@@ -59,6 +59,17 @@ android {
             buildConfigField("String", "DEV_USERNAME", devCredentialField("USERNAME"))
             buildConfigField("String", "DEV_PASSWORD", devCredentialField("PASSWORD"))
         }
+        // The debug build is far slower than a shipped one (debuggable, no code shrinking); this one is built like a release
+        // but keeps the debug application id, signature and test account, so it installs over the debug build and measures real speed.
+        create("staging") {
+            initWith(getByName("debug"))
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            matchingFallbacks += listOf("release", "debug")
+        }
+
     }
 
     packaging {
