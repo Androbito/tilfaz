@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isCloseTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.androbito.tilfaz.core.designsystem.component.TvTextField
@@ -67,6 +68,17 @@ class TvTextFieldTest {
         compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionRight) }
 
         compose.onNodeWithTag("neighbour").assertIsFocused()
+    }
+
+    @Test
+    fun aBlankLabelTakesNoSpaceAboveTheBox() {
+        compose.setContent {
+            TilfazTheme { TvTextField(value = "", onValueChange = {}, label = "", modifier = Modifier.testTag("field")) }
+        }
+
+        val height = compose.onNodeWithTag("field").fetchSemanticsNode().boundsInRoot.height
+        val box = with(compose.density) { 56.dp.toPx() }
+        assertThat(height).isCloseTo(box, delta = 1f) // just the 56dp box, nothing above it
     }
 
     @Test

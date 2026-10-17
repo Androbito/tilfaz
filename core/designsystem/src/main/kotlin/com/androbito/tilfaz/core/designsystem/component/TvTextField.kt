@@ -67,7 +67,9 @@ fun TvTextField(
         else -> TilfazColors.SurfaceVariant
     }
     Column(modifier) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = TilfazColors.OnSurfaceMuted, modifier = Modifier.padding(bottom = Dimens.SpaceXs))
+        if (label.isNotEmpty()) {
+            Text(label, style = MaterialTheme.typography.labelLarge, color = TilfazColors.OnSurfaceMuted, modifier = Modifier.padding(bottom = Dimens.SpaceXs))
+        }
         Box(
             Modifier
                 .fillMaxWidth()
