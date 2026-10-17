@@ -39,6 +39,9 @@ object TitleText {
         return trimmed.split('|').map { it.trim() }.filter { it.isNotEmpty() }.joinToString(SEPARATOR)
     }
 
+    /** What the catalog stores to search on: the normalised title, or nothing for a heading entry that must never match. */
+    fun searchKey(title: String): String = if (isSeparator(title)) "" else normalize(title)
+
     /**
      * Providers pad their lists with heading entries such as "-----| BEIN SPORTS |-----" or "=====": they open with a run
      * of the same symbol, or have no letter at all. They are not something to watch, so search leaves them out.

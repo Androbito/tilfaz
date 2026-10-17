@@ -2,6 +2,7 @@ package com.androbito.tilfaz.core.database.di
 
 import android.content.Context
 import androidx.room.Room
+import com.androbito.tilfaz.core.database.Migrations
 import com.androbito.tilfaz.core.database.TilfazDatabase
 import dagger.Module
 import dagger.Provides
@@ -18,8 +19,8 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): TilfazDatabase =
         Room.databaseBuilder(context, TilfazDatabase::class.java, "tilfaz.db")
-            // The catalog is a cache of the provider; on a schema change, re-sync rather than migrate.
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            // Favourites and progress share this file, so a schema change is always a migration, never a wipe.
+            .addMigrations(*Migrations.ALL)
             .build()
 
     @Provides fun provideCategoryDao(db: TilfazDatabase) = db.categoryDao()

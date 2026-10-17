@@ -7,6 +7,7 @@ import assertk.assertions.isNull
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.network.dto.CategoryDto
 import com.androbito.tilfaz.core.network.dto.LiveStreamDto
+import com.androbito.tilfaz.core.network.dto.SeriesDto
 import com.androbito.tilfaz.core.network.dto.VodStreamDto
 import org.junit.Test
 
@@ -57,5 +58,23 @@ class CatalogMappersTest {
         assertThat(DurationParser.parse("103 min")).isEqualTo(6180L)
         assertThat(DurationParser.parse("1h 43m")).isEqualTo(6180L)
         assertThat(DurationParser.parse("")).isNull()
+    }
+
+    @Test
+    fun `every catalog row carries the text a search compares against`() {
+        val movie = listOf(VodStreamDto(streamId = 1, name = "|FR| La Vénus électrique (2026)")).toMovieEntities().single()
+        val series = listOf(SeriesDto(seriesId = 2, name = "| The Mysterious Sound! | 2026 | ده صوت")).toSeriesEntities().single()
+        val channel = listOf(LiveStreamDto(streamId = 3, name = "|AR| AL JAZEERA HD")).toLiveEntities().single()
+
+        assertThat(movie.nameNormalized).isEqualTo("la venus electrique 2026")
+        assertThat(series.nameNormalized).isEqualTo("the mysterious sound 2026 ده صوت")
+        assertThat(channel.nameNormalized).isEqualTo("al jazeera hd")
+    }
+
+    @Test
+    fun `a heading entry has no search text so it never matches`() {
+        val heading = listOf(LiveStreamDto(streamId = 4, name = "-----| BEIN SPORTS |-----")).toLiveEntities().single()
+
+        assertThat(heading.nameNormalized).isEqualTo("")
     }
 }

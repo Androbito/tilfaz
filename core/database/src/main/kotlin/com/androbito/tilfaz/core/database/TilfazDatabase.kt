@@ -30,7 +30,7 @@ import com.androbito.tilfaz.core.database.entity.WatchProgressEntity
         WatchProgressEntity::class,
         RecentChannelEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class TilfazDatabase : RoomDatabase() {

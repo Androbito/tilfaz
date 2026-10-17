@@ -1,5 +1,6 @@
 package com.androbito.tilfaz.core.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -14,11 +15,13 @@ data class CategoryEntity(
     val position: Int
 )
 
-@Entity(tableName = "live_channels", indices = [Index("categoryId"), Index("name")])
+@Entity(tableName = "live_channels", indices = [Index("categoryId", "position"), Index("position")])
 data class LiveChannelEntity(
     @PrimaryKey val id: Int,
     val number: Int?,
     val name: String,
+    /** [com.androbito.tilfaz.core.model.TitleText.searchKey] of the name: what a search compares against. */
+    @ColumnInfo(defaultValue = "''") val nameNormalized: String = "",
     val logoUrl: String?,
     val categoryId: String?,
     val epgChannelId: String?,
@@ -27,10 +30,12 @@ data class LiveChannelEntity(
     val position: Int
 )
 
-@Entity(tableName = "movies", indices = [Index("categoryId"), Index("name"), Index("addedAtMillis")])
+@Entity(tableName = "movies", indices = [Index("categoryId", "position"), Index("position"), Index("addedAtMillis")])
 data class MovieEntity(
     @PrimaryKey val id: Int,
     val name: String,
+    /** [com.androbito.tilfaz.core.model.TitleText.searchKey] of the name: what a search compares against. */
+    @ColumnInfo(defaultValue = "''") val nameNormalized: String = "",
     val posterUrl: String?,
     val categoryId: String?,
     val ratingOutOfTen: Double?,
@@ -40,10 +45,12 @@ data class MovieEntity(
     val position: Int
 )
 
-@Entity(tableName = "series", indices = [Index("categoryId"), Index("name"), Index("lastModifiedMillis")])
+@Entity(tableName = "series", indices = [Index("categoryId", "position"), Index("position"), Index("lastModifiedMillis")])
 data class SeriesEntity(
     @PrimaryKey val id: Int,
     val name: String,
+    /** [com.androbito.tilfaz.core.model.TitleText.searchKey] of the name: what a search compares against. */
+    @ColumnInfo(defaultValue = "''") val nameNormalized: String = "",
     val posterUrl: String?,
     val categoryId: String?,
     val ratingOutOfTen: Double?,

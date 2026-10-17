@@ -12,6 +12,7 @@ import com.androbito.tilfaz.core.model.Movie
 import com.androbito.tilfaz.core.model.Rating
 import com.androbito.tilfaz.core.model.Series
 import com.androbito.tilfaz.core.model.SyncStatus
+import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.network.dto.CategoryDto
 import com.androbito.tilfaz.core.network.dto.LiveStreamDto
 import com.androbito.tilfaz.core.network.dto.SeriesDto
@@ -32,10 +33,12 @@ fun CategoryEntity.toDomain() = Category(id = id, name = name, type = ContentTyp
 
 fun List<LiveStreamDto>.toLiveEntities(): List<LiveChannelEntity> = mapIndexedNotNull { index, dto ->
     val id = dto.streamId ?: return@mapIndexedNotNull null
+    val name = dto.name?.trim().orEmpty().ifEmpty { "Channel $id" }
     LiveChannelEntity(
         id = id,
         number = dto.num,
-        name = dto.name?.trim().orEmpty().ifEmpty { "Channel $id" },
+        name = name,
+        nameNormalized = TitleText.searchKey(name),
         logoUrl = dto.streamIcon?.takeIf { it.startsWith("http") },
         categoryId = dto.categoryId,
         epgChannelId = dto.epgChannelId,
@@ -62,6 +65,7 @@ fun List<VodStreamDto>.toMovieEntities(): List<MovieEntity> = mapIndexedNotNull 
     MovieEntity(
         id = id,
         name = name,
+        nameNormalized = TitleText.searchKey(name),
         posterUrl = dto.streamIcon?.takeIf { it.startsWith("http") },
         categoryId = dto.categoryId,
         ratingOutOfTen = Rating.fromRaw(dto.rating, dto.rating5Based)?.outOfTen,
@@ -89,6 +93,7 @@ fun List<SeriesDto>.toSeriesEntities(): List<SeriesEntity> = mapIndexedNotNull {
     SeriesEntity(
         id = id,
         name = name,
+        nameNormalized = TitleText.searchKey(name),
         posterUrl = dto.cover?.takeIf { it.startsWith("http") },
         categoryId = dto.categoryId,
         ratingOutOfTen = Rating.fromRaw(dto.rating, dto.rating5Based)?.outOfTen,
