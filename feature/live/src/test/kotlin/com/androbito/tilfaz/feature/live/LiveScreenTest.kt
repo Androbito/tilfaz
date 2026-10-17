@@ -1,6 +1,9 @@
 package com.androbito.tilfaz.feature.live
 
 import android.content.Context
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
@@ -10,13 +13,17 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isGreaterThan
 import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThanOrEqualTo
+import assertk.assertions.isNull
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.model.NowNext
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
@@ -106,6 +113,50 @@ class LiveScreenTest {
         tester.emulateSavedInstanceStateRestore()
 
         compose.onNode(secondRow).assertIsFocused()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    private fun pressOk(matcher: SemanticsMatcher) {
+        compose.onNode(matcher).requestFocus()
+        compose.onNode(matcher).performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun whileTypingTheSuggestionsReplaceTheCategoriesAndPlayTheChannel() {
+        val played = mutableListOf<Int>()
+        val typing = stateWith().copy(query = "jaz", suggestions = listOf(Fixtures.alJazeera))
+        compose.setContent { TilfazTheme { LiveScreen(state = typing, onEvent = {}, onPlay = { played += it }) } }
+
+        compose.onNodeWithText(string(R.string.live_all)).assertDoesNotExist()
+        pressOk(hasText("AL JAZEERA HD") and hasClickAction())
+
+        assertThat(played).isEqualTo(listOf(Fixtures.alJazeera.id))
+    }
+
+    @Test
+    fun withoutAQueryTheCategoriesAreShown() {
+        show(stateWith())
+
+        compose.onNodeWithText(string(R.string.live_all)).assertIsDisplayed()
+    }
+
+    @Test
+    fun aSearchedChannelZapsInItsOwnCategory() {
+        val searching = stateWith().copy(query = "bein", selectedCategoryId = "2", channels = listOf(Fixtures.beinSports1))
+
+        assertThat(zapCategoryFor(searching, Fixtures.beinSports1.id)).isEqualTo("1")
+    }
+
+    @Test
+    fun withoutASearchTheSelectedProviderCategoryIsUsed() {
+        val browsing = stateWith().copy(
+            categories = listOf(LiveCategoryUi("2", "|AR| NEWS", 1, LiveCategoryUi.Kind.PROVIDER)),
+            selectedCategoryId = "2"
+        )
+
+        assertThat(zapCategoryFor(browsing, Fixtures.alJazeera.id)).isEqualTo("2")
+        assertThat(zapCategoryFor(stateWith(), Fixtures.alJazeera.id)).isNull()
     }
 
     private companion object {

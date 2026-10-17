@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.feature.live
 
 import androidx.lifecycle.SavedStateHandle
+import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.containsExactly
@@ -54,9 +55,10 @@ class LiveViewModelTest {
         viewModel.state.test {
             viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.alJazeera.id))
             viewModel.onEvent(LiveEvent.QueryChanged("bein"))
-            val state = expectMostRecentItem()
+            val state = awaitState { it.query == "bein" && it.channels == listOf(Fixtures.beinSports1) }
             assertThat(state.channels).containsExactly(Fixtures.beinSports1)
             assertThat(state.focusedChannel).isEqualTo(Fixtures.beinSports1)
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -96,13 +98,59 @@ class LiveViewModelTest {
         }
     }
 
+    /** The search runs off the main thread, so the result arrives a moment after the query. */
+    private suspend fun ReceiveTurbine<LiveUiState>.awaitState(matches: (LiveUiState) -> Boolean): LiveUiState {
+        while (true) {
+            val state = awaitItem()
+            if (matches(state)) return state
+        }
+    }
+
     @Test
-    fun `search filters within the selected category`() = runTest {
+    fun `search finds channels and nothing when there is no match`() = runTest {
         viewModel.state.test {
             viewModel.onEvent(LiveEvent.QueryChanged("jazeera"))
-            assertThat(expectMostRecentItem().channels).containsExactly(Fixtures.alJazeera)
+            assertThat(awaitState { it.query == "jazeera" && it.channels.size == 1 }.channels).containsExactly(Fixtures.alJazeera)
             viewModel.onEvent(LiveEvent.QueryChanged("nothing"))
-            assertThat(expectMostRecentItem().channels).isEqualTo(emptyList())
+            assertThat(awaitState { it.query == "nothing" && it.channels.isEmpty() }.channels).isEqualTo(emptyList())
+        }
+    }
+
+    @Test
+    fun `search covers every channel whichever category is selected`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.SelectCategory("1"))
+            viewModel.onEvent(LiveEvent.QueryChanged("jazeera"))
+            assertThat(awaitState { it.channels == listOf(Fixtures.alJazeera) }.channels).containsExactly(Fixtures.alJazeera)
+        }
+    }
+
+    @Test
+    fun `the provider's tag is not searched and a title start is enough`() = runTest {
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.QueryChanged("bei"))
+            assertThat(awaitState { it.query == "bei" && it.channels.size == 1 }.channels).containsExactly(Fixtures.beinSports1)
+            viewModel.onEvent(LiveEvent.QueryChanged("ar"))
+            assertThat(awaitState { it.query == "ar" && it.channels.isEmpty() }.channels).isEqualTo(emptyList())
+        }
+    }
+
+    @Test
+    fun `suggestions follow the query and list each channel once`() = runTest {
+        val duplicate = Fixtures.alJazeera.copy(id = 103, name = "|FR| AL JAZEERA HD")
+        live.items.value = Fixtures.liveChannels + duplicate
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.QueryChanged("al j"))
+            val state = awaitState { it.query == "al j" && it.suggestions.isNotEmpty() }
+            assertThat(state.suggestions).containsExactly(Fixtures.alJazeera)
+            assertThat(state.channels.size).isEqualTo(2)
+        }
+    }
+
+    @Test
+    fun `without a query there are no suggestions`() = runTest {
+        viewModel.state.test {
+            assertThat(expectMostRecentItem().suggestions).isEqualTo(emptyList())
         }
     }
 

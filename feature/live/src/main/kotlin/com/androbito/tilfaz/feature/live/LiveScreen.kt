@@ -40,6 +40,7 @@ import com.androbito.tilfaz.core.designsystem.component.ChannelRow
 import com.androbito.tilfaz.core.designsystem.component.EmptyState
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.ProgressBar
+import com.androbito.tilfaz.core.designsystem.component.SuggestionRow
 import com.androbito.tilfaz.core.designsystem.component.TopBar
 import com.androbito.tilfaz.core.designsystem.component.TvTextField
 import com.androbito.tilfaz.core.designsystem.component.rememberCurrentTime
@@ -47,6 +48,7 @@ import com.androbito.tilfaz.core.designsystem.component.rememberFocus
 import com.androbito.tilfaz.core.designsystem.component.rememberListFocusMemory
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
+import com.androbito.tilfaz.core.domain.search.TitleText
 import com.androbito.tilfaz.core.model.EpgEntry
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
@@ -74,11 +76,21 @@ fun LiveRoute(onPlayChannel: (Int, String?) -> Unit, viewModel: LiveViewModel = 
         onEvent = viewModel::onEvent,
         onPlay = { id ->
             viewModel.onEvent(LiveEvent.Play(id))
-            val providerCategory = state.selectedCategory?.takeIf { it.kind == LiveCategoryUi.Kind.PROVIDER }?.id
-            onPlayChannel(id, providerCategory)
+            onPlayChannel(id, zapCategoryFor(state, id))
         }
     )
 }
+
+/**
+ * The category the player pages through with channel up and down. A channel found by search may belong to a different
+ * category than the one selected, and paging has to happen among its own neighbours.
+ */
+internal fun zapCategoryFor(state: LiveUiState, channelId: Int): String? =
+    if (state.query.isNotBlank()) {
+        state.channels.firstOrNull { it.id == channelId }?.categoryId
+    } else {
+        state.selectedCategory?.takeIf { it.kind == LiveCategoryUi.Kind.PROVIDER }?.id
+    }
 
 @Composable
 fun LiveScreen(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -> Unit) {
@@ -86,7 +98,7 @@ fun LiveScreen(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.live_title)}")
         Row(Modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
-            CategoryColumn(state, onEvent, Modifier.width(SidebarWidth).fillMaxHeight())
+            CategoryColumn(state, onEvent, onPlay, Modifier.width(SidebarWidth).fillMaxHeight())
             ChannelColumn(state, onEvent, onPlay, now, Modifier.weight(1f).fillMaxHeight())
             PreviewPane(
                 channel = state.focusedChannel,
@@ -104,7 +116,7 @@ private val SidebarWidth = 270.dp
 private val PreviewWidth = 300.dp
 
 @Composable
-private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, modifier: Modifier) {
+private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -> Unit, modifier: Modifier) {
     Column(modifier) {
         TvTextField(
             value = state.query,
@@ -114,6 +126,12 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, mod
             modifier = Modifier.padding(bottom = Dimens.SpaceS)
         )
         LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
+            if (state.query.isNotBlank()) {
+                items(state.suggestions, key = { it.id }) { channel ->
+                    SuggestionRow(TitleText.clean(channel.name), onClick = { onPlay(channel.id) })
+                }
+                return@LazyColumn
+            }
             items(state.categories, key = { it.id }) { category ->
                 val (name, icon) = when (category.kind) {
                     LiveCategoryUi.Kind.ALL -> stringResource(R.string.live_all) to Icons.Default.ViewList

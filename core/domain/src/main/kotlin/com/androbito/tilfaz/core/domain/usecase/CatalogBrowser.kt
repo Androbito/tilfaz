@@ -3,7 +3,7 @@ package com.androbito.tilfaz.core.domain.usecase
 import com.androbito.tilfaz.core.domain.repository.CatalogRepository
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
-import com.androbito.tilfaz.core.domain.search.TitleSearch
+import com.androbito.tilfaz.core.domain.search.TitleSearchCache
 import com.androbito.tilfaz.core.model.Category
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.WatchProgress
@@ -77,13 +77,7 @@ class CatalogBrowser<T>(
 
     private class Found<T>(val items: List<T>, val suggestions: List<T> = emptyList())
 
-    // Built once per catalog snapshot and kept for the next keystroke.
-    private var indexed: Pair<List<T>, TitleSearch<T>>? = null
-
-    private fun indexOf(everything: List<T>): TitleSearch<T> {
-        indexed?.takeIf { it.first === everything }?.let { return it.second }
-        return TitleSearch(everything, nameOf).also { indexed = everything to it }
-    }
+    private val searchCache = TitleSearchCache(nameOf)
 
     // The whole catalog stays subscribed while typing, so a keystroke never reloads it from the database.
     private val found: Flow<Found<T>> = combine(selectedSectionId, query.map(String::trim), all) { id, q, everything ->
@@ -91,7 +85,7 @@ class CatalogBrowser<T>(
     }.flatMapLatest { (id, q, everything) ->
         if (q.isNotEmpty()) {
             flow {
-                val index = indexOf(everything)
+                val index = searchCache.indexOf(everything)
                 val results = index.search(q)
                 emit(Found(results, index.distinctTitles(results, SUGGESTION_LIMIT)))
             }.flowOn(computation)
