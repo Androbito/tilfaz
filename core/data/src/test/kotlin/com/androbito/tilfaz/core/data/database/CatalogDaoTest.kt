@@ -134,7 +134,12 @@ class CatalogDaoTest {
 
     @Test
     fun `related titles are the first few of the same category without the movie itself`() = runTest {
-        givenMovies(movie(1, "me", "10", position = 0), movie(2, "a", "10", position = 1), movie(3, "b", "10", position = 2), movie(4, "other", "11", position = 3))
+        givenMovies(
+            movie(1, "me", "10", position = 0),
+            movie(2, "a", "10", position = 1),
+            movie(3, "b", "10", position = 2),
+            movie(4, "other", "11", position = 3)
+        )
 
         database.movieDao().observeRelated("10", excludeId = 1, limit = 1).test {
             assertThat(awaitItem().map { it.name }).containsExactly("a")
