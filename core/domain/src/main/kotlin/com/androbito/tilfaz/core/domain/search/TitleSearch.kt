@@ -37,10 +37,13 @@ class TitleSearch<T>(private val items: List<T>, private val titleOf: (T) -> Str
     }
 
     /** At most [limit] results with each title once, so the same film in three languages is not offered three times. */
-    fun suggest(query: String, limit: Int): List<T> {
+    fun suggest(query: String, limit: Int): List<T> = distinctTitles(search(query), limit)
+
+    /** The first [limit] of [results] whose titles differ, keeping their order. */
+    fun distinctTitles(results: List<T>, limit: Int): List<T> {
         val seen = HashSet<String>()
         val out = ArrayList<T>(limit)
-        for (item in search(query)) {
+        for (item in results) {
             if (seen.add(TitleText.normalize(titleOf(item)))) out += item
             if (out.size == limit) break
         }

@@ -3,14 +3,20 @@ package com.androbito.tilfaz.core.domain.usecase
 import com.androbito.tilfaz.core.domain.repository.CatalogRepository
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.search.TitleSearch
 import com.androbito.tilfaz.core.model.Category
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.WatchProgress
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 /**
@@ -28,7 +34,9 @@ class CatalogBrowser<T>(
     private val nameOf: (T) -> String,
     private val categoryOf: (T) -> String?,
     private val addedAtMillisOf: (T) -> Long?,
-    private val favoriteKeyOf: (Int) -> String
+    private val favoriteKeyOf: (Int) -> String,
+    /** Where the search runs: indexing a catalog of a hundred thousand titles must not happen on the main thread. */
+    private val computation: CoroutineDispatcher = Dispatchers.Default
 ) {
     data class Section(val id: String, val name: String, val count: Int?, val kind: Kind) {
         enum class Kind { ALL, FAVORITES, CONTINUE_WATCHING, RECENTLY_ADDED, PROVIDER }
@@ -40,7 +48,9 @@ class CatalogBrowser<T>(
         val items: List<T>,
         val favoriteIds: Set<Int>,
         val progressById: Map<Int, WatchProgress>,
-        val query: String
+        val query: String,
+        /** While a query is typed: the best few titles, each once, to jump to without typing the rest. */
+        val suggestions: List<T> = emptyList()
     ) {
         val selectedSection: Section? get() = sections.firstOrNull { it.id == selectedSectionId }
     }
@@ -65,31 +75,52 @@ class CatalogBrowser<T>(
         }
     }
 
-    private val items: Flow<List<T>> = combine(selectedSectionId, query) { id, q -> id to q.trim() }.flatMapLatest { (id, q) ->
-        val source: Flow<List<T>> = when (id) {
-            ALL -> all
-            FAVORITES -> combine(all, favoriteIds) { items, fav -> items.filter { idOf(it) in fav } }
-            CONTINUE_WATCHING -> combine(all, progress) { items, progress ->
-                val byId = items.associateBy(idOf)
-                progress.keys.mapNotNull { byId[it] }
+    private class Found<T>(val items: List<T>, val suggestions: List<T> = emptyList())
+
+    // Built once per catalog snapshot and kept for the next keystroke.
+    private var indexed: Pair<List<T>, TitleSearch<T>>? = null
+
+    private fun indexOf(everything: List<T>): TitleSearch<T> {
+        indexed?.takeIf { it.first === everything }?.let { return it.second }
+        return TitleSearch(everything, nameOf).also { indexed = everything to it }
+    }
+
+    // The whole catalog stays subscribed while typing, so a keystroke never reloads it from the database.
+    private val found: Flow<Found<T>> = combine(selectedSectionId, query.map(String::trim), all) { id, q, everything ->
+        Triple(id, q, everything)
+    }.flatMapLatest { (id, q, everything) ->
+        if (q.isNotEmpty()) {
+            flow {
+                val index = indexOf(everything)
+                val results = index.search(q)
+                emit(Found(results, index.distinctTitles(results, SUGGESTION_LIMIT)))
+            }.flowOn(computation)
+        } else {
+            val source: Flow<List<T>> = when (id) {
+                ALL -> flowOf(everything)
+                FAVORITES -> favoriteIds.map { fav -> everything.filter { idOf(it) in fav } }
+                CONTINUE_WATCHING -> progress.map { progress ->
+                    val byId = everything.associateBy(idOf)
+                    progress.keys.mapNotNull { byId[it] }
+                }
+                RECENTLY_ADDED -> flowOf(everything.sortedByDescending { addedAtMillisOf(it) ?: Long.MIN_VALUE }.take(RECENT_LIMIT))
+                else -> repository.observeItems(id)
             }
-            RECENTLY_ADDED -> all.map { items -> items.sortedByDescending { addedAtMillisOf(it) ?: Long.MIN_VALUE }.take(RECENT_LIMIT) }
-            else -> repository.observeItems(id)
+            source.map { Found(it) }
         }
-        if (q.isEmpty()) source else source.map { list -> list.filter { nameOf(it).contains(q, ignoreCase = true) } }
     }
 
     val snapshot: Flow<Snapshot<T>> =
         combine(
             sections,
             selectedSectionId,
-            items,
+            found,
             favoriteIds,
             combine(progress, query) { p, q ->
                 p to q
             }
-        ) { sections, selected, items, favorites, (progress, q) ->
-            Snapshot(sections, selected, items, favorites, progress, q)
+        ) { sections, selected, found, favorites, (progress, q) ->
+            Snapshot(sections, selected, found.items, favorites, progress, q, found.suggestions)
         }
 
     fun select(sectionId: String) {
@@ -110,5 +141,6 @@ class CatalogBrowser<T>(
         const val CONTINUE_WATCHING = "__continue"
         const val RECENTLY_ADDED = "__recent"
         const val RECENT_LIMIT = 60
+        const val SUGGESTION_LIMIT = 8
     }
 }

@@ -12,6 +12,7 @@ import com.androbito.tilfaz.core.testing.fake.FakeFavoritesRepository
 import com.androbito.tilfaz.core.testing.fake.FakeVodRepository
 import com.androbito.tilfaz.core.testing.fake.FakeWatchProgressRepository
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -34,7 +35,8 @@ class CatalogBrowserTest {
         nameOf = { it.name },
         categoryOf = { it.categoryId },
         addedAtMillisOf = { it.addedAt?.toEpochMilli() },
-        favoriteKeyOf = ToggleFavoriteUseCase::vodKey
+        favoriteKeyOf = ToggleFavoriteUseCase::vodKey,
+        computation = Dispatchers.Unconfined
     )
 
     @Test
@@ -72,15 +74,79 @@ class CatalogBrowserTest {
     }
 
     @Test
-    fun `query filters inside the selected section`() = runTest {
+    fun `a query searches the whole catalog whichever section is selected`() = runTest {
         browser.select("11")
         browser.search("old")
         browser.snapshot.test {
+            assertThat(expectMostRecentItem().items).containsExactly(older)
+        }
+    }
+
+    @Test
+    fun `clearing the query goes back to the selected section`() = runTest {
+        browser.select("11")
+        browser.search("old")
+        browser.search("")
+        browser.snapshot.test {
+            assertThat(expectMostRecentItem().items).containsExactly(newer)
+        }
+    }
+
+    @Test
+    fun `results come best match first`() = runTest {
+        val upstream = Fixtures.movie.copy(id = 3, name = "Upstream", categoryId = "10")
+        val stream = Fixtures.movie.copy(id = 4, name = "Stream Team", categoryId = "10")
+        vod.items.value = listOf(upstream, stream)
+        browser.search("stream")
+        browser.snapshot.test {
+            assertThat(expectMostRecentItem().items).containsExactly(stream, upstream)
+        }
+    }
+
+    @Test
+    fun `the provider's language tag is not matched and the title is found without it`() = runTest {
+        val tagged = Fixtures.movie.copy(id = 5, name = "|FR| Scream 4 (2011)", categoryId = "10")
+        vod.items.value = listOf(tagged)
+        browser.search("scream")
+        browser.snapshot.test {
+            assertThat(expectMostRecentItem().items).containsExactly(tagged)
+        }
+        browser.search("fr")
+        browser.snapshot.test {
             assertThat(expectMostRecentItem().items).isEqualTo(emptyList())
         }
-        browser.select(CatalogBrowser.ALL)
+    }
+
+    @Test
+    fun `suggestions offer each title once with the best matches first`() = runTest {
+        val french = Fixtures.movie.copy(id = 6, name = "|FR| Scream 4 (2011)", categoryId = "10")
+        val english = Fixtures.movie.copy(id = 7, name = "|EN| Scream 4 (2011)", categoryId = "10")
+        val other = Fixtures.movie.copy(id = 8, name = "|EN| Screamers", categoryId = "10")
+        vod.items.value = listOf(french, english, other)
+        browser.search("scr")
         browser.snapshot.test {
-            assertThat(expectMostRecentItem().items).containsExactly(older)
+            val snapshot = expectMostRecentItem()
+            // Both only start with the typed letters, so the shorter title comes first; the French and English Scream 4 count once.
+            assertThat(snapshot.suggestions).containsExactly(other, french)
+            assertThat(snapshot.items.size).isEqualTo(3)
+        }
+    }
+
+    @Test
+    fun `without a query there are no suggestions`() = runTest {
+        browser.snapshot.test {
+            assertThat(expectMostRecentItem().suggestions).isEqualTo(emptyList())
+        }
+    }
+
+    @Test
+    fun `at most eight suggestions are offered`() = runTest {
+        vod.items.value = List(20) { Fixtures.movie.copy(id = 100 + it, name = "Film number $it", categoryId = "10") }
+        browser.search("film")
+        browser.snapshot.test {
+            val snapshot = expectMostRecentItem()
+            assertThat(snapshot.suggestions.size).isEqualTo(CatalogBrowser.SUGGESTION_LIMIT)
+            assertThat(snapshot.items.size).isEqualTo(20)
         }
     }
 }
