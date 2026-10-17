@@ -52,10 +52,6 @@ class DefaultLiveRepository @Inject constructor(
     override fun observeCategories(): Flow<List<Category>> =
         categoryDao.observeByType(ContentType.LIVE.name).map { rows -> rows.map { it.toDomain() } }
 
-    override fun observeItems(categoryId: String?): Flow<List<LiveChannel>> =
-        (if (categoryId == null) channelDao.observeAll() else channelDao.observeByCategory(categoryId))
-            .map { rows -> rows.map { it.toDomain() } }
-
     override fun pagedItems(categoryId: String?): Flow<PagingData<LiveChannel>> =
         Pager(CatalogPaging.config) { if (categoryId == null) channelDao.pagingAll() else channelDao.pagingByCategory(categoryId) }
             .flow

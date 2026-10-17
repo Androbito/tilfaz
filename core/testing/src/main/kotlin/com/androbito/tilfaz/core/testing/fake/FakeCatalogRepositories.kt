@@ -33,8 +33,6 @@ abstract class FakeCatalogRepository<T : Any>(
     var refreshCalls = 0
 
     override fun observeCategories(): Flow<List<Category>> = categories
-    override fun observeItems(categoryId: String?): Flow<List<T>> =
-        items.map { list -> if (categoryId == null) list else list.filter { categoryOf(it) == categoryId } }
     override fun observeByIds(ids: Set<Int>): Flow<List<T>> = items.map { list -> list.filter { idOf(it) in ids } }
     override fun pagedItems(categoryId: String?): Flow<PagingData<T>> =
         items.map { list -> PagingData.from(if (categoryId == null) list else list.filter { categoryOf(it) == categoryId }) }

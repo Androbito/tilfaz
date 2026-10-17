@@ -86,9 +86,8 @@ class SeriesDetailsViewModel @Inject constructor(
         .map { it.series?.categoryId }
         .distinctUntilChanged()
         .flatMapLatest { categoryId ->
-            if (categoryId == null) flowOf(emptyList()) else seriesRepository.observeItems(categoryId)
+            if (categoryId == null) flowOf(emptyList()) else seriesRepository.observeRelated(categoryId, excludeId = seriesId, limit = RELATED_LIMIT)
         }
-        .map { list -> list.filter { it.id != seriesId }.take(RELATED_LIMIT) }
 
     val state: StateFlow<SeriesDetailsUiState> = combine(
         loaded,

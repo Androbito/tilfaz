@@ -40,7 +40,6 @@ data class PlayerUiState(
     val startPositionMs: Long = 0L,
     val isLive: Boolean = false,
     val nowNext: NowNext = NowNext.Empty,
-    val zapList: List<LiveChannel> = emptyList(),
     val error: PlayerError? = null,
     val isLoading: Boolean = true,
     val formatOverride: StreamFormat? = null
@@ -154,22 +153,20 @@ class PlayerViewModel @Inject constructor(
     }
 
     private suspend fun loadLiveContext(channel: LiveChannel) {
-        val zapList = liveRepository.observeItems(categoryId).first()
-        _state.update { it.copy(zapList = zapList) }
         val nowNext = liveRepository.shortEpg(channel.id).map { NowNextResolver.resolve(it, clock.instant()) }.getOrDefault(NowNext.Empty)
         _state.update { it.copy(nowNext = nowNext) }
     }
 
     private fun zap(direction: Int) {
-        val current = _state.value
-        val list = current.zapList
-        val channel = (current.source?.playable as? Playable.Live)?.channel ?: return
-        if (list.isEmpty()) return
-        val index = list.indexOfFirst { it.id == channel.id }.takeIf { it >= 0 } ?: return
-        val next = list[(index + direction + list.size) % list.size]
-        itemId = next.id.toString()
-        _state.update { it.copy(nowNext = NowNext.Empty) }
-        viewModelScope.launch { load() }
+        val channel = (_state.value.source?.playable as? Playable.Live)?.channel ?: return
+        viewModelScope.launch {
+            // One read of the neighbour, not the whole category: a list of channels can be far larger than what a TV can hold.
+            val next = liveRepository.neighbour(channel.id, categoryId, forward = direction > 0) ?: return@launch
+            if (next.id == channel.id) return@launch
+            itemId = next.id.toString()
+            _state.update { it.copy(nowNext = NowNext.Empty) }
+            load()
+        }
     }
 
     private fun saveProgress(positionMs: Long, durationMs: Long) {

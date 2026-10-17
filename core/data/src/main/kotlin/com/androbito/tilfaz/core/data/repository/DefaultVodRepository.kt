@@ -50,10 +50,6 @@ class DefaultVodRepository @Inject constructor(
     override fun observeCategories(): Flow<List<Category>> =
         categoryDao.observeByType(ContentType.VOD.name).map { rows -> rows.map { it.toDomain() } }
 
-    override fun observeItems(categoryId: String?): Flow<List<Movie>> =
-        (if (categoryId == null) movieDao.observeAll() else movieDao.observeByCategory(categoryId))
-            .map { rows -> rows.map { it.toDomain() } }
-
     override fun pagedItems(categoryId: String?): Flow<PagingData<Movie>> =
         Pager(CatalogPaging.config) { if (categoryId == null) movieDao.pagingAll() else movieDao.pagingByCategory(categoryId) }
             .flow

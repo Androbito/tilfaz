@@ -66,9 +66,8 @@ class MovieDetailsViewModel @Inject constructor(
         .map { it.movie?.categoryId }
         .distinctUntilChanged()
         .flatMapLatest { categoryId ->
-            if (categoryId == null) flowOf(emptyList()) else vodRepository.observeItems(categoryId)
+            if (categoryId == null) flowOf(emptyList()) else vodRepository.observeRelated(categoryId, excludeId = movieId, limit = RELATED_LIMIT)
         }
-        .map { list -> list.filter { it.id != movieId }.take(RELATED_LIMIT) }
 
     // Observed, not read once: the player saves progress while this page waits underneath it on the back stack.
     private val progress: Flow<WatchProgress?> = progressRepository.observeContinueWatching(ContentType.VOD)

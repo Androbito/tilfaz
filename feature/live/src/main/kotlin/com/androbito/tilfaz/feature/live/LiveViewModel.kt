@@ -3,32 +3,38 @@ package com.androbito.tilfaz.feature.live
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.LiveRepository
 import com.androbito.tilfaz.core.domain.repository.RecentChannelsRepository
-import com.androbito.tilfaz.core.domain.search.TitleSearchCache
 import com.androbito.tilfaz.core.domain.usecase.NowNextResolver
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
 import com.androbito.tilfaz.core.model.Category
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
+import com.androbito.tilfaz.core.model.TitleText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,28 +53,29 @@ data class LiveCategoryUi(val id: String, val name: String, val count: Int?, val
 data class LiveUiState(
     val categories: List<LiveCategoryUi> = emptyList(),
     val selectedCategoryId: String = LiveCategoryUi.ALL_ID,
-    val channels: List<LiveChannel> = emptyList(),
     val favoriteIds: Set<Int> = emptySet(),
     val nowNext: Map<Int, NowNext> = emptyMap(),
-    val focusedChannelId: Int? = null,
+    /** The channel the preview pane describes: the one with focus, or else the first of the list. */
+    val focusedChannel: LiveChannel? = null,
+    /** What was typed, shown at once; the list follows once the typing pauses. */
     val query: String = "",
     /** While a query is typed: the best few channel names, each once, to tune straight to. */
     val suggestions: List<LiveChannel> = emptyList(),
     val isLoading: Boolean = true
 ) {
-    val focusedChannel: LiveChannel? get() = channels.firstOrNull { it.id == focusedChannelId }
+    val focusedChannelId: Int? get() = focusedChannel?.id
     val selectedCategory: LiveCategoryUi? get() = categories.firstOrNull { it.id == selectedCategoryId }
 }
 
 sealed interface LiveEvent {
     data class SelectCategory(val id: String) : LiveEvent
-    data class FocusChannel(val id: Int) : LiveEvent
+    data class FocusChannel(val channel: LiveChannel) : LiveEvent
     data class QueryChanged(val query: String) : LiveEvent
     data class ToggleFavorite(val id: Int) : LiveEvent
     data class Play(val id: Int) : LiveEvent
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class LiveViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -80,7 +87,7 @@ class LiveViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val selectedCategoryId = MutableStateFlow(savedStateHandle[LiveRoute.ARG_INITIAL_CATEGORY] ?: LiveCategoryUi.ALL_ID)
-    private val focusedChannelId = MutableStateFlow<Int?>(null)
+    private val explicitFocus = MutableStateFlow<LiveChannel?>(null)
     private val query = MutableStateFlow("")
     private val nowNext = MutableStateFlow<Map<Int, NowNext>>(emptyMap())
     private val epgInFlight = mutableSetOf<Int>()
@@ -88,64 +95,82 @@ class LiveViewModel @Inject constructor(
     private val favoriteIds: Flow<Set<Int>> = favoritesRepository.observeKeys(ContentType.LIVE)
         .map { keys -> keys.mapNotNull(ToggleFavoriteUseCase::idFromKey).toSet() }
 
-    private val allChannels: Flow<List<LiveChannel>> = liveRepository.observeItems(null)
+    /** What was typed once the typing has paused: the part of [query] that reaches the database. */
+    private val appliedQuery: Flow<String> = query.map { it.trim() }
+        // Only typed text waits: opening the screen and clearing the box pass straight through.
+        .debounce { text -> if (text.isEmpty()) 0L else SEARCH_DELAY_MS }
+        .distinctUntilChanged()
 
     private val categories: Flow<List<LiveCategoryUi>> = combine(
         liveRepository.observeCategories(),
-        allChannels,
+        liveRepository.observeCategoryCounts(),
+        liveRepository.observeCount(),
         favoriteIds,
         recentChannelsRepository.observeRecent()
-    ) { categories, channels, favorites, recent ->
-        val countByCategory = channels.groupingBy { it.categoryId }.eachCount()
+    ) { categories, counts, total, favorites, recent ->
         buildList {
-            add(LiveCategoryUi(LiveCategoryUi.ALL_ID, "", channels.size, LiveCategoryUi.Kind.ALL))
+            add(LiveCategoryUi(LiveCategoryUi.ALL_ID, "", total, LiveCategoryUi.Kind.ALL))
             add(LiveCategoryUi(LiveCategoryUi.FAVORITES_ID, "", favorites.size, LiveCategoryUi.Kind.FAVORITES))
             add(LiveCategoryUi(LiveCategoryUi.HISTORY_ID, "", recent.size, LiveCategoryUi.Kind.HISTORY))
-            categories.forEach { add(it.toUi(countByCategory[it.id] ?: 0)) }
+            categories.forEach { add(it.toUi(counts[it.id] ?: 0)) }
         }
     }
 
-    private class Found(val channels: List<LiveChannel>, val suggestions: List<LiveChannel> = emptyList())
+    /**
+     * One search for the list, the suggestions and the preview, tagged with what was asked so a late answer to an older query
+     * is never shown. A search never holds more than a screenful of results.
+     */
+    private val searchResults: SharedFlow<Pair<String, List<LiveChannel>>> = appliedQuery.flatMapLatest { q ->
+        if (q.isEmpty()) flowOf(q to emptyList()) else liveRepository.search(q, SEARCH_RESULT_LIMIT).map { q to it }
+    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
-    private val searchCache = TitleSearchCache<LiveChannel> { it.name }
+    private fun resultsFor(q: String): Flow<List<LiveChannel>> = searchResults.filter { it.first == q }.map { it.second }
 
-    // The whole list stays subscribed while typing, so a keystroke never reloads it; a query searches every channel.
-    private val found: Flow<Found> = combine(selectedCategoryId, query.map(String::trim), allChannels) { id, q, all -> Triple(id, q, all) }
-        .flatMapLatest { (id, q, all) ->
+    /** The channel list, a page at a time: a catalog has far more channels than a TV has memory to hold at once. */
+    val channels: Flow<PagingData<LiveChannel>> = combine(selectedCategoryId, appliedQuery) { id, q -> id to q }
+        .flatMapLatest { (id, q) ->
             if (q.isNotEmpty()) {
-                flow {
-                    val index = searchCache.indexOf(all)
-                    val results = index.search(q)
-                    emit(Found(results, index.distinctTitles(results, SUGGESTION_LIMIT)))
-                }.flowOn(Dispatchers.Default)
+                resultsFor(q).map { PagingData.from(it) }
             } else {
-                val source: Flow<List<LiveChannel>> = when (id) {
-                    LiveCategoryUi.ALL_ID -> flowOf(all)
-                    LiveCategoryUi.FAVORITES_ID -> favoriteIds.map { fav -> all.filter { it.id in fav } }
-                    LiveCategoryUi.HISTORY_ID -> recentChannelsRepository.observeRecent()
-                    else -> liveRepository.observeItems(id)
+                when (id) {
+                    LiveCategoryUi.ALL_ID -> liveRepository.pagedItems(null)
+                    LiveCategoryUi.FAVORITES_ID -> favoriteIds.flatMapLatest { liveRepository.observeByIds(it) }.map { PagingData.from(it) }
+                    LiveCategoryUi.HISTORY_ID -> recentChannelsRepository.observeRecent().map { PagingData.from(it) }
+                    else -> liveRepository.pagedItems(id)
                 }
-                source.map { Found(it) }
             }
         }
+        .cachedIn(viewModelScope)
+
+    /** What the preview shows when nothing has been focused: the first channel of what the list shows. */
+    private val firstChannel: Flow<LiveChannel?> = combine(selectedCategoryId, appliedQuery) { id, q -> id to q }
+        .flatMapLatest { (id, q) ->
+            when {
+                q.isNotEmpty() -> resultsFor(q).map { it.firstOrNull() }
+                id == LiveCategoryUi.ALL_ID -> flow { emit(liveRepository.firstOf(null)) }
+                id == LiveCategoryUi.FAVORITES_ID -> favoriteIds.flatMapLatest { liveRepository.observeByIds(it) }.map { it.firstOrNull() }
+                id == LiveCategoryUi.HISTORY_ID -> recentChannelsRepository.observeRecent().map { it.firstOrNull() }
+                else -> flow { emit(liveRepository.firstOf(id)) }
+            }
+        }
+
+    private val suggestions: Flow<List<LiveChannel>> = searchResults.map { (_, found) -> distinctByName(found) }
 
     val state: StateFlow<LiveUiState> = combine(
         categories,
         selectedCategoryId,
-        found,
         favoriteIds,
-        combine(nowNext, focusedChannelId, query) { nn, focused, q -> Triple(nn, focused, q) }
-    ) { categories, selected, found, favorites, (nowNext, focused, q) ->
-        val channels = found.channels
+        combine(nowNext, explicitFocus, firstChannel) { nn, focused, first -> Triple(nn, focused, first) },
+        combine(query, suggestions) { q, s -> q to s }
+    ) { categories, selected, favorites, (nowNext, focused, first), (q, suggestions) ->
         LiveUiState(
             categories = categories,
             selectedCategoryId = selected,
-            channels = channels,
             favoriteIds = favorites,
             nowNext = nowNext,
-            focusedChannelId = focused?.takeIf { id -> channels.any { it.id == id } } ?: channels.firstOrNull()?.id,
+            focusedChannel = focused ?: first,
             query = q,
-            suggestions = found.suggestions,
+            suggestions = suggestions,
             isLoading = false
         )
     }.onEach { state -> state.focusedChannelId?.let(::loadEpg) }
@@ -155,13 +180,16 @@ class LiveViewModel @Inject constructor(
         when (event) {
             is LiveEvent.SelectCategory -> {
                 selectedCategoryId.value = event.id
-                focusedChannelId.value = null
+                explicitFocus.value = null
             }
             is LiveEvent.FocusChannel -> {
-                focusedChannelId.value = event.id
-                loadEpg(event.id)
+                explicitFocus.value = event.channel
+                loadEpg(event.channel.id)
             }
-            is LiveEvent.QueryChanged -> query.value = event.query
+            is LiveEvent.QueryChanged -> {
+                query.value = event.query
+                explicitFocus.value = null
+            }
             is LiveEvent.ToggleFavorite -> viewModelScope.launch { toggleFavorite.live(event.id) }
             is LiveEvent.Play -> viewModelScope.launch { recentChannelsRepository.record(event.id) }
         }
@@ -177,8 +205,22 @@ class LiveViewModel @Inject constructor(
         }
     }
 
-    private companion object {
-        const val SUGGESTION_LIMIT = 8
+    /** The same channel often comes in several qualities and languages; one suggestion each. */
+    private fun distinctByName(found: List<LiveChannel>): List<LiveChannel> {
+        val seen = HashSet<String>()
+        val out = ArrayList<LiveChannel>(SUGGESTION_LIMIT)
+        for (channel in found) {
+            if (seen.add(TitleText.normalize(channel.name))) out += channel
+            if (out.size == SUGGESTION_LIMIT) break
+        }
+        return out
+    }
+
+    companion object {
+        /** How long typing must pause before the database is asked. */
+        const val SEARCH_DELAY_MS = 200L
+        private const val SUGGESTION_LIMIT = 8
+        private const val SEARCH_RESULT_LIMIT = 300
     }
 
     private fun Category.toUi(count: Int) = LiveCategoryUi(id = id, name = name, count = count, kind = LiveCategoryUi.Kind.PROVIDER)

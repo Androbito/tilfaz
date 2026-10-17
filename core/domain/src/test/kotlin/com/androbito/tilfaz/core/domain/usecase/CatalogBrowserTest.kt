@@ -15,7 +15,9 @@ import com.androbito.tilfaz.core.testing.fake.FakeFavoritesRepository
 import com.androbito.tilfaz.core.testing.fake.FakeVodRepository
 import com.androbito.tilfaz.core.testing.fake.FakeWatchProgressRepository
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -153,5 +155,46 @@ class CatalogBrowserTest {
         browser.select("10")
 
         browser.snapshot.test { assertThat(expectMostRecentItem().selectedSection).isNotNull() }
+    }
+
+    @Test
+    fun `opening the screen does not wait for the typing pause`() = runTest {
+        val realDelay = CatalogBrowser(
+            repository = vod,
+            recent = vod::observeRecent,
+            favoritesRepository = favorites,
+            progressRepository = progress,
+            contentType = ContentType.VOD,
+            idOf = { it.id },
+            nameOf = { it.name },
+            favoriteKeyOf = ToggleFavoriteUseCase::vodKey,
+            searchDelayMs = 200
+        )
+
+        realDelay.snapshot.first()
+        realDelay.items.first()
+
+        assertThat(currentTime).isEqualTo(0L)
+    }
+
+    @Test
+    fun `clearing the search does not wait either, only typing does`() = runTest {
+        val realDelay = CatalogBrowser(
+            repository = vod,
+            recent = vod::observeRecent,
+            favoritesRepository = favorites,
+            progressRepository = progress,
+            contentType = ContentType.VOD,
+            idOf = { it.id },
+            nameOf = { it.name },
+            favoriteKeyOf = ToggleFavoriteUseCase::vodKey,
+            searchDelayMs = 200
+        )
+        realDelay.search("old")
+        realDelay.search("")
+
+        realDelay.snapshot.first()
+
+        assertThat(currentTime).isEqualTo(0L)
     }
 }

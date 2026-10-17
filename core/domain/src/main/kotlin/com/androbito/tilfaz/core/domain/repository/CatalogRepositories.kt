@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 /** Common shape of the three catalogs: a locally cached list that a refresh syncs from the server. */
 interface CatalogRepository<T : Any> {
     fun observeCategories(): Flow<List<Category>>
-    fun observeItems(categoryId: String?): Flow<List<T>>
 
     /**
      * The catalog (or one category of it) as pages, in the provider's order. Only a window of it is held in memory,

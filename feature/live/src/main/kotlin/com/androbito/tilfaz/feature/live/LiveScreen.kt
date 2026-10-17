@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
@@ -31,6 +30,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -71,12 +74,14 @@ fun NavGraphBuilder.liveScreen(onPlayChannel: (channelId: Int, categoryId: Strin
 @Composable
 fun LiveRoute(onPlayChannel: (Int, String?) -> Unit, viewModel: LiveViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val channels = viewModel.channels.collectAsLazyPagingItems()
     LiveScreen(
         state = state,
+        channels = channels,
         onEvent = viewModel::onEvent,
-        onPlay = { id ->
-            viewModel.onEvent(LiveEvent.Play(id))
-            onPlayChannel(id, zapCategoryFor(state, id))
+        onPlay = { channel ->
+            viewModel.onEvent(LiveEvent.Play(channel.id))
+            onPlayChannel(channel.id, zapCategoryFor(state, channel))
         }
     )
 }
@@ -85,21 +90,21 @@ fun LiveRoute(onPlayChannel: (Int, String?) -> Unit, viewModel: LiveViewModel = 
  * The category the player pages through with channel up and down. A channel found by search may belong to a different
  * category than the one selected, and paging has to happen among its own neighbours.
  */
-internal fun zapCategoryFor(state: LiveUiState, channelId: Int): String? =
+internal fun zapCategoryFor(state: LiveUiState, channel: LiveChannel): String? =
     if (state.query.isNotBlank()) {
-        state.channels.firstOrNull { it.id == channelId }?.categoryId
+        channel.categoryId
     } else {
         state.selectedCategory?.takeIf { it.kind == LiveCategoryUi.Kind.PROVIDER }?.id
     }
 
 @Composable
-fun LiveScreen(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -> Unit) {
+fun LiveScreen(state: LiveUiState, channels: LazyPagingItems<LiveChannel>, onEvent: (LiveEvent) -> Unit, onPlay: (LiveChannel) -> Unit) {
     val now by rememberCurrentTime()
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Tilfaz · ${stringResource(R.string.live_title)}")
         Row(Modifier.fillMaxSize().padding(horizontal = Dimens.SpaceL), horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM)) {
             CategoryColumn(state, onEvent, onPlay, Modifier.width(SidebarWidth).fillMaxHeight())
-            ChannelColumn(state, onEvent, onPlay, now, Modifier.weight(1f).fillMaxHeight())
+            ChannelColumn(state, channels, onEvent, onPlay, now, Modifier.weight(1f).fillMaxHeight())
             PreviewPane(
                 channel = state.focusedChannel,
                 nowNext = state.focusedChannelId?.let { state.nowNext[it] },
@@ -116,7 +121,7 @@ private val SidebarWidth = 270.dp
 private val PreviewWidth = 300.dp
 
 @Composable
-private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -> Unit, modifier: Modifier) {
+private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (LiveChannel) -> Unit, modifier: Modifier) {
     Column(modifier) {
         TvTextField(
             value = state.query,
@@ -128,7 +133,7 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onP
         LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
             if (state.query.isNotBlank()) {
                 items(state.suggestions, key = { it.id }) { channel ->
-                    SuggestionRow(TitleText.clean(channel.name), onClick = { onPlay(channel.id) })
+                    SuggestionRow(TitleText.clean(channel.name), onClick = { onPlay(channel) })
                 }
                 return@LazyColumn
             }
@@ -152,21 +157,41 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onP
 }
 
 @Composable
-private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPlay: (Int) -> Unit, now: Instant, modifier: Modifier) {
+private fun ChannelColumn(
+    state: LiveUiState,
+    channels: LazyPagingItems<LiveChannel>,
+    onEvent: (LiveEvent) -> Unit,
+    onPlay: (LiveChannel) -> Unit,
+    now: Instant,
+    modifier: Modifier
+) {
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
     Box(modifier) {
         when {
             state.isLoading -> LoadingState()
-            state.channels.isEmpty() -> EmptyState(
-                title = when {
-                    state.query.isNotBlank() -> stringResource(R.string.live_no_results, state.query)
-                    state.selectedCategoryId == LiveCategoryUi.FAVORITES_ID -> stringResource(R.string.live_empty_favorites)
-                    state.selectedCategoryId == LiveCategoryUi.HISTORY_ID -> stringResource(R.string.live_empty_history)
-                    else -> stringResource(R.string.live_empty_category)
-                }
-            )
+            // While the first page loads the list is empty too, and that is not "no results".
+            channels.itemCount == 0 -> if (channels.loadState.refresh !is LoadState.Loading) {
+                EmptyState(
+                    title = when {
+                        state.query.isNotBlank() -> stringResource(R.string.live_no_results, state.query)
+                        state.selectedCategoryId == LiveCategoryUi.FAVORITES_ID -> stringResource(R.string.live_empty_favorites)
+                        state.selectedCategoryId == LiveCategoryUi.HISTORY_ID -> stringResource(R.string.live_empty_history)
+                        else -> stringResource(R.string.live_empty_category)
+                    }
+                )
+            }
             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
-                itemsIndexed(state.channels, key = { _, channel -> channel.id }) { index, channel ->
+                // The count is read inside the list's own content so it and the keys always come from the same version of the paged list.
+                items(count = channels.itemCount, key = { index ->
+                    if (index <
+                        channels.itemCount
+                    ) {
+                        channels.itemKey { it.id }(index)
+                    } else {
+                        "past-the-end-$index"
+                    }
+                }) { index ->
+                    val channel = channels[index] ?: return@items
                     val nowNext = state.nowNext[channel.id]
                     ChannelRow(
                         name = channel.name,
@@ -174,10 +199,10 @@ private fun ChannelColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onPl
                         nowTitle = nowNext?.now?.title,
                         progress = nowNext?.now?.progressAt(now),
                         selected = channel.id == state.focusedChannelId,
-                        onClick = { onPlay(channel.id) },
+                        onClick = { onPlay(channel) },
                         onLongClick = { onEvent(LiveEvent.ToggleFavorite(channel.id)) },
                         isFavorite = channel.id in state.favoriteIds,
-                        modifier = Modifier.rememberFocus(focusMemory, index).onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel.id)) }
+                        modifier = Modifier.rememberFocus(focusMemory, index).onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel)) }
                     )
                 }
             }

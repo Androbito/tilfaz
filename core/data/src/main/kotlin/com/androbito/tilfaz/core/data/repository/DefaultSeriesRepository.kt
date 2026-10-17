@@ -52,10 +52,6 @@ class DefaultSeriesRepository @Inject constructor(
     override fun observeCategories(): Flow<List<Category>> =
         categoryDao.observeByType(ContentType.SERIES.name).map { rows -> rows.map { it.toDomain() } }
 
-    override fun observeItems(categoryId: String?): Flow<List<Series>> =
-        (if (categoryId == null) seriesDao.observeAll() else seriesDao.observeByCategory(categoryId))
-            .map { rows -> rows.map { it.toDomain() } }
-
     override fun pagedItems(categoryId: String?): Flow<PagingData<Series>> =
         Pager(CatalogPaging.config) { if (categoryId == null) seriesDao.pagingAll() else seriesDao.pagingByCategory(categoryId) }
             .flow

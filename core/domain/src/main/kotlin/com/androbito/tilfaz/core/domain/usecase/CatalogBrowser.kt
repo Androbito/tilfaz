@@ -66,7 +66,10 @@ class CatalogBrowser<T : Any>(
         .map { list -> list.mapNotNull { p -> ToggleFavoriteUseCase.idFromKey(p.playableKey)?.let { it to p } }.toMap() }
 
     /** What was typed, once the typing has paused: the part of [query] that reaches the database. */
-    private val appliedQuery: Flow<String> = query.map { it.trim() }.let { if (searchDelayMs > 0) it.debounce(searchDelayMs) else it }.distinctUntilChanged()
+    private val appliedQuery: Flow<String> = query.map { it.trim() }
+        // Only typed text waits: opening the screen and clearing the box pass straight through.
+        .debounce { text -> if (text.isEmpty()) 0L else searchDelayMs }
+        .distinctUntilChanged()
 
     private val sections: Flow<List<Section>> = combine(
         repository.observeCategories(),

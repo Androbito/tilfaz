@@ -55,12 +55,11 @@ class PlayerViewModelTest {
     )
 
     @Test
-    fun `live channel resolves to a ts url with its zap list and EPG`() = runTest {
+    fun `live channel resolves to a ts url with its EPG`() = runTest {
         live.epg[Fixtures.alJazeera.id] = Result.success(listOf(Fixtures.epg(101, "News Hour", -10, 60)))
         viewModel(PlayerRoute.live(Fixtures.alJazeera.id, categoryId = null)).state.test {
             val state = expectMostRecentItem()
             assertThat(state.source?.url).isEqualTo("http://tv.example.com:8080/live/ayoub/s3cret/101.ts")
-            assertThat(state.zapList).isEqualTo(Fixtures.liveChannels)
             assertThat(state.nowNext.now?.title).isEqualTo("News Hour")
             assertThat(state.error).isNull()
         }
@@ -84,6 +83,28 @@ class PlayerViewModelTest {
             vm.onEvent(PlayerEvent.ZapNext)
             assertThat(expectMostRecentItem().title).isEqualTo(Fixtures.alJazeera.name)
             vm.onEvent(PlayerEvent.ZapPrevious)
+            assertThat(expectMostRecentItem().title).isEqualTo(Fixtures.beinSports1.name)
+        }
+    }
+
+    @Test
+    fun `zapping stays inside the category the channel was opened from`() = runTest {
+        val sameCategory = Fixtures.alJazeera.copy(id = 103, name = "AL JAZEERA 2")
+        live.items.value = Fixtures.liveChannels + sameCategory
+        val vm = viewModel(PlayerRoute.live(Fixtures.alJazeera.id, categoryId = Fixtures.alJazeera.categoryId))
+        vm.state.test {
+            vm.onEvent(PlayerEvent.ZapNext)
+            assertThat(expectMostRecentItem().title).isEqualTo("AL JAZEERA 2")
+            vm.onEvent(PlayerEvent.ZapNext)
+            assertThat(expectMostRecentItem().title).isEqualTo(Fixtures.alJazeera.name) // wrapped, skipping the other category
+        }
+    }
+
+    @Test
+    fun `a channel alone in its category stays on itself when zapping`() = runTest {
+        val vm = viewModel(PlayerRoute.live(Fixtures.beinSports1.id, categoryId = Fixtures.beinSports1.categoryId))
+        vm.state.test {
+            vm.onEvent(PlayerEvent.ZapNext)
             assertThat(expectMostRecentItem().title).isEqualTo(Fixtures.beinSports1.name)
         }
     }

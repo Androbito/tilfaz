@@ -16,6 +16,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -25,8 +27,10 @@ import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isLessThanOrEqualTo
 import assertk.assertions.isNull
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
+import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,7 +52,6 @@ class LiveScreenTest {
         val channel = Fixtures.alJazeera
         return LiveUiState(
             categories = listOf(LiveCategoryUi(LiveCategoryUi.ALL_ID, "", Fixtures.liveChannels.size, LiveCategoryUi.Kind.ALL)),
-            channels = Fixtures.liveChannels,
             favoriteIds = if (favorite) setOf(channel.id) else emptySet(),
             nowNext = mapOf(
                 channel.id to NowNext(
@@ -56,13 +59,15 @@ class LiveScreenTest {
                     next = Fixtures.epg(channel.id, "The Debate", 30, 60).copy(description = longDescription)
                 )
             ),
-            focusedChannelId = channel.id,
+            focusedChannel = channel,
             isLoading = false
         )
     }
 
+    private fun pages(channels: List<LiveChannel> = Fixtures.liveChannels) = flowOf(PagingData.from(channels))
+
     private fun show(state: LiveUiState) = compose.setContent {
-        TilfazTheme { LiveScreen(state = state, onEvent = {}, onPlay = {}) }
+        TilfazTheme { LiveScreen(state = state, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}) }
     }
 
     private fun string(id: Int) = ApplicationProvider.getApplicationContext<Context>().getString(id)
@@ -104,7 +109,7 @@ class LiveScreenTest {
     @Test
     fun focusReturnsToTheChannelTheUserLeftWhenTheScreenComesBack() {
         val tester = StateRestorationTester(compose)
-        tester.setContent { TilfazTheme { LiveScreen(state = stateWith(), onEvent = {}, onPlay = {}) } }
+        tester.setContent { TilfazTheme { LiveScreen(state = stateWith(), channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = {}) } }
         val secondRow = hasText(Fixtures.beinSports1.name) and hasClickAction()
         compose.onNode(secondRow).requestFocus()
         compose.onNode(secondRow).assertIsFocused()
@@ -126,7 +131,9 @@ class LiveScreenTest {
     fun whileTypingTheSuggestionsReplaceTheCategoriesAndPlayTheChannel() {
         val played = mutableListOf<Int>()
         val typing = stateWith().copy(query = "jaz", suggestions = listOf(Fixtures.alJazeera))
-        compose.setContent { TilfazTheme { LiveScreen(state = typing, onEvent = {}, onPlay = { played += it }) } }
+        compose.setContent {
+            TilfazTheme { LiveScreen(state = typing, channels = pages().collectAsLazyPagingItems(), onEvent = {}, onPlay = { played += it.id }) }
+        }
 
         compose.onNodeWithText(string(R.string.live_all)).assertDoesNotExist()
         pressOk(hasText("AL JAZEERA HD") and hasClickAction())
@@ -143,9 +150,9 @@ class LiveScreenTest {
 
     @Test
     fun aSearchedChannelZapsInItsOwnCategory() {
-        val searching = stateWith().copy(query = "bein", selectedCategoryId = "2", channels = listOf(Fixtures.beinSports1))
+        val searching = stateWith().copy(query = "bein", selectedCategoryId = "2")
 
-        assertThat(zapCategoryFor(searching, Fixtures.beinSports1.id)).isEqualTo("1")
+        assertThat(zapCategoryFor(searching, Fixtures.beinSports1)).isEqualTo("1")
     }
 
     @Test
@@ -155,8 +162,8 @@ class LiveScreenTest {
             selectedCategoryId = "2"
         )
 
-        assertThat(zapCategoryFor(browsing, Fixtures.alJazeera.id)).isEqualTo("2")
-        assertThat(zapCategoryFor(stateWith(), Fixtures.alJazeera.id)).isNull()
+        assertThat(zapCategoryFor(browsing, Fixtures.alJazeera)).isEqualTo("2")
+        assertThat(zapCategoryFor(stateWith(), Fixtures.alJazeera)).isNull()
     }
 
     private companion object {

@@ -55,12 +55,6 @@ interface LiveChannelDao {
     @RawQuery(observedEntities = [LiveChannelEntity::class])
     fun search(query: SupportSQLiteQuery): Flow<List<LiveChannelEntity>>
 
-    @Query("SELECT * FROM live_channels ORDER BY position")
-    fun observeAll(): Flow<List<LiveChannelEntity>>
-
-    @Query("SELECT * FROM live_channels WHERE categoryId = :categoryId ORDER BY position")
-    fun observeByCategory(categoryId: String): Flow<List<LiveChannelEntity>>
-
     @Query("SELECT * FROM live_channels WHERE id IN (:ids)")
     fun observeByIds(ids: List<Int>): Flow<List<LiveChannelEntity>>
 
@@ -119,12 +113,6 @@ interface MovieDao {
     @RawQuery(observedEntities = [MovieEntity::class])
     fun search(query: SupportSQLiteQuery): Flow<List<MovieEntity>>
 
-    @Query("SELECT * FROM movies ORDER BY position")
-    fun observeAll(): Flow<List<MovieEntity>>
-
-    @Query("SELECT * FROM movies WHERE categoryId = :categoryId ORDER BY position")
-    fun observeByCategory(categoryId: String): Flow<List<MovieEntity>>
-
     @Query("SELECT * FROM movies WHERE categoryId = :categoryId AND id != :excludeId ORDER BY position LIMIT :limit")
     fun observeRelated(categoryId: String, excludeId: Int, limit: Int): Flow<List<MovieEntity>>
 
@@ -167,12 +155,6 @@ interface SeriesDao {
     /** Build the query with [com.androbito.tilfaz.core.database.CatalogSearch.query]. */
     @RawQuery(observedEntities = [SeriesEntity::class])
     fun search(query: SupportSQLiteQuery): Flow<List<SeriesEntity>>
-
-    @Query("SELECT * FROM series ORDER BY position")
-    fun observeAll(): Flow<List<SeriesEntity>>
-
-    @Query("SELECT * FROM series WHERE categoryId = :categoryId ORDER BY position")
-    fun observeByCategory(categoryId: String): Flow<List<SeriesEntity>>
 
     @Query("SELECT * FROM series WHERE categoryId = :categoryId AND id != :excludeId ORDER BY position LIMIT :limit")
     fun observeRelated(categoryId: String, excludeId: Int, limit: Int): Flow<List<SeriesEntity>>
