@@ -121,7 +121,7 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
         val exo = factory.create(source, state.settings)
         if (state.startPositionMs > 0) exo.seekTo(state.startPositionMs)
         exo.setPlaybackSpeed(speed) // a zap or retry keeps the speed the user chose
-        var subtitleChecked = false
+        var preferenceChecked = false
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 isBuffering = playbackState == Player.STATE_BUFFERING
@@ -131,11 +131,14 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
             override fun onTracksChanged(newTracks: Tracks) {
                 tracks = newTracks
                 // Once per playback, so a track the user picks afterwards is never overridden.
-                if (!subtitleChecked && newTracks.groups.any { it.type == C.TRACK_TYPE_TEXT }) {
-                    subtitleChecked = true
-                    newTracks.fullSubtitleInsteadOfForced(state.settings.subtitleLanguage)?.let {
-                        exo.trackSelectionParameters = exo.trackSelectionParameters.choosing(newTracks, it)
-                    }
+                if (!preferenceChecked && newTracks.groups.any { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }) {
+                    preferenceChecked = true
+                    listOf(TrackKind.AUDIO to state.settings.audioLanguage, TrackKind.SUBTITLE to state.settings.subtitleLanguage)
+                        .forEach { (kind, language) ->
+                            newTracks.preferredTrack(kind, language)?.let {
+                                exo.trackSelectionParameters = exo.trackSelectionParameters.choosing(newTracks, it)
+                            }
+                        }
                 }
             }
             override fun onCues(cueGroup: CueGroup) { cues = cueGroup }

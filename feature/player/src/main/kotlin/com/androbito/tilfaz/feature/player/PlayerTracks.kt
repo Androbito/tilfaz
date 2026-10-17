@@ -133,16 +133,18 @@ fun TrackSelectionParameters.choosing(tracks: Tracks, kind: TrackKind, option: T
 }
 
 /**
- * Files often flag a "Forced" subtitle (only the foreign lines) as the default one, and the player starts on it, which looks
- * like missing subtitles. When that is the track playing, this is the full subtitle in the same language to use instead:
- * a plain one if there is one, else a hearing impaired one. Null when nothing needs changing.
+ * The track to switch to once the file's tracks are known, or null when nothing needs changing. The player matches the
+ * preferred language by itself only when a track's language field is filled; files that leave it empty (the code sits in the
+ * label) and files that flag a "Forced" subtitle as the default (it only has the foreign lines, so it looks like missing
+ * subtitles) need this. A plain track is taken before a hearing impaired one, and a forced one never.
  */
 @OptIn(UnstableApi::class)
-fun Tracks.fullSubtitleInsteadOfForced(language: String?): TrackOption? {
+fun Tracks.preferredTrack(kind: TrackKind, language: String?): TrackOption? {
     if (language == null) return null
     val wanted = Util.normalizeLanguageCode(language)
-    val sameLanguage = toOptions(TrackKind.SUBTITLE).filter { it.language?.let(Util::normalizeLanguageCode) == wanted }
-    if (sameLanguage.none { it.isSelected && it.isForced }) return null
-    val full = sameLanguage.filter { !it.isForced }
-    return full.firstOrNull { !it.isHearingImpaired } ?: full.firstOrNull()
+    val options = toOptions(kind)
+    val playing = options.firstOrNull { it.isSelected }
+    if (playing != null && !playing.isForced && playing.language?.let(Util::normalizeLanguageCode) == wanted) return null
+    val matching = options.filter { !it.isForced && it.language?.let(Util::normalizeLanguageCode) == wanted }
+    return (matching.firstOrNull { !it.isHearingImpaired } ?: matching.firstOrNull())?.takeUnless { it.isSelected }
 }

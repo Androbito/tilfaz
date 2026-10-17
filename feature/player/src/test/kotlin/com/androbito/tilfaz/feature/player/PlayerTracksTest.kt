@@ -189,7 +189,7 @@ class PlayerTracksTest {
     fun `when the player started on a forced subtitle the full one in that language is offered instead`() {
         val tracks = Tracks(listOf(group(forced, selected = 0), group(hearingImpaired), group(full)))
 
-        val better = tracks.fullSubtitleInsteadOfForced("fr")
+        val better = tracks.preferredTrack(TrackKind.SUBTITLE, "fr")
 
         assertThat(better?.id).isEqualTo("2:0")
     }
@@ -198,27 +198,55 @@ class PlayerTracksTest {
     fun `a subtitle that is not forced is left alone`() {
         val tracks = Tracks(listOf(group(forced), group(full, selected = 0)))
 
-        assertThat(tracks.fullSubtitleInsteadOfForced("fr")).isNull()
+        assertThat(tracks.preferredTrack(TrackKind.SUBTITLE, "fr")).isNull()
     }
 
     @Test
     fun `with only a forced track in that language nothing is changed`() {
         val tracks = Tracks(listOf(group(forced, selected = 0), group(subtitle("eng"))))
 
-        assertThat(tracks.fullSubtitleInsteadOfForced("fr")).isNull()
+        assertThat(tracks.preferredTrack(TrackKind.SUBTITLE, "fr")).isNull()
     }
 
     @Test
     fun `a hearing impaired track is taken only when no plain one exists`() {
         val tracks = Tracks(listOf(group(forced, selected = 0), group(hearingImpaired)))
 
-        assertThat(tracks.fullSubtitleInsteadOfForced("fr")?.id).isEqualTo("1:0")
+        assertThat(tracks.preferredTrack(TrackKind.SUBTITLE, "fr")?.id).isEqualTo("1:0")
     }
 
     @Test
     fun `without a subtitle language nothing is changed`() {
         val tracks = Tracks(listOf(group(forced, selected = 0), group(full)))
 
-        assertThat(tracks.fullSubtitleInsteadOfForced(null)).isNull()
+        assertThat(tracks.preferredTrack(TrackKind.SUBTITLE, null)).isNull()
+    }
+
+    @Test
+    fun `a track that only names its language in the label is found for the preference`() {
+        val tracks = Tracks(listOf(group(text("eng"), selected = 0), group(text(null, label = "ara"))))
+
+        assertThat(tracks.preferredTrack(TrackKind.SUBTITLE, "ar")?.id).isEqualTo("1:0")
+    }
+
+    @Test
+    fun `nothing is changed when the playing track is already in the preferred language`() {
+        val tracks = Tracks(listOf(group(text("ar"), selected = 0), group(text(null, label = "ara"))))
+
+        assertThat(tracks.preferredTrack(TrackKind.SUBTITLE, "ar")).isNull()
+    }
+
+    @Test
+    fun `the preferred audio language is found among tracks named only by their label`() {
+        val tracks = Tracks(listOf(group(audio("en"), selected = 0), group(audio(null, label = "fre"))))
+
+        assertThat(tracks.preferredTrack(TrackKind.AUDIO, "fr")?.id).isEqualTo("1:0")
+    }
+
+    @Test
+    fun `when the preferred language is missing from the file nothing is changed`() {
+        val tracks = Tracks(listOf(group(audio("en"), selected = 0), group(audio("de"))))
+
+        assertThat(tracks.preferredTrack(TrackKind.AUDIO, "ar")).isNull()
     }
 }
