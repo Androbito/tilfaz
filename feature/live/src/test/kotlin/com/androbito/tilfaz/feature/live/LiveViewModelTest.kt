@@ -191,6 +191,11 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `the wait before a preview is short enough to feel immediate but not one stream per channel passed`() {
+        assertThat(LiveViewModel.PREVIEW_DELAY_MS in 600L..1_000L).isEqualTo(true)
+    }
+
+    @Test
     fun `the preview starts only after focus has rested on a channel`() = runTest {
         viewModel.state.test {
             viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.beinSports1))

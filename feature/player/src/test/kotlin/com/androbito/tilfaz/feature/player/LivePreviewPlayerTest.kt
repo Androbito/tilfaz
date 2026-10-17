@@ -8,6 +8,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
@@ -115,6 +116,14 @@ class LivePreviewPlayerTest {
 
         assertThat(created).isEqualTo(2)
         assertThat(released).isEqualTo(1) // the first; the second is still playing
+    }
+
+    @Test
+    fun `a loading indicator is shown until the first picture is drawn`() {
+        show({ Fixtures.alJazeera })
+        compose.waitForIdle()
+
+        compose.onNodeWithText(context.getString(com.androbito.tilfaz.core.designsystem.R.string.ds_loading)).assertExists()
     }
 
     @Test

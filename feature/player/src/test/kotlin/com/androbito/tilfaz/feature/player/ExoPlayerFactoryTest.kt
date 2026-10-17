@@ -93,6 +93,20 @@ class ExoPlayerFactoryTest {
     }
 
     @Test
+    fun `a preview stays close to the live edge so its first picture comes sooner than the full screen player's`() {
+        val factory = ExoPlayerFactory(context, OkHttpClient())
+        val preview = factory.createPreview(live)
+        val full = factory.create(live, PlaybackSettings())
+
+        val previewOffset = preview.currentMediaItem!!.liveConfiguration.targetOffsetMs
+        val fullOffset = full.currentMediaItem!!.liveConfiguration.targetOffsetMs
+
+        assertThat(previewOffset < fullOffset).isEqualTo(true)
+        preview.release()
+        full.release()
+    }
+
+    @Test
     fun `a preview starts playing by itself`() {
         val player = ExoPlayerFactory(context, OkHttpClient()).createPreview(live)
 

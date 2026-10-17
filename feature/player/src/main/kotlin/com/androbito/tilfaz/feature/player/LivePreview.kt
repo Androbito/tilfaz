@@ -3,6 +3,7 @@ package com.androbito.tilfaz.feature.player
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,14 +14,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_SURFACE_VIEW
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Text
+import com.androbito.tilfaz.core.designsystem.R
 import com.androbito.tilfaz.core.designsystem.component.ChannelLogo
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
+import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.Playable
 import com.androbito.tilfaz.core.model.StreamSource
@@ -88,7 +94,16 @@ internal fun LivePreviewPlayer(
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             player?.let { PlayerSurface(player = it, surfaceType = SURFACE_TYPE_SURFACE_VIEW, modifier = Modifier.fillMaxSize()) }
             // The logo stays until the first picture is drawn, so the box is never an empty black rectangle.
-            if (!showingVideo) ChannelLogo(channel.logoUrl, Modifier.align(Alignment.Center).then(Modifier.fillMaxSize(LOGO_FRACTION)))
+            if (!showingVideo) {
+                ChannelLogo(channel.logoUrl, Modifier.align(Alignment.Center).fillMaxSize(LOGO_FRACTION))
+                // Connecting can take a few seconds on a weak TV; say so, or the box looks stuck.
+                Text(
+                    stringResource(R.string.ds_loading),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TilfazColors.OnSurfaceMuted,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp)
+                )
+            }
         }
     }
 }

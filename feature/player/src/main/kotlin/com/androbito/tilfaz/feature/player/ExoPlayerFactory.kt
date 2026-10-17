@@ -63,10 +63,16 @@ class ExoPlayerFactory @Inject constructor(
             .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
             .setMaxVideoSize(PREVIEW_MAX_WIDTH, PREVIEW_MAX_HEIGHT)
             .build()
-        return build(source, loadControl, ownsAudio = false, trackSelection = trackSelection)
+        return build(source, loadControl, ownsAudio = false, trackSelection = trackSelection, liveOffsetMs = PREVIEW_LIVE_OFFSET_MS)
     }
 
-    private fun build(source: StreamSource, loadControl: DefaultLoadControl, ownsAudio: Boolean, trackSelection: TrackSelectionParameters): ExoPlayer {
+    private fun build(
+        source: StreamSource,
+        loadControl: DefaultLoadControl,
+        ownsAudio: Boolean,
+        trackSelection: TrackSelectionParameters,
+        liveOffsetMs: Long = LIVE_TARGET_OFFSET_MS
+    ): ExoPlayer {
         val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
             .setUserAgent(source.userAgent)
             .setDefaultRequestProperties(mapOf("Accept" to "*/*"))
@@ -91,12 +97,12 @@ class ExoPlayerFactory @Inject constructor(
             .build()
             .apply {
                 trackSelectionParameters = trackSelection
-                setMediaItem(source.toMediaItem())
+                setMediaItem(source.toMediaItem(liveOffsetMs))
                 playWhenReady = true
             }
     }
 
-    private fun StreamSource.toMediaItem(): MediaItem {
+    private fun StreamSource.toMediaItem(liveOffsetMs: Long): MediaItem {
         val builder = MediaItem.Builder().setUri(url)
         when (format) {
             StreamFormat.HLS -> builder.setMimeType(MimeTypes.APPLICATION_M3U8)
@@ -104,7 +110,7 @@ class ExoPlayerFactory @Inject constructor(
             null -> Unit // progressive VOD: let the extractor sniff mp4/mkv/avi
         }
         if (isLive) {
-            builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setTargetOffsetMs(LIVE_TARGET_OFFSET_MS).build())
+            builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setTargetOffsetMs(liveOffsetMs).build())
         }
         return builder.build()
     }
@@ -117,6 +123,9 @@ class ExoPlayerFactory @Inject constructor(
         private const val PREVIEW_START_BUFFER_MS = 500
         private const val PREVIEW_BUFFER_BYTES = 8 * 1024 * 1024
         private const val LIVE_TARGET_OFFSET_MS = 6_000L
+
+        /** A preview does not need a safety margin against stalls, so it plays closer to the live edge and shows a picture sooner. */
+        private const val PREVIEW_LIVE_OFFSET_MS = 2_000L
     }
 }
 

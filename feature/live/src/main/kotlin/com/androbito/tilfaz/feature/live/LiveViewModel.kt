@@ -242,7 +242,7 @@ class LiveViewModel @Inject constructor(
         const val SEARCH_DELAY_MS = 200L
 
         /** How long focus must rest on a channel before its small video starts. */
-        const val PREVIEW_DELAY_MS = 1_500L
+        const val PREVIEW_DELAY_MS = 800L
         private const val SUGGESTION_LIMIT = 8
         private const val SEARCH_RESULT_LIMIT = 300
     }
