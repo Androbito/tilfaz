@@ -23,8 +23,8 @@ import com.androbito.tilfaz.core.designsystem.component.LoadingState
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.SuggestionRow
 import com.androbito.tilfaz.core.designsystem.component.TopBar
-import com.androbito.tilfaz.core.model.TitleText
 import com.androbito.tilfaz.core.domain.usecase.CatalogBrowser
+import com.androbito.tilfaz.core.model.TitleText
 import kotlinx.serialization.Serializable
 
 @Serializable
