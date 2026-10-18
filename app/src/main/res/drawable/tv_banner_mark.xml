@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Wordmark drawn as paths so the banner needs no font: "TILFAZ" in blocky capitals under a screen glyph. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="220dp"
-    android:height="110dp"
+    android:width="200dp"
+    android:height="100dp"
     android:viewportWidth="220"
     android:viewportHeight="110">
     <path android:fillColor="#27A9E1" android:pathData="M80,6 h60 a5,5 0 0 1 5,5 v34 a5,5 0 0 1 -5,5 h-60 a5,5 0 0 1 -5,-5 v-34 a5,5 0 0 1 5,-5 z" />

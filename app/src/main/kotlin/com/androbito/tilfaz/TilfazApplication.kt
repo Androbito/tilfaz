@@ -24,6 +24,8 @@ class TilfazApplication : Application(), SingletonImageLoader.Factory {
      * a twentieth of its free storage and an eighth of the memory the system lets the app use, both within fixed bounds, so
      * it never fills a TV's small storage or squeezes the player.
      */
+    // usableSpace on purpose: getAllocatableBytes also counts other apps' clearable caches, which would size ours up on a nearly full TV.
+    @Suppress("UsableSpace")
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         val memoryClassMb = (getSystemService(ACTIVITY_SERVICE) as ActivityManager).memoryClass
         val directory = cacheDir.resolve("images").apply { mkdirs() }

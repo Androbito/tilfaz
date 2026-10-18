@@ -6,5 +6,5 @@
             <gradient android:startColor="#0F1A33" android:endColor="#070C18" android:angle="45" />
         </shape>
     </item>
-    <item android:drawable="@drawable/tv_banner_mark" android:gravity="center" android:width="220dp" android:height="110dp" />
+    <item android:drawable="@drawable/tv_banner_mark" android:gravity="center" android:width="200dp" android:height="100dp" />
 </layer-list>

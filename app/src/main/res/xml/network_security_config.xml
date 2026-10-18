@@ -4,8 +4,8 @@
   for the user-entered server. There is nothing to pin: the host is whatever the user types in.
   See docs/adr/0006 for the trade-off.
 -->
-<network-security-config>
-    <base-config cleartextTrafficPermitted="true">
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config cleartextTrafficPermitted="true" tools:ignore="InsecureBaseConfiguration">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

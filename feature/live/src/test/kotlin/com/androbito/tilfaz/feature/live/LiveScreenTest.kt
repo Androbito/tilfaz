@@ -299,4 +299,12 @@ class LiveScreenTest {
     private companion object {
         const val MIN_NAME_WIDTH_PX = 200f // 100dp at 2px per dp: enough for a readable, ellipsized channel name
     }
+
+    @Test
+    fun theCatchUpWindowSaysDayOrDaysAccordingToItsLength() {
+        val resources = ApplicationProvider.getApplicationContext<Context>().resources
+
+        assertThat(resources.getQuantityString(R.plurals.live_archive_days, 1, 1)).isEqualTo("Catch-up: 1 day")
+        assertThat(resources.getQuantityString(R.plurals.live_archive_days, 7, 7)).isEqualTo("Catch-up: 7 days")
+    }
 }

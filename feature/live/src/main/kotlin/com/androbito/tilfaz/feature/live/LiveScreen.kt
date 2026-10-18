@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -285,7 +286,7 @@ private fun PreviewPane(
                 )
                 if (channel.hasArchive && channel.archiveDays > 0) {
                     Text(
-                        stringResource(R.string.live_archive_days, channel.archiveDays),
+                        pluralStringResource(R.plurals.live_archive_days, channel.archiveDays, channel.archiveDays),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TilfazColors.Accent
                     )
