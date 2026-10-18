@@ -40,13 +40,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Left column entries. The first three are virtual and exist only in the UI. */
+/** Left column entries. The first two are virtual and exist only in the UI. */
 data class LiveCategoryUi(val id: String, val name: String, val count: Int?, val kind: Kind) {
-    enum class Kind { ALL, FAVORITES, HISTORY, PROVIDER }
+    enum class Kind { ALL, HISTORY, PROVIDER }
 
     companion object {
         const val ALL_ID = "__all"
-        const val FAVORITES_ID = "__favorites"
         const val HISTORY_ID = "__history"
     }
 }
@@ -108,12 +107,10 @@ class LiveViewModel @Inject constructor(
         liveRepository.observeCategories(),
         liveRepository.observeCategoryCounts(),
         liveRepository.observeCount(),
-        favoriteIds,
         recentChannelsRepository.observeRecent()
-    ) { categories, counts, total, favorites, recent ->
+    ) { categories, counts, total, recent ->
         buildList {
             add(LiveCategoryUi(LiveCategoryUi.ALL_ID, "", total, LiveCategoryUi.Kind.ALL))
-            add(LiveCategoryUi(LiveCategoryUi.FAVORITES_ID, "", favorites.size, LiveCategoryUi.Kind.FAVORITES))
             add(LiveCategoryUi(LiveCategoryUi.HISTORY_ID, "", recent.size, LiveCategoryUi.Kind.HISTORY))
             categories.forEach { add(it.toUi(counts[it.id] ?: 0)) }
         }
@@ -137,7 +134,6 @@ class LiveViewModel @Inject constructor(
             } else {
                 when (id) {
                     LiveCategoryUi.ALL_ID -> liveRepository.pagedItems(null)
-                    LiveCategoryUi.FAVORITES_ID -> favoriteIds.flatMapLatest { liveRepository.observeByIds(it) }.map { PagingData.from(it) }
                     LiveCategoryUi.HISTORY_ID -> recentChannelsRepository.observeRecent().map { PagingData.from(it) }
                     else -> liveRepository.pagedItems(id)
                 }
@@ -151,7 +147,6 @@ class LiveViewModel @Inject constructor(
             when {
                 q.isNotEmpty() -> resultsFor(q).map { it.firstOrNull() }
                 id == LiveCategoryUi.ALL_ID -> flow { emit(liveRepository.firstOf(null)) }
-                id == LiveCategoryUi.FAVORITES_ID -> favoriteIds.flatMapLatest { liveRepository.observeByIds(it) }.map { it.firstOrNull() }
                 id == LiveCategoryUi.HISTORY_ID -> recentChannelsRepository.observeRecent().map { it.firstOrNull() }
                 else -> flow { emit(liveRepository.firstOf(id)) }
             }

@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.containsOnly
+import assertk.assertions.doesNotContain
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import com.androbito.tilfaz.core.model.Category
@@ -50,12 +51,13 @@ class CatalogBrowserTest {
     fun `sections list virtual entries then provider categories with counts`() = runTest {
         browser.snapshot.test {
             val sections = expectMostRecentItem().sections
-            assertThat(sections.map { it.kind }.take(4)).containsExactly(
+            assertThat(sections.map { it.kind }.take(3)).containsExactly(
                 CatalogBrowser.Section.Kind.ALL,
-                CatalogBrowser.Section.Kind.FAVORITES,
                 CatalogBrowser.Section.Kind.CONTINUE_WATCHING,
                 CatalogBrowser.Section.Kind.RECENTLY_ADDED
             )
+            // Favourites have a page of their own on Home.
+            assertThat(sections.map { it.kind.name }).doesNotContain("FAVORITES")
             assertThat(sections.first().count).isEqualTo(2)
             assertThat(sections.first { it.name == "Drama" }.count).isEqualTo(1)
         }
@@ -84,14 +86,6 @@ class CatalogBrowserTest {
 
         assertThat(shown()).containsExactly(older)
         browser.snapshot.test { assertThat(expectMostRecentItem().progressById.keys).containsOnly(1) }
-    }
-
-    @Test
-    fun `favourites lists the favourited items`() = runTest {
-        favorites.toggle(ToggleFavoriteUseCase.vodKey(2), ContentType.VOD)
-        browser.select(CatalogBrowser.FAVORITES)
-
-        assertThat(shown()).containsExactly(newer)
     }
 
     @Test

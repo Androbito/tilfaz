@@ -5,7 +5,7 @@ import androidx.paging.testing.asSnapshot
 import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.containsExactly
-import assertk.assertions.containsOnly
+import assertk.assertions.doesNotContain
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
@@ -47,7 +47,9 @@ class LiveViewModelTest {
     fun `virtual categories come first with live counts`() = runTest {
         viewModel.state.test {
             val categories = expectMostRecentItem().categories
-            assertThat(categories.map { it.kind }.take(3)).containsExactly(LiveCategoryUi.Kind.ALL, LiveCategoryUi.Kind.FAVORITES, LiveCategoryUi.Kind.HISTORY)
+            assertThat(categories.map { it.kind }.take(2)).containsExactly(LiveCategoryUi.Kind.ALL, LiveCategoryUi.Kind.HISTORY)
+            // Favourites have a page of their own on Home.
+            assertThat(categories.map { it.kind.name }).doesNotContain("FAVORITES")
             assertThat(categories.first().count).isEqualTo(2)
             assertThat(categories.first { it.id == "1" }.count).isEqualTo(1)
         }
@@ -124,16 +126,6 @@ class LiveViewModelTest {
             viewModel.onEvent(LiveEvent.QueryChanged("beI"))
             assertThat(expectMostRecentItem().query).isEqualTo("beI")
         }
-    }
-
-    @Test
-    fun `favourites category shows only favourited channels`() = runTest {
-        viewModel.state.test {
-            viewModel.onEvent(LiveEvent.ToggleFavorite(Fixtures.beinSports1.id))
-            viewModel.onEvent(LiveEvent.SelectCategory(LiveCategoryUi.FAVORITES_ID))
-            assertThat(expectMostRecentItem().favoriteIds).containsOnly(Fixtures.beinSports1.id)
-        }
-        assertThat(shown()).containsExactly(Fixtures.beinSports1)
     }
 
     @Test

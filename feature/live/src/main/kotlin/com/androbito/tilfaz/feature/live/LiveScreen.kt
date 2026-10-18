@@ -186,7 +186,6 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onP
             items(state.categories, key = { it.id }) { category ->
                 val (name, icon) = when (category.kind) {
                     LiveCategoryUi.Kind.ALL -> stringResource(R.string.live_all) to Icons.Default.ViewList
-                    LiveCategoryUi.Kind.FAVORITES -> stringResource(R.string.live_favorites) to Icons.Default.Favorite
                     LiveCategoryUi.Kind.HISTORY -> stringResource(R.string.live_history) to Icons.Default.History
                     LiveCategoryUi.Kind.PROVIDER -> category.name to null
                 }
@@ -220,7 +219,6 @@ private fun ChannelColumn(
                 EmptyState(
                     title = when {
                         state.query.isNotBlank() -> stringResource(R.string.live_no_results, state.query)
-                        state.selectedCategoryId == LiveCategoryUi.FAVORITES_ID -> stringResource(R.string.live_empty_favorites)
                         state.selectedCategoryId == LiveCategoryUi.HISTORY_ID -> stringResource(R.string.live_empty_history)
                         else -> stringResource(R.string.live_empty_category)
                     }

@@ -41,7 +41,7 @@ class CatalogBrowser<T : Any>(
     private val searchDelayMs: Long = SEARCH_DELAY_MS
 ) {
     data class Section(val id: String, val name: String, val count: Int?, val kind: Kind) {
-        enum class Kind { ALL, FAVORITES, CONTINUE_WATCHING, RECENTLY_ADDED, PROVIDER }
+        enum class Kind { ALL, CONTINUE_WATCHING, RECENTLY_ADDED, PROVIDER }
     }
 
     /** Everything about the screen except the grid itself, which is [items]: it must not change when a favourite does. */
@@ -75,12 +75,10 @@ class CatalogBrowser<T : Any>(
         repository.observeCategories(),
         repository.observeCategoryCounts(),
         repository.observeCount(),
-        favoriteIds,
         progress
-    ) { categories, counts, total, favorites, progress ->
+    ) { categories, counts, total, progress ->
         buildList {
             add(Section(ALL, "", total, Section.Kind.ALL))
-            add(Section(FAVORITES, "", favorites.size, Section.Kind.FAVORITES))
             add(Section(CONTINUE_WATCHING, "", progress.size, Section.Kind.CONTINUE_WATCHING))
             add(Section(RECENTLY_ADDED, "", minOf(RECENT_LIMIT, total), Section.Kind.RECENTLY_ADDED))
             categories.forEach { add(it.toSection(counts[it.id] ?: 0)) }
@@ -94,7 +92,6 @@ class CatalogBrowser<T : Any>(
         } else {
             when (id) {
                 ALL -> repository.pagedItems(null)
-                FAVORITES -> favoriteIds.flatMapLatest { ids -> repository.observeByIds(ids) }.map { PagingData.from(it) }
                 CONTINUE_WATCHING -> progress.flatMapLatest { progress ->
                     repository.observeByIds(progress.keys).map { found ->
                         val byId = found.associateBy(idOf)
@@ -149,7 +146,6 @@ class CatalogBrowser<T : Any>(
 
     companion object {
         const val ALL = "__all"
-        const val FAVORITES = "__favorites"
         const val CONTINUE_WATCHING = "__continue"
         const val RECENTLY_ADDED = "__recent"
         const val RECENT_LIMIT = 60
