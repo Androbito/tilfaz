@@ -41,12 +41,33 @@ android {
         versionName = (project.findProperty("versionName") as String?) ?: "0.1.0"
     }
 
+    // The upload key for Play App Signing. It comes only from the environment or from Gradle properties (see docs/release.md and
+    // ADR 0010), never from a file or a default in this repository. With none of the four values set, a release build is signed with
+    // the debug key as before; with only some of them set, the build fails rather than ship something signed with the wrong key.
+    val signingKeys = listOf("KEYSTORE_PATH", "KEYSTORE_PASSWORD", "KEY_ALIAS", "KEY_PASSWORD")
+    val signingValues: Map<String, String> = signingKeys.mapNotNull { key ->
+        providers.environmentVariable(key).orElse(providers.gradleProperty(key)).orNull?.takeIf { it.isNotBlank() }?.let { key to it }
+    }.toMap()
+    val missingSigningKeys = signingKeys - signingValues.keys
+    if (missingSigningKeys.size == signingKeys.size) {
+        logger.lifecycle("Release signing: no upload key configured, a release build is signed with the debug key.")
+    } else if (missingSigningKeys.isNotEmpty()) {
+        throw GradleException("Release signing is half configured, missing: $missingSigningKeys")
+    } else {
+        signingConfigs.create("release") {
+            storeFile = file(signingValues.getValue("KEYSTORE_PATH"))
+            storePassword = signingValues.getValue("KEYSTORE_PASSWORD")
+            keyAlias = signingValues.getValue("KEY_ALIAS")
+            keyPassword = signingValues.getValue("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Signing is configured from CI secrets; see docs/release.md.
+            // The upload key when configured (CI), the debug key otherwise; see the signing block above.
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             // Never ship a test account.
             buildConfigField("String", "DEV_SERVER_URL", "\"\"")
