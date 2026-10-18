@@ -182,6 +182,20 @@ class PlayerOptionsPanelTest {
     }
 
     @Test
+    fun theBackKeyOnAFocusedRowWorksOnTheFirstPress() {
+        show(initial = OptionsPage.Audio)
+
+        compose.onNode(row("Arabic")).performKeyInput { pressKey(Key.Back) }
+        compose.waitForIdle()
+        compose.onNode(row(string(R.string.player_options_audio))).assertExists() // back on the root, no press wasted
+        assertThat(closed).isEqualTo(false)
+
+        compose.onNode(row(string(R.string.player_options_audio))).requestFocus()
+        compose.onNode(row(string(R.string.player_options_audio))).performKeyInput { pressKey(Key.Back) }
+        assertThat(closed).isEqualTo(true)
+    }
+
+    @Test
     fun theStylePageShowsEachChoiceAndPressingOneMovesToTheNextValue() {
         show(initial = OptionsPage.Style)
 
