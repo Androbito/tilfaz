@@ -40,10 +40,14 @@ class MigrationTest {
         context.deleteDatabase(name)
     }
 
-    private fun createVersion1(fill: (SupportSQLiteDatabase) -> Unit) {
-        val schema = JSONObject(File("../database/schemas/com.androbito.tilfaz.core.database.TilfazDatabase/1.json").readText()).getJSONObject("database")
+    private fun createVersion1(fill: (SupportSQLiteDatabase) -> Unit) = createVersion(1, fill)
+
+    private fun createVersion(version: Int, fill: (SupportSQLiteDatabase) -> Unit) {
+        val schema = JSONObject(
+            File("../database/schemas/com.androbito.tilfaz.core.database.TilfazDatabase/$version.json").readText()
+        ).getJSONObject("database")
         val helper = FrameworkSQLiteOpenHelperFactory().create(
-            SupportSQLiteOpenHelper.Configuration.builder(context).name(name).callback(object : SupportSQLiteOpenHelper.Callback(1) {
+            SupportSQLiteOpenHelper.Configuration.builder(context).name(name).callback(object : SupportSQLiteOpenHelper.Callback(version) {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     val setup = schema.getJSONArray("setupQueries")
                     for (i in 0 until setup.length()) db.execSQL(setup.getString(i))
@@ -117,5 +121,25 @@ class MigrationTest {
         assertThat(indexes.contains("index_movies_name")).isEqualTo(false)
         assertThat(indexes.contains("index_movies_categoryId_position")).isEqualTo(true)
         assertThat(indexes.contains("index_movies_position")).isEqualTo(true)
+    }
+
+    @Test
+    fun `the watch list table is added and favourites and progress are left alone`() {
+        createVersion(2) { db ->
+            db.execSQL("INSERT INTO favorites (`key`, type, addedAtMillis) VALUES ('vod:7', 'VOD', 1000)")
+            db.execSQL(
+                "INSERT INTO watch_progress (playableKey, type, title, posterUrl, positionMs, durationMs, updatedAtMillis, reference) VALUES ('vod:7', 'VOD', 'Scream 4', NULL, 600000, 6000000, 2000, '7')"
+            )
+        }
+
+        val database = openMigrated()
+        val db = database.openHelper.writableDatabase
+
+        assertThat(db.strings("SELECT count(*) FROM watchlist")).containsExactly("0")
+        db.execSQL("INSERT INTO watchlist (`key`, type, addedAtMillis) VALUES ('series:9', 'SERIES', 5000)")
+        assertThat(db.strings("SELECT `key` FROM watchlist")).containsExactly("series:9")
+        assertThat(db.strings("SELECT `key` FROM favorites")).containsExactly("vod:7")
+        assertThat(db.strings("SELECT title FROM watch_progress")).containsExactly("Scream 4")
+        database.close()
     }
 }
