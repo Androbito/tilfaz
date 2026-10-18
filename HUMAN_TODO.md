@@ -3,7 +3,9 @@
 The code, the release workflow and the documentation are done (see `docs/release.md` and ADR 0010). These steps need your
 accounts, your passwords or your decision. Each stops until you have done it. Nothing here is public until you say so.
 
-## 1. Create the upload keystore
+## 1. Create the upload keystore (done: the key is managed by EAS)
+
+Done on 2026-10-18: `~/secrets/tilfaz-upload.jks` and `tilfaz-upload.properties` exist, and EAS (`@androbito/tilfaz`, "Tilfaz upload key") holds the same key. Certificate SHA-256 `3F:C0:2F:80:68:9E:53:CA:EB:09:8E:AA:D8:FA:14:F4:FF:71:09:D5:3A:8B:4F:06:42:56:80:7F:E1:B9:B5:43`. Never regenerate it. The first bundle, `~/secrets/release/tilfaz-0.1.0-vc1.aab` (versionCode 1), is built, signed with that key and verified. The command below is kept for the record only.
 
 On your machine, in a terminal. You choose the passwords; `keytool` asks for them. Save them in your password manager.
 
