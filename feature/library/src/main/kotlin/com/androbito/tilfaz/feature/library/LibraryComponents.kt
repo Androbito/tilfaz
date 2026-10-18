@@ -91,6 +91,10 @@ fun LibraryPage(
             focusAfterQuestion = null
         }
     }
+    // Back from a page where the item was removed or finished: its place is gone, so the neighbour that took it gets focus.
+    LaunchedEffect(itemCount) {
+        if (focusMemory.pointsPast(itemCount)) focusMemory.restore(itemCount)
+    }
     BackHandler(enabled = confirmation != null) { cancel() }
 
     ProvideMinimalBringIntoView {

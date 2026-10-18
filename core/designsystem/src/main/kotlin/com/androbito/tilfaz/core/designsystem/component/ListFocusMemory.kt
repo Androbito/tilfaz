@@ -28,6 +28,9 @@ class ListFocusMemory internal constructor(initialIndex: Int) {
     /** True when focus must be given back: the memory came from saved state, or the screen asked for a starting item. */
     internal var restorePending = initialIndex >= 0
 
+    /** True while focus is still owed to the remembered item, and that item is past the end of a list of [itemCount]. */
+    fun pointsPast(itemCount: Int): Boolean = restorePending && index >= itemCount
+
     /**
      * Gives focus back to the remembered item now, e.g. after a question closed over the list. If the list got shorter
      * the last item takes over; an empty list has nothing to focus.
@@ -35,6 +38,7 @@ class ListFocusMemory internal constructor(initialIndex: Int) {
     suspend fun restore(itemCount: Int) {
         if (itemCount <= 0) return
         index = index.coerceIn(0, itemCount - 1)
+        restorePending = false
         withFrameNanos { } // the item at the (possibly new) index picks up the requester
         requester.requestFocus()
     }

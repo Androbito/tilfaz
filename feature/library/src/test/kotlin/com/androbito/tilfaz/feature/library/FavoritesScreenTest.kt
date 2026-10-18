@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -179,5 +180,53 @@ class FavoritesScreenTest {
         tester.emulateSavedInstanceStateRestore()
 
         compose.onNode(card(Fixtures.movie.name)).assertIsFocused()
+    }
+
+    @Test
+    fun focusReturnsToAnItemThatIsFarAlongItsShelf() {
+        val movies = (1..14).map { Fixtures.movie.copy(id = 700 + it, name = "Movie $it") }
+        val tester = StateRestorationTester(compose)
+        tester.setContent { TilfazTheme { FavoritesScreen(state = full.copy(movies = movies), onEvent = {}, navigation = navigation) } }
+        compose.onNode(card("Movie 1")).requestFocus()
+        repeat(12) { compose.onNode(hasClickAction() and isFocused()).performKeyInput { pressKey(Key.DirectionRight) } }
+        compose.waitForIdle()
+        compose.onNode(card("Movie 13")).assertIsFocused()
+
+        tester.emulateSavedInstanceStateRestore()
+        compose.waitForIdle()
+
+        compose.onNode(card("Movie 13")).assertIsFocused()
+    }
+
+    @Test
+    fun focusReturnsToAnItemInTheLowestShelf() {
+        val tester = StateRestorationTester(compose)
+        tester.setContent { TilfazTheme { FavoritesScreen(state = full, onEvent = {}, navigation = navigation) } }
+        compose.onNode(card(Fixtures.alJazeera.name)).requestFocus()
+        repeat(2) { compose.onNode(hasClickAction() and isFocused()).performKeyInput { pressKey(Key.DirectionDown) } }
+        compose.waitForIdle()
+        compose.onNode(card(Fixtures.series.name)).assertIsFocused()
+
+        tester.emulateSavedInstanceStateRestore()
+        compose.waitForIdle()
+
+        compose.onNode(card(Fixtures.series.name)).assertIsFocused()
+    }
+
+    @Test
+    fun focusFallsBackToTheNeighbourWhenTheItemTheUserLeftIsGone() {
+        val movies = (1..3).map { Fixtures.movie.copy(id = 800 + it, name = "Movie $it") }
+        var state by mutableStateOf(FavoritesUiState(movies = movies))
+        val tester = StateRestorationTester(compose)
+        tester.setContent { TilfazTheme { FavoritesScreen(state = state, onEvent = {}, navigation = navigation) } }
+        compose.onNode(card("Movie 3")).requestFocus()
+        compose.onNode(card("Movie 3")).assertIsFocused()
+
+        // The user took it off the list on its page, so it is not there when they come back.
+        state = FavoritesUiState(movies = movies.take(2))
+        tester.emulateSavedInstanceStateRestore()
+        compose.waitForIdle()
+
+        compose.onNode(card("Movie 2")).assertIsFocused()
     }
 }
