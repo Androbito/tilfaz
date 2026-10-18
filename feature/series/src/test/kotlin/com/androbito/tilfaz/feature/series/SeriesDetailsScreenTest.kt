@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -153,7 +154,7 @@ class SeriesDetailsScreenTest {
         var event: SeriesDetailsEvent? = null
         show(onEvent = { event = it })
 
-        pressOk(hasText(string(R.string.series_add_watchlist)) and hasClickAction())
+        pressOk(hasContentDescription(string(R.string.series_add_watchlist)) and hasClickAction())
 
         assertThat(event).isEqualTo(SeriesDetailsEvent.ToggleWatchlist)
     }
@@ -162,7 +163,17 @@ class SeriesDetailsScreenTest {
     fun aSeriesOnTheWatchListOffersToTakeItOff() {
         show(state().copy(isInWatchlist = true))
 
-        compose.onNode(hasText(string(R.string.series_remove_watchlist)) and hasClickAction()).assertExists()
+        compose.onNode(hasContentDescription(string(R.string.series_remove_watchlist)) and hasClickAction()).assertExists()
+    }
+
+    @Test
+    fun favouriteAndWatchListAreIconsWithAnAccessibleName() {
+        show()
+
+        listOf(R.string.series_add_favorite, R.string.series_add_watchlist).forEach {
+            compose.onAllNodesWithText(string(it)).assertCountEquals(0) // no visible label
+            compose.onNode(hasContentDescription(string(it)) and hasClickAction()).assertExists()
+        }
     }
 
     @OptIn(ExperimentalTestApi::class)

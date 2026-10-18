@@ -7,10 +7,13 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
@@ -19,7 +22,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
+import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.MovieDetails
+import com.androbito.tilfaz.core.model.WatchProgress
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import org.junit.Rule
 import org.junit.Test
@@ -79,7 +84,7 @@ class MovieDetailsScreenTest {
     fun theWatchListButtonAsksToToggle() {
         var event: MovieDetailsEvent? = null
         show(MovieDetailsUiState(movie = Fixtures.movie)) { event = it }
-        val button = hasText(string(R.string.vod_add_watchlist)) and hasClickAction()
+        val button = hasContentDescription(string(R.string.vod_add_watchlist)) and hasClickAction()
         compose.onNode(button).requestFocus()
 
         compose.onNode(button).performKeyInput { pressKey(Key.DirectionCenter) }
@@ -91,6 +96,17 @@ class MovieDetailsScreenTest {
     fun aMovieOnTheWatchListOffersToTakeItOff() {
         show(MovieDetailsUiState(movie = Fixtures.movie, isInWatchlist = true)) {}
 
-        compose.onNode(hasText(string(R.string.vod_remove_watchlist)) and hasClickAction()).assertExists()
+        compose.onNode(hasContentDescription(string(R.string.vod_remove_watchlist)) and hasClickAction()).assertExists()
+    }
+
+    @Test
+    fun startOverFavouriteAndWatchListAreIconsWithAnAccessibleName() {
+        val resuming = WatchProgress("vod:${Fixtures.movie.id}", ContentType.VOD, "x", null, 900_000, 6_000_000, Fixtures.now, "${Fixtures.movie.id}")
+        show(MovieDetailsUiState(movie = Fixtures.movie, progress = resuming)) {}
+
+        listOf(R.string.vod_start_over, R.string.vod_add_favorite, R.string.vod_add_watchlist).forEach {
+            compose.onAllNodesWithText(string(it)).assertCountEquals(0) // no visible label
+            compose.onNode(hasContentDescription(string(it)) and hasClickAction()).assertExists()
+        }
     }
 }

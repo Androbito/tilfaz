@@ -3,8 +3,6 @@ package com.androbito.tilfaz.feature.vod
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -80,7 +78,6 @@ fun MovieDetailsRoute(onPlayMovie: (Int, Long) -> Unit, onOpenMovie: (Int) -> Un
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MovieDetailsScreen(
     state: MovieDetailsUiState,
@@ -114,12 +111,7 @@ fun MovieDetailsScreen(
                             Text(movie.name, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
                             movie.rating?.let { ScoreLine(it) }
 
-                            // Wraps onto a second line: four buttons with these labels are wider than the column.
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
-                                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
-                                itemVerticalAlignment = Alignment.CenterVertically
-                            ) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
                                 TilfazButton(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
                                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                                     Text(
@@ -136,26 +128,22 @@ fun MovieDetailsScreen(
                                 }
                                 if (state.canResume) {
                                     OutlinedButton(onClick = { onEvent(MovieDetailsEvent.StartOver); onPlay(0L) }) {
-                                        Icon(Icons.Default.Replay, contentDescription = null)
-                                        Text(stringResource(R.string.vod_start_over), modifier = Modifier.padding(start = Dimens.SpaceS))
+                                        Icon(Icons.Default.Replay, contentDescription = stringResource(R.string.vod_start_over))
                                     }
                                 }
                                 OutlinedButton(onClick = { onEvent(MovieDetailsEvent.ToggleFavorite) }) {
                                     Icon(
                                         if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(if (state.isFavorite) R.string.vod_remove_favorite else R.string.vod_add_favorite),
                                         tint = if (state.isFavorite) TilfazColors.Danger else LocalContentColor.current
-                                    )
-                                    Text(
-                                        stringResource(if (state.isFavorite) R.string.vod_remove_favorite else R.string.vod_add_favorite),
-                                        modifier = Modifier.padding(start = Dimens.SpaceS)
                                     )
                                 }
                                 OutlinedButton(onClick = { onEvent(MovieDetailsEvent.ToggleWatchlist) }) {
-                                    Icon(if (state.isInWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder, contentDescription = null)
-                                    Text(
-                                        stringResource(if (state.isInWatchlist) R.string.vod_remove_watchlist else R.string.vod_add_watchlist),
-                                        modifier = Modifier.padding(start = Dimens.SpaceS)
+                                    Icon(
+                                        if (state.isInWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                        contentDescription = stringResource(
+                                            if (state.isInWatchlist) R.string.vod_remove_watchlist else R.string.vod_add_watchlist
+                                        )
                                     )
                                 }
                             }
