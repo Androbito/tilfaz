@@ -25,11 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,6 +33,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
+import com.androbito.tilfaz.core.designsystem.component.backKeyAsBackPress
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
 import com.androbito.tilfaz.core.model.SubtitleBackground
@@ -76,8 +72,7 @@ fun PlayerOptionsPanel(
     onAspect: (AspectMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val back = { if (page == OptionsPage.Root) onClose() else onPage(OptionsPage.Root) }
-    BackHandler(onBack = back)
+    BackHandler { if (page == OptionsPage.Root) onClose() else onPage(OptionsPage.Root) }
 
     val off = stringResource(R.string.player_options_off)
     val noneFound = stringResource(R.string.player_options_none_found)
@@ -89,12 +84,7 @@ fun PlayerOptionsPanel(
             .background(TilfazColors.Surface)
             .padding(Dimens.SpaceL)
             .focusGroup()
-            // The TV spends the first Back on dropping the focused row's focus, so Back is taken here, before the system sees it.
-            .onPreviewKeyEvent { event ->
-                if (event.key != Key.Back) return@onPreviewKeyEvent false
-                if (event.type == KeyEventType.KeyUp) back()
-                true
-            },
+            .backKeyAsBackPress(),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
     ) {
         Text(stringResource(R.string.player_options_title), style = MaterialTheme.typography.titleLarge, color = TilfazColors.OnSurfaceMuted)

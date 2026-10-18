@@ -11,6 +11,7 @@ dependencies {
     api(libs.androidx.tv.material)
     api(libs.androidx.compose.material.icons.extended)
     api(libs.coil.compose)
+    implementation(libs.androidx.activity.compose)
     implementation(projects.core.model)
 
     testImplementation(libs.robolectric)

@@ -2,6 +2,7 @@ package com.androbito.tilfaz.feature.series
 
 import android.content.Context
 import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -143,6 +144,21 @@ class SeriesDetailsScreenTest {
 
         compose.onAllNodesWithText("S01E02", useUnmergedTree = true).assertCountEquals(0)
         compose.onNode(episodesButton).assertIsFocused()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun theBackKeyOnAFocusedButtonGoesBackOnTheFirstPress() {
+        var backs = 0
+        compose.setContent {
+            BackHandler { backs++ }
+            TilfazTheme { SeriesDetailsScreen(state = state(), onEvent = {}, onPlay = {}, onOpenSeries = {}) }
+        }
+        compose.waitForIdle()
+
+        compose.onNode(hasText("Play S01E01") and hasClickAction()).performKeyInput { pressKey(Key.Back) }
+
+        assertThat(backs).isEqualTo(1)
     }
 
     @Test

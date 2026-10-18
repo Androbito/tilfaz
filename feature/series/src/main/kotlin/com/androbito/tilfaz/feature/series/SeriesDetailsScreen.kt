@@ -73,6 +73,7 @@ import com.androbito.tilfaz.core.designsystem.component.RatingBadge
 import com.androbito.tilfaz.core.designsystem.component.ScoreLine
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
+import com.androbito.tilfaz.core.designsystem.component.backKeyAsBackPress
 import com.androbito.tilfaz.core.designsystem.component.formatDuration
 import com.androbito.tilfaz.core.designsystem.component.rememberFocus
 import com.androbito.tilfaz.core.designsystem.component.rememberListFocusMemory
@@ -181,7 +182,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
     }
 
     ProvideMinimalBringIntoView {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().backKeyAsBackPress()) {
             details?.backdropUrls?.firstOrNull()?.let { backdrop ->
                 AsyncImage(model = backdrop, contentDescription = null, contentScale = ContentScale.Crop, alpha = 0.18f, modifier = Modifier.fillMaxSize())
             }
