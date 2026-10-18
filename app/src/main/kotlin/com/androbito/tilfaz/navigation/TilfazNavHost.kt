@@ -2,8 +2,12 @@ package com.androbito.tilfaz.navigation
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import coil3.SingletonImageLoader
+import com.androbito.tilfaz.ImageCaches
 import com.androbito.tilfaz.feature.home.HomeNavigation
 import com.androbito.tilfaz.feature.home.HomeRoute
 import com.androbito.tilfaz.feature.home.homeScreen
@@ -33,15 +37,14 @@ import com.androbito.tilfaz.feature.vod.MovieDetailsRoute
 import com.androbito.tilfaz.feature.vod.MoviesRoute
 import com.androbito.tilfaz.feature.vod.movieDetailsScreen
 import com.androbito.tilfaz.feature.vod.moviesScreen
-
-/**
- * The only place that knows about every feature. Features expose routes and callbacks; this maps the callbacks
- * to destinations, so no feature module depends on another.
- */
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 @Composable
 fun TilfazNavHost(startSignedIn: Boolean) {
     val navController = rememberNavController()
     val activity = LocalActivity.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     NavHost(navController = navController, startDestination = if (startSignedIn) HomeRoute else SignInRoute) {
         signInScreen(
@@ -107,6 +110,9 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         settingsScreen(
             onSignedOut = {
                 navController.navigate(SignInRoute) { popUpTo(0) { inclusive = true } }
+                // The posters of the signed-out account are not kept either.
+                val loader = SingletonImageLoader.get(context)
+                scope.launch(Dispatchers.IO) { ImageCaches.clear(loader) }
             }
         )
     }

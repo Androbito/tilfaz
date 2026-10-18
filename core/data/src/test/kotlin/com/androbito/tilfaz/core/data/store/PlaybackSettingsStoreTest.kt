@@ -72,4 +72,22 @@ class PlaybackSettingsStoreTest {
         assertThat(PlaybackSettingsStore(dataStore).settings.first().subtitleStyle.size).isEqualTo(SubtitleSize.MEDIUM)
         assertThat(PlaybackSettings().subtitleStyle.size).isEqualTo(SubtitleSize.MEDIUM)
     }
+
+    @Test
+    fun `clearing puts every setting back to what a fresh install has`() = runTest(UnconfinedTestDispatcher()) {
+        val store = PlaybackSettingsStore(newDataStore())
+        store.update {
+            it.copy(
+                audioLanguage = "ar",
+                subtitleLanguage = "fr",
+                userAgent = "Custom/1.0",
+                resumePlayback = false,
+                subtitleStyle = it.subtitleStyle.copy(size = SubtitleSize.LARGE, textColor = SubtitleColor.YELLOW)
+            )
+        }
+
+        store.clear()
+
+        assertThat(store.settings.first()).isEqualTo(PlaybackSettings())
+    }
 }

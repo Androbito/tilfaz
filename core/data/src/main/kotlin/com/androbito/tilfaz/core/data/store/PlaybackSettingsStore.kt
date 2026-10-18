@@ -60,6 +60,11 @@ class PlaybackSettingsStore @Inject constructor(
         }
     }
 
+    /** Back to what a fresh install has. */
+    suspend fun clear() {
+        dataStore.edit { it.clear() }
+    }
+
     /** A name stored by another version of the app that this one does not know falls back to the default. */
     private inline fun <reified E : Enum<E>> enumOf(name: String?, default: E): E = enumValues<E>().firstOrNull { it.name == name } ?: default
 

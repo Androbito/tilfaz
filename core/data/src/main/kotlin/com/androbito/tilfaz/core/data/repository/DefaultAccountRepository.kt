@@ -4,6 +4,7 @@ import com.androbito.tilfaz.core.data.di.IoDispatcher
 import com.androbito.tilfaz.core.data.mapper.AuthMapper
 import com.androbito.tilfaz.core.data.store.AccountStore
 import com.androbito.tilfaz.core.data.store.ActiveAccountHolder
+import com.androbito.tilfaz.core.data.store.PlaybackSettingsStore
 import com.androbito.tilfaz.core.database.TilfazDatabase
 import com.androbito.tilfaz.core.domain.repository.AccountRepository
 import com.androbito.tilfaz.core.model.Account
@@ -24,6 +25,7 @@ class DefaultAccountRepository @Inject constructor(
     private val accountStore: AccountStore,
     private val accountHolder: ActiveAccountHolder,
     private val database: TilfazDatabase,
+    private val settingsStore: PlaybackSettingsStore,
     private val clock: Clock,
     @IoDispatcher private val io: CoroutineDispatcher
 ) : AccountRepository {
@@ -47,8 +49,10 @@ class DefaultAccountRepository @Inject constructor(
             .onSuccess { accountStore.saveStatus(it) }
     }
 
+    /** Leaves the device as after a fresh install: the account, every table and the playback settings. */
     override suspend fun signOut() = withContext(io) {
         accountStore.clear()
         database.clearAllTables()
+        settingsStore.clear()
     }
 }
