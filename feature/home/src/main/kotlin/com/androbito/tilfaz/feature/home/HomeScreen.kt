@@ -1,5 +1,8 @@
 package com.androbito.tilfaz.feature.home
 
+import android.os.SystemClock
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +22,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Theaters
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -63,7 +69,8 @@ class HomeNavigation(
     val onOpenSettings: () -> Unit,
     val onOpenFavorites: () -> Unit,
     val onOpenContinueWatching: () -> Unit,
-    val onOpenWatchlist: () -> Unit
+    val onOpenWatchlist: () -> Unit,
+    val onExit: () -> Unit
 )
 
 fun NavGraphBuilder.homeScreen(navigation: HomeNavigation) {
@@ -81,6 +88,18 @@ fun HomeRoute(navigation: HomeNavigation, viewModel: HomeViewModel = hiltViewMod
 @Composable
 fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: HomeNavigation) {
     val now by rememberCurrentTime()
+    // Home is where Back would leave the app, so the first press only asks.
+    val context = LocalContext.current
+    var lastBackAt by remember { mutableLongStateOf(NEVER) }
+    BackHandler {
+        val now = SystemClock.elapsedRealtime()
+        if (lastBackAt != NEVER && now - lastBackAt <= EXIT_WINDOW_MS) {
+            navigation.onExit()
+        } else {
+            lastBackAt = now
+            Toast.makeText(context, R.string.home_press_back_again, Toast.LENGTH_SHORT).show()
+        }
+    }
     // Tiles are numbered in reading order; the LIVE tile (0) takes focus on a fresh start.
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
     // Up from the bottom row would otherwise stop at the small refresh button of the tile above; these send it to the big tile.
@@ -205,3 +224,7 @@ private fun SyncErrors(errors: Map<ContentType, DomainError>) {
         }
     }
 }
+
+/** The second Back must come within this long after the first to leave the app. */
+private const val EXIT_WINDOW_MS = 2_000L
+private const val NEVER = -1L

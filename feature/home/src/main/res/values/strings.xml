@@ -7,6 +7,7 @@
     <string name="home_favorites">Favourites</string>
     <string name="home_continue">Continue watching</string>
     <string name="home_watchlist">Watch list</string>
+    <string name="home_press_back_again">Press Back again to exit</string>
     <string name="home_expiration">Expiration: %1$s</string>
     <string name="home_expiration_unlimited">Expiration: unlimited</string>
     <string name="home_trial">Trial</string>

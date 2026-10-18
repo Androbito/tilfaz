@@ -1,5 +1,6 @@
 package com.androbito.tilfaz.navigation
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -40,6 +41,7 @@ import com.androbito.tilfaz.feature.vod.moviesScreen
 @Composable
 fun TilfazNavHost(startSignedIn: Boolean) {
     val navController = rememberNavController()
+    val activity = LocalActivity.current
 
     NavHost(navController = navController, startDestination = if (startSignedIn) HomeRoute else SignInRoute) {
         signInScreen(
@@ -56,7 +58,8 @@ fun TilfazNavHost(startSignedIn: Boolean) {
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenFavorites = { navController.navigate(FavoritesRoute) },
                 onOpenContinueWatching = { navController.navigate(ContinueWatchingRoute) },
-                onOpenWatchlist = { navController.navigate(WatchlistRoute) }
+                onOpenWatchlist = { navController.navigate(WatchlistRoute) },
+                onExit = { activity?.finish() }
             )
         )
 
