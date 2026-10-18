@@ -6,6 +6,12 @@ format when a channel refuses to play, and a codebase that follows software craf
 
 ![Status](https://img.shields.io/badge/status-v0.1%20scaffold-blue)
 
+## Download
+
+The signed APK for Android TV, Google TV, Fire TV and Android boxes is on the
+[releases page](https://github.com/Androbito/tilfaz/releases/latest) (install steps are in the release notes).
+Tilfaz is a player only: it ships with no channels or content, you sign in with the account your own provider gave you.
+
 ## Features (v1)
 
 - Sign in with server URL, username and password. Credentials are encrypted at rest with the Android Keystore.
