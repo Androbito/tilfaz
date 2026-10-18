@@ -24,6 +24,7 @@ import androidx.compose.ui.test.requestFocus
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.model.ContentType
@@ -228,5 +229,33 @@ class FavoritesScreenTest {
         compose.waitForIdle()
 
         compose.onNode(card("Movie 2")).assertIsFocused()
+    }
+
+    @Test
+    fun releasingTheKeyThatOpenedTheQuestionDoesNotAnswerIt() {
+        var state by mutableStateOf(full)
+        compose.setContent { TilfazTheme { FavoritesScreen(state = state, onEvent = { events += it }, navigation = navigation) } }
+        val movie = card(Fixtures.movie.name)
+        compose.onNode(movie).requestFocus()
+        compose.onNode(movie).performKeyInput { keyDown(Key.DirectionCenter) }
+        // The long press opens the question while OK is still held down.
+        compose.runOnIdle { state = full.copy(pendingRemoval = PendingRemoval(ContentType.VOD, Fixtures.movie.id, Fixtures.movie.name)) }
+        compose.waitForIdle()
+
+        compose.onNode(card(string(R.string.favorites_remove_cancel))).performKeyInput { keyUp(Key.DirectionCenter) }
+        compose.waitForIdle()
+
+        assertThat(events).isEmpty()
+        compose.onNodeWithText(string(R.string.favorites_remove_title)).assertExists()
+    }
+
+    @Test
+    fun aFreshOkOnAnAnswerStillAnswersIt() {
+        show(full.copy(pendingRemoval = PendingRemoval(ContentType.VOD, Fixtures.movie.id, Fixtures.movie.name)))
+        compose.waitForIdle()
+
+        pressKey(card(string(R.string.favorites_remove_cancel)), Key.DirectionCenter)
+
+        assertThat(events.last()).isEqualTo(FavoritesEvent.CancelRemoval)
     }
 }

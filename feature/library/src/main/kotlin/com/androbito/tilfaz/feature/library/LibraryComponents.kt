@@ -25,6 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
@@ -139,7 +144,27 @@ private fun ConfirmationDialog(confirmation: Confirmation, onConfirm: () -> Unit
         withFrameNanos { } // the button joins the focus tree once its first frame is laid out
         cancelFocus.requestFocus()
     }
-    Box(Modifier.fillMaxSize().background(TilfazColors.Scrim), contentAlignment = Alignment.Center) {
+    // Holding OK on an item opens this question while the key is still down: its repeats and its release must not answer it.
+    var okPressedHere by remember { mutableStateOf(false) }
+    Box(
+        Modifier.fillMaxSize().background(TilfazColors.Scrim).onPreviewKeyEvent { event ->
+            if (event.key != Key.DirectionCenter && event.key != Key.Enter) return@onPreviewKeyEvent false
+            when (event.type) {
+                KeyEventType.KeyDown -> if (event.nativeKeyEvent.repeatCount == 0) {
+                    okPressedHere = true
+                    false
+                } else {
+                    !okPressedHere
+                }
+                else -> {
+                    val ownPress = okPressedHere
+                    okPressedHere = false
+                    !ownPress
+                }
+            }
+        },
+        contentAlignment = Alignment.Center
+    ) {
         Column(
             Modifier.width(520.dp).background(TilfazColors.Surface, RoundedCornerShape(Dimens.CornerL)).padding(Dimens.SpaceXl),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceM)
