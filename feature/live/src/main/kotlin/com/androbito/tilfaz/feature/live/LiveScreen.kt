@@ -83,7 +83,7 @@ data class LiveRoute(val initialCategoryId: String? = null) {
  * The small live video of the right-hand pane. It is provided by the player feature (features never depend on each other)
  * and receives the channel to show, the space to fill, and what to call when the user presses OK on it.
  */
-typealias LivePreviewSlot = @Composable (channel: LiveChannel, modifier: Modifier, onOpen: () -> Unit) -> Unit
+typealias LivePreviewSlot = @Composable (channel: LiveChannel?, handingOff: Boolean, modifier: Modifier, onOpen: () -> Unit) -> Unit
 
 fun NavGraphBuilder.liveScreen(onPlayChannel: (channelId: Int, categoryId: String?) -> Unit, preview: LivePreviewSlot) {
     composable<LiveRoute> { LiveRoute(onPlayChannel, preview) }
@@ -122,7 +122,7 @@ fun LiveScreen(
     channels: LazyPagingItems<LiveChannel>,
     onEvent: (LiveEvent) -> Unit,
     onPlay: (LiveChannel) -> Unit,
-    preview: LivePreviewSlot = { _, _, _ -> }
+    preview: LivePreviewSlot = { _, _, _, _ -> }
 ) {
     val now by rememberCurrentTime()
     // The account allows one connection: once a channel is opened full screen, the small video goes away at once so that
@@ -152,6 +152,7 @@ fun LiveScreen(
                 now = now,
                 isFavorite = state.focusedChannelId in state.favoriteIds,
                 video = state.previewChannel.takeUnless { previewSuspended },
+                handingOff = previewSuspended,
                 onOpenVideo = play,
                 preview = preview,
                 modifier = Modifier.width(PreviewWidth).fillMaxHeight()
@@ -262,6 +263,7 @@ private fun PreviewPane(
     now: Instant,
     isFavorite: Boolean,
     video: LiveChannel?,
+    handingOff: Boolean,
     onOpenVideo: (LiveChannel) -> Unit,
     preview: LivePreviewSlot,
     modifier: Modifier
@@ -270,11 +272,9 @@ private fun PreviewPane(
         if (channel == null) return
         // The small live video, or the channel's logo while nothing is playing (scrolling, or just opened).
         Box(Modifier.fillMaxWidth().aspectRatio(VIDEO_ASPECT).background(TilfazColors.Surface, RoundedCornerShape(Dimens.CornerS))) {
-            if (video != null) {
-                preview(video, Modifier.fillMaxSize()) { onOpenVideo(video) }
-            } else {
-                ChannelLogo(channel.logoUrl, Modifier.size(72.dp).align(Alignment.Center))
-            }
+            // Always composed, so the player behind it survives scrolling; with no channel it only shows the logo.
+            preview(video, handingOff, Modifier.fillMaxSize()) { onOpenVideo(channel) }
+            if (video == null) ChannelLogo(channel.logoUrl, Modifier.size(72.dp).align(Alignment.Center))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
             ChannelLogo(channel.logoUrl, Modifier.size(40.dp))

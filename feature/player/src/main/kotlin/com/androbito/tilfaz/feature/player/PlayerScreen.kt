@@ -90,13 +90,17 @@ internal interface PlayerEntryPoint {
     fun exoPlayerFactory(): ExoPlayerFactory
 
     fun buildStreamSource(): BuildStreamSourceUseCase
+
+    fun livePlayerHolder(): LivePlayerHolder
 }
 
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: () -> Unit) {
     val context = LocalContext.current
-    val factory = remember(context) { EntryPointAccessors.fromApplication(context.applicationContext, PlayerEntryPoint::class.java).exoPlayerFactory() }
+    val entryPoint = remember(context) { EntryPointAccessors.fromApplication(context.applicationContext, PlayerEntryPoint::class.java) }
+    val factory = remember(entryPoint) { entryPoint.exoPlayerFactory() }
+    val liveHolder = remember(entryPoint) { entryPoint.livePlayerHolder() }
     val source = state.source
 
     var player by remember { mutableStateOf<ExoPlayer?>(null) }
@@ -123,40 +127,53 @@ fun PlayerScreen(state: PlayerUiState, onEvent: (PlayerEvent) -> Unit, onExit: (
     // (Re)create the player whenever the source changes: channel zap, format switch, retry.
     DisposableEffect(source) {
         if (source == null) return@DisposableEffect onDispose { }
-        val exo = factory.create(source, state.settings)
-        if (state.startPositionMs > 0) exo.seekTo(state.startPositionMs)
+        // A live channel opened from the small video arrives already playing: take that very player instead of starting a second
+        // stream and a second decoder. For anything else (or another channel) the holder frees its player and this one is built.
+        val handedOver = if (state.isLive) liveHolder.take(source, state.settings) else null
+        val exo = handedOver ?: factory.create(source, state.settings)
+        if (state.startPositionMs > 0 && handedOver == null) exo.seekTo(state.startPositionMs)
         exo.setPlaybackSpeed(speed) // a zap or retry keeps the speed the user chose
         var preferenceChecked = false
+
+        fun applyTracks(newTracks: Tracks) {
+            tracks = newTracks
+            // Once per playback, so a track the user picks afterwards is never overridden.
+            if (!preferenceChecked && newTracks.groups.any { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }) {
+                preferenceChecked = true
+                listOf(TrackKind.AUDIO to state.settings.audioLanguage, TrackKind.SUBTITLE to state.settings.subtitleLanguage)
+                    .forEach { (kind, language) ->
+                        newTracks.preferredTrack(kind, language)?.let {
+                            exo.trackSelectionParameters = exo.trackSelectionParameters.choosing(newTracks, it)
+                        }
+                    }
+            }
+        }
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 isBuffering = playbackState == Player.STATE_BUFFERING
                 if (playbackState == Player.STATE_READY) durationMs = exo.duration.coerceAtLeast(0)
             }
             override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
-            override fun onTracksChanged(newTracks: Tracks) {
-                tracks = newTracks
-                // Once per playback, so a track the user picks afterwards is never overridden.
-                if (!preferenceChecked && newTracks.groups.any { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }) {
-                    preferenceChecked = true
-                    listOf(TrackKind.AUDIO to state.settings.audioLanguage, TrackKind.SUBTITLE to state.settings.subtitleLanguage)
-                        .forEach { (kind, language) ->
-                            newTracks.preferredTrack(kind, language)?.let {
-                                exo.trackSelectionParameters = exo.trackSelectionParameters.choosing(newTracks, it)
-                            }
-                        }
-                }
-            }
+            override fun onTracksChanged(newTracks: Tracks) = applyTracks(newTracks)
             override fun onCues(cueGroup: CueGroup) { cues = cueGroup }
             override fun onTimelineChanged(timeline: Timeline, reason: Int) { seekable = exo.isCurrentMediaItemSeekable }
             override fun onPlayerError(error: PlaybackException) { onEvent(PlayerEvent.PlaybackFailed(error.toPlayerError())) }
         }
         exo.addListener(listener)
-        exo.prepare()
+        exo.prepare() // a no-op for a player that is already playing
+        if (handedOver != null) {
+            // The listener only hears about changes, and this player has been running for a while: read what it already knows.
+            isBuffering = exo.playbackState == Player.STATE_BUFFERING
+            isPlaying = exo.isPlaying
+            seekable = exo.isCurrentMediaItemSeekable
+            applyTracks(exo.currentTracks)
+        }
         player = exo
         showControls()
         onDispose {
             exo.removeListener(listener)
-            exo.release()
+            // A live player goes back to the holder for the small video to pick up (or be freed in a moment); the rest is released.
+            if (state.isLive) liveHolder.retire(exo) else exo.release()
             player = null
             tracks = Tracks.EMPTY
             cues = CueGroup.EMPTY_TIME_ZERO

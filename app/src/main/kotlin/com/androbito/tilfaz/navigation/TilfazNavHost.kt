@@ -58,7 +58,7 @@ fun TilfazNavHost(startSignedIn: Boolean) {
 
         liveScreen(
             onPlayChannel = { channelId, categoryId -> navController.navigate(PlayerRoute.live(channelId, categoryId)) },
-            preview = { channel, modifier, onOpen -> LivePreview(channel, onOpen, modifier) }
+            preview = { channel, handingOff, modifier, onOpen -> LivePreview(channel, handingOff, onOpen, modifier) }
         )
 
         moviesScreen(onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) })

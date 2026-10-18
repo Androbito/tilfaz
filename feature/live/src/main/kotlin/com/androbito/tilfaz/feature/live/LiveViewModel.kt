@@ -169,7 +169,8 @@ class LiveViewModel @Inject constructor(
         .flatMapLatest { channel ->
             flow {
                 emit(null)
-                if (channel != null) {
+                // The provider pads its list with heading entries ("===== BEIN ====="): there is nothing to play behind them.
+                if (channel != null && !TitleText.isSeparator(channel.name)) {
                     delay(PREVIEW_DELAY_MS)
                     emit(channel)
                 }

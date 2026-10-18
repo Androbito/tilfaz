@@ -58,13 +58,34 @@ class ExoPlayerFactory @Inject constructor(
             .setPrioritizeTimeOverSizeThresholds(false)
             .build()
 
-        val trackSelection = TrackSelectionParameters.DEFAULT.buildUpon()
-            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
-            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-            .setMaxVideoSize(PREVIEW_MAX_WIDTH, PREVIEW_MAX_HEIGHT)
-            .build()
-        return build(source, loadControl, ownsAudio = false, trackSelection = trackSelection, liveOffsetMs = PREVIEW_LIVE_OFFSET_MS)
+        return build(source, loadControl, ownsAudio = false, trackSelection = previewTrackSelection, liveOffsetMs = PREVIEW_LIVE_OFFSET_MS)
     }
+
+    /** What a preview of [source] plays: the same stream as full screen, but close to the live edge. */
+    fun previewMediaItem(source: StreamSource): MediaItem = source.toMediaItem(PREVIEW_LIVE_OFFSET_MS)
+
+    /** Turns a small preview player into the full screen one in place: sound, subtitles and the full picture. No restart. */
+    fun upgradeToFull(player: ExoPlayer, settings: PlaybackSettings) {
+        player.setAudioAttributes(movieAudio, true)
+        player.trackSelectionParameters = trackSelectionFor(settings)
+        player.setWakeMode(C.WAKE_MODE_NETWORK)
+        player.playWhenReady = true
+    }
+
+    /** The other way: silent, small, and not holding the audio focus or the wake lock. */
+    fun downgradeToPreview(player: ExoPlayer) {
+        player.setAudioAttributes(movieAudio, false)
+        player.trackSelectionParameters = previewTrackSelection
+        player.setWakeMode(C.WAKE_MODE_NONE)
+    }
+
+    private val movieAudio = AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build()
+
+    private val previewTrackSelection: TrackSelectionParameters = TrackSelectionParameters.DEFAULT.buildUpon()
+        .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
+        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+        .setMaxVideoSize(PREVIEW_MAX_WIDTH, PREVIEW_MAX_HEIGHT)
+        .build()
 
     private fun build(
         source: StreamSource,
@@ -91,7 +112,7 @@ class ExoPlayerFactory @Inject constructor(
         return ExoPlayer.Builder(context, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(mediaDataSourceFactory))
             .setLoadControl(loadControl)
-            .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(), ownsAudio)
+            .setAudioAttributes(movieAudio, ownsAudio)
             .setHandleAudioBecomingNoisy(false)
             .setWakeMode(if (ownsAudio) C.WAKE_MODE_NETWORK else C.WAKE_MODE_NONE)
             .build()

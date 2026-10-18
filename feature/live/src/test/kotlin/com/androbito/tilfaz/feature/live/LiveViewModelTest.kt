@@ -251,6 +251,21 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `a heading entry of the provider's list is never previewed, it has no stream`() = runTest {
+        val heading = Fixtures.alJazeera.copy(id = 900, name = "===== BEINSPORT HD =====")
+        viewModel.state.test {
+            viewModel.onEvent(LiveEvent.FocusChannel(heading))
+            advance(LiveViewModel.PREVIEW_DELAY_MS * 2)
+            assertThat(viewModel.state.value.previewChannel).isNull()
+
+            viewModel.onEvent(LiveEvent.FocusChannel(Fixtures.beinSports1))
+            advance(LiveViewModel.PREVIEW_DELAY_MS)
+            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.beinSports1)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `an empty list has nothing to preview`() = runTest {
         live.items.value = emptyList()
         viewModel.state.test {
