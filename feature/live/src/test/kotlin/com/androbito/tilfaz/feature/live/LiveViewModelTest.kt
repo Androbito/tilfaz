@@ -234,10 +234,16 @@ class LiveViewModelTest {
     }
 
     @Test
-    fun `the channel shown when the screen opens is previewed after the pause too`() = runTest {
+    fun `nothing is previewed until the user has focused a channel, not even the first one of a category`() = runTest {
         viewModel.state.test {
-            advance(LiveViewModel.PREVIEW_DELAY_MS)
-            assertThat(viewModel.state.value.previewChannel).isEqualTo(Fixtures.alJazeera)
+            advance(LiveViewModel.PREVIEW_DELAY_MS * 2)
+            // The first channel is shown in the info pane, but no stream is opened for it.
+            assertThat(viewModel.state.value.focusedChannel).isEqualTo(Fixtures.alJazeera)
+            assertThat(viewModel.state.value.previewChannel).isNull()
+
+            viewModel.onEvent(LiveEvent.SelectCategory("1"))
+            advance(LiveViewModel.PREVIEW_DELAY_MS * 2)
+            assertThat(viewModel.state.value.previewChannel).isNull()
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -13,6 +16,7 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -36,6 +40,7 @@ import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
@@ -334,5 +339,56 @@ class LiveScreenTest {
         compose.waitForIdle()
 
         compose.onNode(hasText("Channel 1") and hasClickAction()).assertIsFocused()
+    }
+
+    @Test
+    fun afterScrollingTheListAnotherCategoryStillLandsOnItsFirstChannel() {
+        val longList = (1..40).map { Fixtures.alJazeera.copy(id = 1000 + it, name = "News $it") }
+        val sportsList = (1..40).map { Fixtures.alJazeera.copy(id = 2000 + it, name = "Sports $it") }
+        val categories = listOf(
+            LiveCategoryUi(LiveCategoryUi.ALL_ID, "", 80, LiveCategoryUi.Kind.ALL),
+            LiveCategoryUi("1", "News", 40, LiveCategoryUi.Kind.PROVIDER),
+            LiveCategoryUi("2", "Sports", 40, LiveCategoryUi.Kind.PROVIDER)
+        )
+        var selected by mutableStateOf("1")
+        // One paging flow whose content is swapped, as the view model does: the list is never empty in between.
+        val source = MutableStateFlow(PagingData.from(longList))
+        compose.setContent {
+            TilfazTheme {
+                LiveScreen(
+                    state = stateWith().copy(categories = categories, selectedCategoryId = selected, focusedChannel = null),
+                    channels = source.collectAsLazyPagingItems(),
+                    onEvent = {
+                        if (it is LiveEvent.SelectCategory) {
+                            selected = it.id
+                            source.value = PagingData.from(if (it.id == "1") longList else sportsList)
+                        }
+                    },
+                    onPlay = {}
+                )
+            }
+        }
+        compose.waitForIdle()
+        val news = hasText("News") and hasClickAction()
+        val sports = hasText("Sports") and hasClickAction()
+
+        // Into the list and well down it, which scrolls it.
+        compose.onNode(news).requestFocus()
+        compose.onNode(news).performKeyInput { pressKey(Key.DirectionRight) }
+        compose.waitForIdle()
+        repeat(25) {
+            compose.onNode(hasClickAction() and isFocused()).performKeyInput { pressKey(Key.DirectionDown) }
+        }
+        compose.waitForIdle()
+        compose.onNode(hasText("News 26") and hasClickAction()).assertIsFocused() // really down the list, which scrolled it
+        // Back to the categories, another one, and into its list.
+        repeat(2) { compose.onNode(hasClickAction() and isFocused()).performKeyInput { pressKey(Key.DirectionLeft) } }
+        compose.onNode(sports).requestFocus()
+        compose.onNode(sports).performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.waitForIdle()
+        compose.onNode(sports).performKeyInput { pressKey(Key.DirectionRight) }
+        compose.waitForIdle()
+
+        compose.onNode(hasText("Sports 1") and hasClickAction()).assertIsFocused()
     }
 }

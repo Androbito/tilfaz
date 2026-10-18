@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -221,6 +223,9 @@ private fun ChannelColumn(
 ) {
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
     val firstChannelFocus = remember { FocusRequester() }
+    // A new category or search is a new list: it starts at its first channel, not at the scroll position of the previous one.
+    val listState = rememberLazyListState()
+    LaunchedEffect(state.selectedCategoryId, state.query) { listState.scrollToItem(0) }
     Box(modifier) {
         when {
             state.isLoading -> LoadingState()
@@ -235,6 +240,7 @@ private fun ChannelColumn(
                 )
             }
             else -> LazyColumn(
+                state = listState,
                 // From the categories, Right lands on the first channel; by position it would be the one level with the category.
                 modifier = Modifier.focusProperties {
                     enter =

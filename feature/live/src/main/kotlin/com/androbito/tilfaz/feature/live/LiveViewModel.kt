@@ -155,12 +155,11 @@ class LiveViewModel @Inject constructor(
     private val suggestions: Flow<List<LiveChannel>> = searchResults.map { (_, found) -> distinctByName(found) }
 
     /**
-     * The small video follows focus, but stops at once when focus moves and starts the new channel only after it has rested:
+     * The small video follows focus (it never starts by itself on a category's first channel), but stops at once when focus moves and starts the new channel only after it has rested:
      * the account allows one connection and a provider keeps a cut-off one busy for a while, so scrolling must not open a stream
      * per channel passed.
      */
-    private val previewChannel: Flow<LiveChannel?> = combine(explicitFocus, firstChannel) { focused, first -> focused ?: first }
-        .distinctUntilChanged()
+    private val previewChannel: Flow<LiveChannel?> = explicitFocus
         .flatMapLatest { channel ->
             flow {
                 emit(null)
