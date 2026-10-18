@@ -63,9 +63,9 @@ node tools/mock-server/mock-server.mjs --dir mocks --port 3001   # fake Xtream p
 
 ## Backlog (not in v1, in rough priority)
 
-1. Full EPG grid (xmltv.php) and catch-up playback (`timeshift` URLs) for channels with `tv_archive`.
-2. Multiple accounts / playlists.
-3. Mini preview player in the Live screen's right pane.
-4. FFmpeg decoder extension (built from source, not on Maven) for AC3/E-AC3/DTS on devices without hardware support.
-5. Parental control with PIN on categories.
-6. Fastlane lanes and Play internal testing track (see `docs/release.md`).
+1. Multiple accounts / playlists.
+2. FFmpeg decoder extension (built from source, not on Maven) for AC3/E-AC3/DTS on devices without hardware support.
+3. Parental control with PIN on categories.
+4. Fastlane lanes and Play internal testing track (see `docs/release.md`).
+
+Decided against: a full EPG grid and catch-up playback (the now/next guide per channel in the Live list is enough).
