@@ -25,7 +25,9 @@ The first four can be set now; the last one comes from step 4.
 
 ## 3. Play Console: the app and its first bundle
 
-- [ ] Create the app: name Tilfaz, default language, "App", "Free".
+Progress (2026-10-18): the app **Tilfaz** is created (app id `4975691540799348501`, `https://play.google.com/console/u/0/developers/7880441050556061813/app/4975691540799348501/app-dashboard`), free, default language en-US, both declarations accepted. The Android TV form factor is added; still locked behind it: import Android TV screenshots, then activate distribution on Android TV and accept the review rules. Then the content declarations, store listing and the first release.
+
+- [x] Create the app: name Tilfaz, default language, "App", "Free".
 - [ ] Add the **Android TV** form factor and answer its questions (D-pad only, banner, TV screenshots).
 - [ ] Declarations: ads (none), content rating questionnaire, target audience (not for children), data safety.
 - [ ] Privacy policy URL: `https://androbito.github.io/tilfaz-privacy/` (published, French and English; its source is `store/privacy-policy/index.html`, push changes to the `tilfaz-privacy` repository).
