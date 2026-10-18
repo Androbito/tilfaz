@@ -213,7 +213,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     InfoRow(stringResource(R.string.series_release_date), details.releaseDate)
                                     InfoRow(stringResource(R.string.series_genre), details.genre)
                                     InfoRow(stringResource(R.string.series_cast), details.cast)
-                                    PlotRow(stringResource(R.string.series_plot), details.plot, collapsedLines = 3)
+                                    PlotRow(stringResource(R.string.series_plot), details.plot)
                                 }
                                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
                                     state.nextEpisode?.let { next ->

@@ -24,7 +24,7 @@ import com.androbito.tilfaz.core.designsystem.theme.Dimens
 
 /** A synopsis cut at [collapsedLines] lines: OK reads all of it, OK or Back folds it again. */
 @Composable
-fun PlotRow(label: String, text: String?, collapsedLines: Int, modifier: Modifier = Modifier) {
+fun PlotRow(label: String, text: String?, modifier: Modifier = Modifier, collapsedLines: Int = COLLAPSED_LINES) {
     if (text.isNullOrBlank()) return
     var expanded by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = expanded) { expanded = false }
@@ -55,6 +55,8 @@ fun PlotRow(label: String, text: String?, collapsedLines: Int, modifier: Modifie
         }
     }
 }
+
+private const val COLLAPSED_LINES = 4
 
 // Same column as the other info rows of the details pages, so the plot lines up with them.
 private val LabelWidth = 180.dp

@@ -151,7 +151,7 @@ fun MovieDetailsScreen(
                                 InfoRow(stringResource(R.string.vod_genre), details.genre)
                                 InfoRow(stringResource(R.string.vod_duration), formatDuration(details.durationSeconds))
                                 InfoRow(stringResource(R.string.vod_cast), details.cast)
-                                PlotRow(stringResource(R.string.vod_plot), details.plot, collapsedLines = 8)
+                                PlotRow(stringResource(R.string.vod_plot), details.plot)
                             }
                         }
                     }
