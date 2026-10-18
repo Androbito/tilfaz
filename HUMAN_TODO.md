@@ -25,9 +25,10 @@ The first four can be set now; the last one comes from step 4.
 
 - [ ] Create the app: name Tilfaz, default language, "App", "Free".
 - [ ] Add the **Android TV** form factor and answer its questions (D-pad only, banner, TV screenshots).
-- [ ] Declarations: ads (none), content rating questionnaire, target audience (not for children), data safety, privacy policy URL.
+- [ ] Declarations: ads (none), content rating questionnaire, target audience (not for children), data safety.
+- [ ] Privacy policy URL: `https://androbito.github.io/tilfaz-privacy/` (published, French and English; its source is `store/privacy-policy/index.html`, push changes to the `tilfaz-privacy` repository).
 - [ ] App access: the app needs a login to a provider, so give the reviewers demo credentials (see "Still open" below).
-- [ ] Store listing: icon 512x512, feature graphic 1024x500, TV banner 1280x720, TV screenshots 1920x1080, short and full description.
+- [ ] Store listing: icon 512x512, feature graphic 1024x500 and TV banner 1280x720 (all three in `store/`), TV screenshots 1920x1080, short and full description.
 - [ ] Build the first bundle with the upload key and `versionCode` 1 (command in `docs/release.md`) and **upload it by hand** to the
   internal testing track. Accept Play App Signing when asked. This is what registers your upload certificate with Google.
 
@@ -56,6 +57,6 @@ the tested build yourself in the Play Console, with a staged rollout.
 
 ## Still open before the listing is complete
 
-- The final logo (you said you would provide it); the 512x512 icon, the launcher icon and the TV banner come from it.
-- A privacy policy page at a public URL. I can write the text; it has to be hosted somewhere (GitHub Pages for instance).
+- TV screenshots 1920x1080 of the real app, taken on the emulator against the mock server so that no provider channel or logo appears.
 - Demo credentials for the reviewers: a mock Xtream server with legal sample streams, hosted publicly, or a provider test account.
+- Optional: a cleaner logo (the smile has a faint smudge in the original artwork); regenerate with `java tools/brand/MakeBrandAssets.java . <Roboto-Bold.ttf>` after replacing `design/brand/logo.png`.
