@@ -44,13 +44,13 @@ public class MakeBrandAssets {
         write(icon, new File(root, "store/icon-512.png"));
 
         // Android TV banner: 16:9, shipped once without a density, the launcher scales it to its slot.
-        write(banner(background, logo, font, 960, 540), new File(res, "drawable-nodpi/tv_banner.png"));
-        write(banner(background, logo, font, 1280, 720), new File(root, "store/tv-banner-1280x720.png"));
-        write(banner(background, logo, font, 1024, 500), new File(root, "store/feature-graphic-1024x500.png"));
+        write(banner(background, logo, font, 960, 540, false), new File(res, "drawable-nodpi/tv_banner.png"));
+        write(banner(background, logo, font, 1280, 720, false), new File(root, "store/tv-banner-1280x720.png"));
+        write(banner(background, logo, font, 1024, 500, true), new File(root, "store/feature-graphic-1024x500.png"));
     }
 
     /** The background cropped to the target's proportions around its centre, scaled, with the logo and the name on it. */
-    private static BufferedImage banner(BufferedImage source, BufferedImage logo, Font font, int width, int height) {
+    private static BufferedImage banner(BufferedImage source, BufferedImage logo, Font font, int width, int height, boolean withName) {
         double ratio = (double) width / height;
         int cropW = source.getWidth();
         int cropH = (int) Math.round(cropW / ratio);
@@ -63,14 +63,19 @@ public class MakeBrandAssets {
         scaleInto(out, cropped);
 
         // The logo sits in the calm centre of the background, the name under it.
-        double logoHeight = height * 0.52;
+        // With the name the logo rides high to leave room for it; alone it is big and centred.
+        double logoHeight = height * (withName ? 0.52 : 0.76);
         double logoScale = logoHeight / logo.getHeight();
         BufferedImage scaledLogo = new BufferedImage((int) Math.round(logo.getWidth() * logoScale), (int) Math.round(logoHeight), BufferedImage.TYPE_INT_ARGB);
         scaleInto(scaledLogo, logo);
 
         Graphics2D g = out.createGraphics();
         hints(g);
-        g.drawImage(scaledLogo, (width - scaledLogo.getWidth()) / 2, (int) Math.round(height * 0.11), null);
+        g.drawImage(scaledLogo, (width - scaledLogo.getWidth()) / 2, withName ? (int) Math.round(height * 0.11) : (height - scaledLogo.getHeight()) / 2, null);
+        if (!withName) {
+            g.dispose();
+            return out;
+        }
         g.setFont(font.deriveFont(Font.BOLD, height * 0.115f));
         FontMetrics metrics = g.getFontMetrics();
         double tracking = height * 0.03;

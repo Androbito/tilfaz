@@ -59,4 +59,4 @@ the tested build yourself in the Play Console, with a staged rollout.
 
 - TV screenshots 1920x1080 of the real app, taken on the emulator against the mock server so that no provider channel or logo appears.
 - Demo credentials for the reviewers: a mock Xtream server with legal sample streams, hosted publicly, or a provider test account.
-- Optional: a cleaner logo (the smile has a faint smudge in the original artwork); regenerate with `java tools/brand/MakeBrandAssets.java . <Roboto-Bold.ttf>` after replacing `design/brand/logo.png`.
+- To change the logo: draw it on a flat green background, cut it out with `java tools/brand/KeyGreen.java <green image> design/brand/logo.png`, then rebuild every image with `java tools/brand/MakeBrandAssets.java . <Roboto-Bold.ttf>` (Roboto Bold is the font of the name on the feature graphic).
