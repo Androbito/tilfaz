@@ -1,0 +1,112 @@
+name: Android Release
+
+# A tag vMAJOR.MINOR.PATCH builds a signed bundle and sends it to the Play internal testing track.
+# Promoting to production is a manual step in the Play Console, see docs/release.md and ADR 0010.
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ github.ref_name }}
+  # The first bundle is uploaded by hand with versionCode 1 (docs/release.md); the offset keeps every CI build above it,
+  # and the run number keeps them rising.
+  VERSION_CODE_OFFSET: "100"
+  AAB: app/build/outputs/bundle/release/app-release.aab
+  MAPPING: app/build/outputs/mapping/release/mapping.txt
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check the tag and the secrets
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The tag $TAG is not of the form vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+          for name in UPLOAD_KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD PLAY_SERVICE_ACCOUNT_JSON; do
+            if [ -z "${!name}" ]; then
+              echo "::error::The secret $name is not set, see docs/release.md"
+              exit 1
+            fi
+          done
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # A release build only reads the Gradle cache, so it can never poison the one the pull requests use.
+      - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+        with:
+          cache-read-only: true
+
+      - name: Checks
+        run: |
+          ./gradlew ktlintCheck lintDebug --continue
+          ./gradlew testDebugUnitTest test --continue
+          ./gradlew :core:designsystem:verifyRoborazziDebug
+
+      - name: Decode the upload keystore
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          umask 077
+          printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+
+      - name: Build the signed bundle
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/upload.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: >
+          ./gradlew :app:bundleRelease
+          -PversionCode=$((GITHUB_RUN_NUMBER + VERSION_CODE_OFFSET))
+          -PversionName="${TAG#v}"
+
+      # The certificate is public; printing it lets the run be compared with the fingerprint registered in the Play Console.
+      - name: Check how the bundle is signed
+        run: |
+          keytool -printcert -jarfile "$AAB" | tee "$RUNNER_TEMP/certificate.txt"
+          if grep -q "CN=Android Debug" "$RUNNER_TEMP/certificate.txt"; then
+            echo "::error::The bundle is signed with the debug key, not the upload key"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tilfaz-${{ github.ref_name }}
+          path: |
+            ${{ env.AAB }}
+            ${{ env.MAPPING }}
+
+      - name: Send to the Play internal testing track
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.androbito.tilfaz
+          releaseFiles: ${{ env.AAB }}
+          mappingFile: ${{ env.MAPPING }}
+          track: internal
+          status: completed
+
+      - name: Remove the key material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks" "$RUNNER_TEMP/certificate.txt"
