@@ -44,3 +44,4 @@ google-services.json
 /app/release/
 *.hprof
 .kotlin/
+.DS_Store
