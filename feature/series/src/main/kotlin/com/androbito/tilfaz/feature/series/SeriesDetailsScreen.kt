@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -38,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -47,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
@@ -89,6 +92,7 @@ import com.androbito.tilfaz.core.model.Season
 import com.androbito.tilfaz.core.model.Series
 import com.androbito.tilfaz.core.model.SeriesDetails
 import com.androbito.tilfaz.core.model.WatchProgress
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -153,6 +157,8 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
     val episodesButtonFocus = remember { FocusRequester() }
     val nextEpisodeFocus = remember { FocusRequester() }
     val episodeFocus = rememberListFocusMemory()
+    val pageState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     // A fresh open puts focus on the episode that would play next; a restore after the player is left to episodeFocus.
     var focusNextEpisode by remember { mutableStateOf(false) }
     var nextEpisodeRowReady by remember { mutableStateOf(false) }
@@ -193,6 +199,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
             Column(Modifier.fillMaxSize().focusProperties { canFocus = !episodesOpen }) {
                 TopBar(title = "Tilfaz", showClock = false)
                 LazyColumn(
+                    state = pageState,
                     contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceS),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
                 ) {
@@ -217,7 +224,12 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     InfoRow(stringResource(R.string.series_cast), details.cast)
                                     PlotRow(stringResource(R.string.series_plot), details.plot)
                                 }
-                                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+                                // The buttons are near the top: reaching them again shows the poster and title, which sit above them.
+                                Row(
+                                    modifier = Modifier.onFocusChanged { if (it.hasFocus) scope.launch { pageState.animateScrollToItem(0) } },
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     state.nextEpisode?.let { next ->
                                         TilfazButton(onClick = { onPlay(next) }, modifier = Modifier.focusRequester(playFocus)) {
                                             Icon(Icons.Default.PlayArrow, contentDescription = null)

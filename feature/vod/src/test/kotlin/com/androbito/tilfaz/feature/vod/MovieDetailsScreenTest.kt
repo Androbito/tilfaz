@@ -3,6 +3,7 @@ package com.androbito.tilfaz.feature.vod
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
@@ -16,9 +17,11 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -114,5 +117,35 @@ class MovieDetailsScreenTest {
             compose.onAllNodesWithText(string(it)).assertCountEquals(0) // no visible label
             compose.onNode(hasContentDescription(string(it)) and hasClickAction()).assertExists()
         }
+    }
+
+    @Test
+    fun focusingTheFirstButtonAgainScrollsBackToTheTopOfThePage() {
+        val long = "A long synopsis. ".repeat(300)
+        val details = MovieDetails(Fixtures.movie, long, "Cast ".repeat(60), "Director", "Drama", "2026", 6000, emptyList(), null)
+        compose.setContent {
+            TilfazTheme {
+                // A short window, so that the synopsis lies below it and reaching it scrolls the page.
+                Box(Modifier.height(320.dp)) {
+                    MovieDetailsScreen(state = MovieDetailsUiState(movie = Fixtures.movie, details = details), onEvent = {}, onPlay = {}, onOpenMovie = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+        val title = compose.onNodeWithText(Fixtures.movie.name)
+        val topAtStart = title.fetchSemanticsNode().boundsInRoot.top
+
+        // Down to the synopsis, which scrolls the page; then back up to the Play button.
+        val play = hasText("Play") and hasClickAction()
+        val plot = hasText("A long synopsis.", substring = true) and hasClickAction()
+        compose.onNode(play).requestFocus()
+        compose.onNode(play).performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNode(plot).assertIsFocused()
+        assertThat(title.fetchSemanticsNode().boundsInRoot.top < topAtStart).isEqualTo(true) // the page really scrolled
+        compose.onNode(plot).performKeyInput { pressKey(Key.DirectionUp) }
+        compose.waitForIdle()
+
+        assertThat(title.fetchSemanticsNode().boundsInRoot.top).isEqualTo(topAtStart)
     }
 }

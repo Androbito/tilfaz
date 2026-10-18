@@ -24,9 +24,11 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +55,7 @@ import com.androbito.tilfaz.core.designsystem.component.formatDuration
 import com.androbito.tilfaz.core.designsystem.component.formatPlayerTime
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
 import com.androbito.tilfaz.core.designsystem.theme.TilfazColors
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -90,6 +93,8 @@ fun MovieDetailsScreen(
         return
     }
     val details = state.details
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
     ProvideMinimalBringIntoView {
         Box(Modifier.fillMaxSize()) {
             details?.backdropUrls?.firstOrNull()?.let { backdrop ->
@@ -98,7 +103,7 @@ fun MovieDetailsScreen(
             Column(Modifier.fillMaxSize()) {
                 TopBar(title = "Tilfaz", showClock = false)
                 Column(
-                    Modifier.fillMaxSize().padding(horizontal = Dimens.ScreenPadding).verticalScroll(rememberScrollState()),
+                    Modifier.fillMaxSize().padding(horizontal = Dimens.ScreenPadding).verticalScroll(scroll),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SpaceL)
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXl)) {
@@ -110,7 +115,12 @@ fun MovieDetailsScreen(
                             Text(movie.name, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
                             movie.rating?.let { ScoreLine(it) }
 
-                            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+                            // The buttons are near the top: reaching them again shows the poster and title, which sit above them.
+                            Row(
+                                modifier = Modifier.onFocusChanged { if (it.hasFocus) scope.launch { scroll.animateScrollTo(0) } },
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 TilfazButton(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
                                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                                     Text(

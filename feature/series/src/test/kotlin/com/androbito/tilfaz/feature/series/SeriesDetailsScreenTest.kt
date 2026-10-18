@@ -5,6 +5,7 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -23,6 +25,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
@@ -251,5 +254,43 @@ class SeriesDetailsScreenTest {
 
         compose.onNodeWithText("6.0 / 10").assertExists()
         compose.onNodeWithText(string(R.string.series_related)).assertExists()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun focusingTheFirstButtonAgainScrollsBackToTheTopOfThePage() {
+        val related = Fixtures.series.copy(id = 4242, name = "Related show")
+        compose.setContent {
+            TilfazTheme {
+                // A short window, so that the related shows lie below it and reaching them scrolls the page.
+                Box(Modifier.height(320.dp)) {
+                    SeriesDetailsScreen(state = state(related = listOf(related)), onEvent = {}, onPlay = {}, onOpenSeries = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+        fun titleTop() = compose.onAllNodesWithText(Fixtures.series.name).fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
+        val topAtStart = titleTop()!!
+
+        val play = hasText("Play S01E01") and hasClickAction()
+        val card = hasText("Related show") and hasClickAction()
+        compose.onNode(play).requestFocus()
+        repeat(4) {
+            if (compose.onAllNodes(card and isFocused()).fetchSemanticsNodes().isEmpty()) {
+                compose.onNode(hasClickAction() and isFocused()).performKeyInput { pressKey(Key.DirectionDown) }
+                compose.waitForIdle()
+            }
+        }
+        compose.onNode(card).assertIsFocused()
+        assertThat((titleTop() ?: Float.NEGATIVE_INFINITY) < topAtStart).isEqualTo(true) // the page really scrolled
+        repeat(4) {
+            if (compose.onAllNodes(play and isFocused()).fetchSemanticsNodes().isEmpty()) {
+                compose.onNode(hasClickAction() and isFocused()).performKeyInput { pressKey(Key.DirectionUp) }
+                compose.waitForIdle()
+            }
+        }
+        compose.onNode(play).assertIsFocused()
+
+        assertThat(titleTop()).isEqualTo(topAtStart)
     }
 }
