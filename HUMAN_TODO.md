@@ -25,6 +25,8 @@ The first four can be set now; the last one comes from step 4.
 
 ## 3. Play Console: the app and its first bundle
 
+Status (2026-10-18, evening): bundle 0.1.0 (version code 1) is on the internal track (testers: list "Testeurs Élan") and the first review is sent (16 changes: closed test Alpha, store listing, declarations). Next: when Alpha is live, the 19 testers join with https://play.google.com/apps/testing/com.androbito.tilfaz, 12 must stay opted in for 14 days, then request production access.
+
 Progress (2026-10-18): the app **Tilfaz** is created (app id `4975691540799348501`, `https://play.google.com/console/u/0/developers/7880441050556061813/app/4975691540799348501/app-dashboard`), free, default language en-US, both declarations accepted. The Android TV form factor is added; still locked behind it: import Android TV screenshots, then activate distribution on Android TV and accept the review rules. Then the content declarations, store listing and the first release.
 
 - [x] Create the app: name Tilfaz, default language, "App", "Free".
