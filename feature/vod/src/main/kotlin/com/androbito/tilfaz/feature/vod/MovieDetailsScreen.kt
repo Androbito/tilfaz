@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.tv.material3.Icon
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
@@ -133,7 +134,7 @@ fun MovieDetailsScreen(
                                     Icon(
                                         if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                         contentDescription = null,
-                                        tint = if (state.isFavorite) TilfazColors.Danger else MaterialTheme.colorScheme.onSurface
+                                        tint = if (state.isFavorite) TilfazColors.Danger else LocalContentColor.current
                                     )
                                     Text(
                                         stringResource(if (state.isFavorite) R.string.vod_remove_favorite else R.string.vod_add_favorite),
