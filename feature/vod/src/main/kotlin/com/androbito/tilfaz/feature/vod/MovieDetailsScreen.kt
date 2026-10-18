@@ -39,6 +39,7 @@ import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
+import com.androbito.tilfaz.core.designsystem.component.PlotRow
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.ProvideMinimalBringIntoView
 import com.androbito.tilfaz.core.designsystem.component.RatingBadge
@@ -150,7 +151,7 @@ fun MovieDetailsScreen(
                                 InfoRow(stringResource(R.string.vod_genre), details.genre)
                                 InfoRow(stringResource(R.string.vod_duration), formatDuration(details.durationSeconds))
                                 InfoRow(stringResource(R.string.vod_cast), details.cast)
-                                InfoRow(stringResource(R.string.vod_plot), details.plot, maxLines = 8)
+                                PlotRow(stringResource(R.string.vod_plot), details.plot, collapsedLines = 8)
                             }
                         }
                     }

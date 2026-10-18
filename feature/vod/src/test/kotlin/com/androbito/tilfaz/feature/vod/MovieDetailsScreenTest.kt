@@ -2,7 +2,11 @@ package com.androbito.tilfaz.feature.vod
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -13,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
+import com.androbito.tilfaz.core.model.MovieDetails
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import org.junit.Rule
 import org.junit.Test
@@ -42,5 +47,23 @@ class MovieDetailsScreenTest {
         compose.onNode(play).performKeyInput { pressKey(Key.Back) }
 
         assertThat(backs).isEqualTo(1)
+    }
+
+    @Test
+    fun theSynopsisTakesFocusAndOkOpensItInFull() {
+        val details = MovieDetails(Fixtures.movie, "A synopsis", null, null, null, null, null, emptyList(), null)
+        compose.setContent {
+            TilfazTheme {
+                MovieDetailsScreen(state = MovieDetailsUiState(movie = Fixtures.movie, details = details), onEvent = {}, onPlay = {}, onOpenMovie = {})
+            }
+        }
+        val plot = hasText("A synopsis") and hasClickAction()
+        compose.onNode(plot).requestFocus()
+        compose.onNode(plot).assertIsFocused().assert(SemanticsMatcher.keyIsDefined(SemanticsActions.Expand))
+
+        compose.onNode(plot).performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.waitForIdle()
+
+        compose.onNode(plot).assert(SemanticsMatcher.keyIsDefined(SemanticsActions.Collapse))
     }
 }

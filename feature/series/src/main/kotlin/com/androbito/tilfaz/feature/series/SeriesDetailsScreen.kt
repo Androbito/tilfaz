@@ -66,6 +66,7 @@ import com.androbito.tilfaz.core.designsystem.component.ErrorState
 import com.androbito.tilfaz.core.designsystem.component.FocusableSurface
 import com.androbito.tilfaz.core.designsystem.component.ListFocusMemory
 import com.androbito.tilfaz.core.designsystem.component.LoadingState
+import com.androbito.tilfaz.core.designsystem.component.PlotRow
 import com.androbito.tilfaz.core.designsystem.component.PosterCard
 import com.androbito.tilfaz.core.designsystem.component.ProgressBar
 import com.androbito.tilfaz.core.designsystem.component.ProvideMinimalBringIntoView
@@ -212,7 +213,7 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     InfoRow(stringResource(R.string.series_release_date), details.releaseDate)
                                     InfoRow(stringResource(R.string.series_genre), details.genre)
                                     InfoRow(stringResource(R.string.series_cast), details.cast)
-                                    InfoRow(stringResource(R.string.series_plot), details.plot, maxLines = 3)
+                                    PlotRow(stringResource(R.string.series_plot), details.plot, collapsedLines = 3)
                                 }
                                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
                                     state.nextEpisode?.let { next ->

@@ -5,8 +5,10 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
@@ -144,6 +146,20 @@ class SeriesDetailsScreenTest {
 
         compose.onAllNodesWithText("S01E02", useUnmergedTree = true).assertCountEquals(0)
         compose.onNode(episodesButton).assertIsFocused()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun theSynopsisTakesFocusAndOkOpensItInFull() {
+        show()
+        val plot = hasText(Fixtures.seriesDetails.plot!!) and hasClickAction()
+        compose.onNode(plot).requestFocus()
+        compose.onNode(plot).assertIsFocused().assert(SemanticsMatcher.keyIsDefined(SemanticsActions.Expand))
+
+        compose.onNode(plot).performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.waitForIdle()
+
+        compose.onNode(plot).assert(SemanticsMatcher.keyIsDefined(SemanticsActions.Collapse))
     }
 
     @OptIn(ExperimentalTestApi::class)
