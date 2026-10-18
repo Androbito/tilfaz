@@ -106,7 +106,7 @@ interface LiveChannelDao {
 
 @Dao
 interface MovieDao {
-    @Query("SELECT * FROM movies ORDER BY position")
+    @Query("SELECT * FROM movies ORDER BY addedAtMillis DESC, position")
     fun pagingAll(): PagingSource<Int, MovieEntity>
 
     @Query("SELECT * FROM movies WHERE categoryId = :categoryId ORDER BY position")
@@ -158,7 +158,7 @@ interface MovieDao {
 
 @Dao
 interface SeriesDao {
-    @Query("SELECT * FROM series ORDER BY position")
+    @Query("SELECT * FROM series ORDER BY lastModifiedMillis DESC, position")
     fun pagingAll(): PagingSource<Int, SeriesEntity>
 
     @Query("SELECT * FROM series WHERE categoryId = :categoryId ORDER BY position")

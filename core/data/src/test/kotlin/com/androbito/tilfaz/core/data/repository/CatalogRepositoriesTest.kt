@@ -114,6 +114,33 @@ class CatalogRepositoriesTest {
     }
 
     @Test
+    fun `the whole movie catalog is newest first, undated titles last, and a category keeps the provider order`() = runTest {
+        givenMovies(
+            movie(1, "old", position = 0, added = 100),
+            movie(2, "undated", position = 1, added = null),
+            movie(3, "newest", position = 2, added = 300),
+            movie(4, "middle", position = 3, added = 200),
+            movie(5, "same day as middle", position = 4, added = 200)
+        )
+
+        assertThat(vod.pagedItems(null).asSnapshot().map { it.name }).containsExactly("newest", "middle", "same day as middle", "old", "undated")
+        assertThat(vod.pagedItems("10").asSnapshot().map { it.name }).containsExactly("old", "undated", "newest", "middle", "same day as middle")
+    }
+
+    @Test
+    fun `the whole series catalog is newest first, undated shows last`() = runTest {
+        database.seriesDao().insertAll(
+            listOf(
+                SeriesEntity(1, "old", TitleText.searchKey("old"), null, "5", null, null, 100, null, null, 0),
+                SeriesEntity(2, "undated", TitleText.searchKey("undated"), null, "5", null, null, null, null, null, 1),
+                SeriesEntity(3, "newest", TitleText.searchKey("newest"), null, "5", null, null, 300, null, null, 2)
+            )
+        )
+
+        assertThat(series.pagedItems(null).asSnapshot().map { it.name }).containsExactly("newest", "old", "undated")
+    }
+
+    @Test
     fun `a category pages only its own movies`() = runTest {
         givenMovies(movie(1, "in", "10"), movie(2, "out", "11"))
 

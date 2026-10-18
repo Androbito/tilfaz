@@ -33,7 +33,17 @@ object Migrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+    /** The whole movie and series catalogs are listed newest first: the date index now carries the provider position as tie-break. */
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP INDEX IF EXISTS `index_movies_addedAtMillis`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_movies_addedAtMillis_position` ON `movies` (`addedAtMillis` DESC, `position` ASC)")
+            db.execSQL("DROP INDEX IF EXISTS `index_series_lastModifiedMillis`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_series_lastModifiedMillis_position` ON `series` (`lastModifiedMillis` DESC, `position` ASC)")
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
     private val CATALOG_TABLES = listOf("live_channels", "movies", "series")
     private const val BATCH = 2_000

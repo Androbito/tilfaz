@@ -142,4 +142,25 @@ class MigrationTest {
         assertThat(db.strings("SELECT title FROM watch_progress")).containsExactly("Scream 4")
         database.close()
     }
+
+    @Test
+    fun `the date indexes of movies and series now end with the position, and the titles are kept`() {
+        createVersion(3) { db ->
+            db.execSQL("INSERT INTO movies VALUES (1, 'Old', 'old', NULL, '10', NULL, NULL, 100, 'mkv', 0)")
+            db.execSQL("INSERT INTO series VALUES (2, 'Show', 'show', NULL, '20', NULL, NULL, 200, NULL, NULL, 0)")
+        }
+
+        val database = openMigrated()
+        val db = database.openHelper.writableDatabase
+
+        val movieIndexes = db.strings("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'movies'")
+        val seriesIndexes = db.strings("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'series'")
+        assertThat(movieIndexes.contains("index_movies_addedAtMillis")).isEqualTo(false)
+        assertThat(movieIndexes.contains("index_movies_addedAtMillis_position")).isEqualTo(true)
+        assertThat(seriesIndexes.contains("index_series_lastModifiedMillis")).isEqualTo(false)
+        assertThat(seriesIndexes.contains("index_series_lastModifiedMillis_position")).isEqualTo(true)
+        assertThat(db.strings("SELECT name FROM movies")).containsExactly("Old")
+        assertThat(db.strings("SELECT name FROM series")).containsExactly("Show")
+        database.close()
+    }
 }

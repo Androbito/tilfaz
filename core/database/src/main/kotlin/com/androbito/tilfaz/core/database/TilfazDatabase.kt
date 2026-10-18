@@ -33,7 +33,7 @@ import com.androbito.tilfaz.core.database.entity.WatchlistEntity
         WatchlistEntity::class,
         RecentChannelEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class TilfazDatabase : RoomDatabase() {

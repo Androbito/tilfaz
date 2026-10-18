@@ -30,7 +30,15 @@ data class LiveChannelEntity(
     val position: Int
 )
 
-@Entity(tableName = "movies", indices = [Index("categoryId", "position"), Index("position"), Index("addedAtMillis")])
+@Entity(
+    tableName = "movies",
+    indices = [
+        Index("categoryId", "position"),
+        Index("position"),
+        // The whole catalog is listed newest first, then in provider order: this index is that order, so nothing is sorted at read time.
+        Index(value = ["addedAtMillis", "position"], orders = [Index.Order.DESC, Index.Order.ASC])
+    ]
+)
 data class MovieEntity(
     @PrimaryKey val id: Int,
     val name: String,
@@ -45,7 +53,14 @@ data class MovieEntity(
     val position: Int
 )
 
-@Entity(tableName = "series", indices = [Index("categoryId", "position"), Index("position"), Index("lastModifiedMillis")])
+@Entity(
+    tableName = "series",
+    indices = [
+        Index("categoryId", "position"),
+        Index("position"),
+        Index(value = ["lastModifiedMillis", "position"], orders = [Index.Order.DESC, Index.Order.ASC])
+    ]
+)
 data class SeriesEntity(
     @PrimaryKey val id: Int,
     val name: String,
