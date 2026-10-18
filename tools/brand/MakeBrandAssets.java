@@ -64,7 +64,7 @@ public class MakeBrandAssets {
 
         // The logo sits in the calm centre of the background, the name under it.
         // With the name the logo rides high to leave room for it; alone it is big and centred.
-        double logoHeight = height * (withName ? 0.52 : 0.76);
+        double logoHeight = height * (withName ? 0.52 : 0.9);
         double logoScale = logoHeight / logo.getHeight();
         BufferedImage scaledLogo = new BufferedImage((int) Math.round(logo.getWidth() * logoScale), (int) Math.round(logoHeight), BufferedImage.TYPE_INT_ARGB);
         scaleInto(scaledLogo, logo);
