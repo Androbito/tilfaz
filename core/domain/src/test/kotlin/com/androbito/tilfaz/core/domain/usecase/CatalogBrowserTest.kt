@@ -51,13 +51,13 @@ class CatalogBrowserTest {
     fun `sections list virtual entries then provider categories with counts`() = runTest {
         browser.snapshot.test {
             val sections = expectMostRecentItem().sections
-            assertThat(sections.map { it.kind }.take(3)).containsExactly(
+            assertThat(sections.map { it.kind }.take(2)).containsExactly(
                 CatalogBrowser.Section.Kind.ALL,
-                CatalogBrowser.Section.Kind.CONTINUE_WATCHING,
                 CatalogBrowser.Section.Kind.RECENTLY_ADDED
             )
-            // Favourites have a page of their own on Home.
+            // Favourites and Continue watching have a page of their own on Home.
             assertThat(sections.map { it.kind.name }).doesNotContain("FAVORITES")
+            assertThat(sections.map { it.kind.name }).doesNotContain("CONTINUE_WATCHING")
             assertThat(sections.first().count).isEqualTo(2)
             assertThat(sections.first { it.name == "Drama" }.count).isEqualTo(1)
         }
@@ -80,11 +80,9 @@ class CatalogBrowserTest {
     }
 
     @Test
-    fun `continue watching lists items with saved progress`() = runTest {
+    fun `saved progress still reaches the posters as a progress bar`() = runTest {
         progress.save(WatchProgress("vod:1", ContentType.VOD, "Old Film", null, 600_000, 6_000_000, Fixtures.now, "1"))
-        browser.select(CatalogBrowser.CONTINUE_WATCHING)
 
-        assertThat(shown()).containsExactly(older)
         browser.snapshot.test { assertThat(expectMostRecentItem().progressById.keys).containsOnly(1) }
     }
 

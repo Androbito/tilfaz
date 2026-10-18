@@ -41,7 +41,7 @@ class CatalogBrowser<T : Any>(
     private val searchDelayMs: Long = SEARCH_DELAY_MS
 ) {
     data class Section(val id: String, val name: String, val count: Int?, val kind: Kind) {
-        enum class Kind { ALL, CONTINUE_WATCHING, RECENTLY_ADDED, PROVIDER }
+        enum class Kind { ALL, RECENTLY_ADDED, PROVIDER }
     }
 
     /** Everything about the screen except the grid itself, which is [items]: it must not change when a favourite does. */
@@ -74,12 +74,10 @@ class CatalogBrowser<T : Any>(
     private val sections: Flow<List<Section>> = combine(
         repository.observeCategories(),
         repository.observeCategoryCounts(),
-        repository.observeCount(),
-        progress
-    ) { categories, counts, total, progress ->
+        repository.observeCount()
+    ) { categories, counts, total ->
         buildList {
             add(Section(ALL, "", total, Section.Kind.ALL))
-            add(Section(CONTINUE_WATCHING, "", progress.size, Section.Kind.CONTINUE_WATCHING))
             add(Section(RECENTLY_ADDED, "", minOf(RECENT_LIMIT, total), Section.Kind.RECENTLY_ADDED))
             categories.forEach { add(it.toSection(counts[it.id] ?: 0)) }
         }
@@ -92,12 +90,6 @@ class CatalogBrowser<T : Any>(
         } else {
             when (id) {
                 ALL -> repository.pagedItems(null)
-                CONTINUE_WATCHING -> progress.flatMapLatest { progress ->
-                    repository.observeByIds(progress.keys).map { found ->
-                        val byId = found.associateBy(idOf)
-                        PagingData.from(progress.keys.mapNotNull { byId[it] })
-                    }
-                }
                 RECENTLY_ADDED -> recent(RECENT_LIMIT).map { PagingData.from(it) }
                 else -> repository.pagedItems(id)
             }
@@ -146,7 +138,6 @@ class CatalogBrowser<T : Any>(
 
     companion object {
         const val ALL = "__all"
-        const val CONTINUE_WATCHING = "__continue"
         const val RECENTLY_ADDED = "__recent"
         const val RECENT_LIMIT = 60
         const val SUGGESTION_LIMIT = 8

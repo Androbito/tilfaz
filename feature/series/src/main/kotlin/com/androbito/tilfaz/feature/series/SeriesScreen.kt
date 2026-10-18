@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.runtime.Composable
@@ -62,7 +61,6 @@ fun SeriesScreen(state: SeriesUiState, items: LazyPagingItems<Series>, onEvent: 
                 items(browser.sections, key = { it.id }) { section ->
                     val (name, icon) = when (section.kind) {
                         CatalogBrowser.Section.Kind.ALL -> stringResource(R.string.series_all) to Icons.Default.ViewList
-                        CatalogBrowser.Section.Kind.CONTINUE_WATCHING -> stringResource(R.string.series_continue) to Icons.Default.History
                         CatalogBrowser.Section.Kind.RECENTLY_ADDED -> stringResource(R.string.series_recent) to Icons.Default.NewReleases
                         CatalogBrowser.Section.Kind.PROVIDER -> section.name to null
                     }

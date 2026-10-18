@@ -3,7 +3,6 @@
     <string name="vod_title">Movies</string>
     <string name="vod_search">Search movies</string>
     <string name="vod_all">ALL</string>
-    <string name="vod_continue">CONTINUE WATCHING</string>
     <string name="vod_recent">RECENTLY ADDED</string>
     <string name="vod_empty">No movies in this section</string>
     <string name="vod_no_results">No movie matches \"%1$s\"</string>
