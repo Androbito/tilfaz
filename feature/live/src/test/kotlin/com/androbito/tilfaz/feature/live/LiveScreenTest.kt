@@ -307,4 +307,32 @@ class LiveScreenTest {
         assertThat(resources.getQuantityString(R.plurals.live_archive_days, 1, 1)).isEqualTo("Catch-up: 1 day")
         assertThat(resources.getQuantityString(R.plurals.live_archive_days, 7, 7)).isEqualTo("Catch-up: 7 days")
     }
+
+    @Test
+    fun movingRightFromACategoryLandsOnTheFirstChannelNotOnTheOneBesideIt() {
+        val channels = (1..8).map { Fixtures.alJazeera.copy(id = 900 + it, name = "Channel $it") }
+        val state = stateWith().copy(
+            categories = listOf(
+                LiveCategoryUi(LiveCategoryUi.ALL_ID, "", channels.size, LiveCategoryUi.Kind.ALL),
+                LiveCategoryUi(LiveCategoryUi.HISTORY_ID, "", 0, LiveCategoryUi.Kind.HISTORY),
+                LiveCategoryUi("1", "News", 2, LiveCategoryUi.Kind.PROVIDER),
+                LiveCategoryUi("2", "Sports", 2, LiveCategoryUi.Kind.PROVIDER),
+                LiveCategoryUi("3", "Documentaries", 2, LiveCategoryUi.Kind.PROVIDER),
+                LiveCategoryUi("4", "Kids", 2, LiveCategoryUi.Kind.PROVIDER)
+            ),
+            selectedCategoryId = "4",
+            focusedChannel = null
+        )
+        compose.setContent {
+            TilfazTheme { LiveScreen(state = state, channels = pages(channels).collectAsLazyPagingItems(), onEvent = {}, onPlay = {}) }
+        }
+        compose.waitForIdle()
+        val kids = hasText("Kids") and hasClickAction()
+        compose.onNode(kids).requestFocus()
+
+        compose.onNode(kids).performKeyInput { pressKey(Key.DirectionRight) }
+        compose.waitForIdle()
+
+        compose.onNode(hasText("Channel 1") and hasClickAction()).assertIsFocused()
+    }
 }

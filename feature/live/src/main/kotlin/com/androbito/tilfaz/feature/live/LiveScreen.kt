@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.feature.live
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +25,17 @@ import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -202,6 +209,7 @@ private fun CategoryColumn(state: LiveUiState, onEvent: (LiveEvent) -> Unit, onP
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun ChannelColumn(
     state: LiveUiState,
@@ -212,6 +220,7 @@ private fun ChannelColumn(
     modifier: Modifier
 ) {
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
+    val firstChannelFocus = remember { FocusRequester() }
     Box(modifier) {
         when {
             state.isLoading -> LoadingState()
@@ -225,7 +234,15 @@ private fun ChannelColumn(
                     }
                 )
             }
-            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = Dimens.SpaceXl)) {
+            else -> LazyColumn(
+                // From the categories, Right lands on the first channel; by position it would be the one level with the category.
+                modifier = Modifier.focusProperties {
+                    enter =
+                        { direction -> if (direction == FocusDirection.Right) firstChannelFocus else FocusRequester.Default }
+                }.focusGroup(),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                contentPadding = PaddingValues(bottom = Dimens.SpaceXl)
+            ) {
                 // The count is read inside the list's own content so it and the keys always come from the same version of the paged list.
                 items(count = channels.itemCount, key = { index ->
                     if (index <
@@ -247,7 +264,9 @@ private fun ChannelColumn(
                         onClick = { onPlay(channel) },
                         onLongClick = { onEvent(LiveEvent.ToggleFavorite(channel.id)) },
                         isFavorite = channel.id in state.favoriteIds,
-                        modifier = Modifier.rememberFocus(focusMemory, index).onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel)) }
+                        modifier = Modifier.rememberFocus(focusMemory, index)
+                            .then(if (index == 0) Modifier.focusRequester(firstChannelFocus) else Modifier)
+                            .onFocusChanged { if (it.isFocused) onEvent(LiveEvent.FocusChannel(channel)) }
                     )
                 }
             }
