@@ -75,6 +75,15 @@ git tag v0.1.1 && git push origin v0.1.1
 `versionName` is the tag without the `v`. `versionCode` is the run number of the release workflow plus 100, so it always rises and
 stays above the hand-uploaded first bundle. Do not lower that offset.
 
+## The direct-download APK
+
+Outside Play, the signed APK is a GitHub release (`apk-v0.1.0` for the first one). Build it with the same four signing variables as
+the bundle: `./gradlew :app:assembleRelease -PversionCode=N -PversionName=X`, then check it with `apksigner verify --print-certs`
+(the certificate must be the upload key's, not the debug one). Attach it twice: as `tilfaz-X.apk` and as `tilfaz.apk`, plus a `.sha256`.
+The unversioned name keeps `https://github.com/Androbito/tilfaz/releases/latest/download/tilfaz.apk` valid, and the AFTVnews Downloader
+code **2086257** points at that link, so it never has to change. The APK shares the upload key's signature, not Play's, so a device
+that has one cannot update from the other.
+
 ## Checking a build
 
 ```bash

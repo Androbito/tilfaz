@@ -10,6 +10,7 @@ format when a channel refuses to play, and a codebase that follows software craf
 
 The signed APK for Android TV, Google TV, Fire TV and Android boxes is on the
 [releases page](https://github.com/Androbito/tilfaz/releases/latest) (install steps are in the release notes).
+On a Fire TV or Android TV, install the free Downloader app and type the code **2086257** (or open `aftv.news/2086257`).
 Tilfaz is a player only: it ships with no channels or content, you sign in with the account your own provider gave you.
 
 ## Features (v1)
