@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.feature.player
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -91,6 +92,7 @@ internal interface PlayerEntryPoint {
 
     fun buildStreamSource(): BuildStreamSourceUseCase
 
+    @OptIn(UnstableApi::class)
     fun livePlayerHolder(): LivePlayerHolder
 }
 

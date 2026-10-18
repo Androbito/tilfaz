@@ -1,5 +1,6 @@
 package com.androbito.tilfaz.feature.player
 
+import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.TrackSelectionOverride
@@ -105,6 +106,7 @@ private fun codecName(mimeType: String?): String? = when (mimeType) {
  * What the player should pick on its own: the preferred audio language if the stream has it, and subtitles in the
  * preferred language, or none when there is no preference (the user turns them on from the options).
  */
+@OptIn(UnstableApi::class)
 fun trackSelectionFor(settings: PlaybackSettings): TrackSelectionParameters {
     val builder = TrackSelectionParameters.DEFAULT.buildUpon()
     settings.audioLanguage?.let { builder.setPreferredAudioLanguage(it) }

@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.feature.player
 
 import android.graphics.Color
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
