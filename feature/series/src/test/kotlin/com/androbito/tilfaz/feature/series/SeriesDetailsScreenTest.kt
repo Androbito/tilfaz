@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -25,6 +27,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import com.androbito.tilfaz.core.designsystem.component.backKeyForDispatcherOnly
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Season
@@ -192,11 +195,14 @@ class SeriesDetailsScreenTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
+    @Config(sdk = [32])
     fun theBackKeyOnAFocusedButtonGoesBackOnTheFirstPress() {
         var backs = 0
         compose.setContent {
             BackHandler { backs++ }
-            TilfazTheme { SeriesDetailsScreen(state = state(), onEvent = {}, onPlay = {}, onOpenSeries = {}) }
+            TilfazTheme {
+                Box(Modifier.backKeyForDispatcherOnly()) { SeriesDetailsScreen(state = state(), onEvent = {}, onPlay = {}, onOpenSeries = {}) }
+            }
         }
         compose.waitForIdle()
 

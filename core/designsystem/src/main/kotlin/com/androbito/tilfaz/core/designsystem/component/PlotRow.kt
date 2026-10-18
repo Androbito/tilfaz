@@ -32,7 +32,6 @@ fun PlotRow(label: String, text: String?, modifier: Modifier = Modifier, collaps
         onClick = { expanded = !expanded },
         modifier = modifier
             .fillMaxWidth()
-            .then(if (expanded) Modifier.backKeyAsBackPress() else Modifier)
             .semantics {
                 if (expanded) {
                     collapse { expanded = false; true }

@@ -3,10 +3,12 @@ package com.androbito.tilfaz.feature.player
 import android.content.Context
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
@@ -23,6 +25,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import com.androbito.tilfaz.core.designsystem.component.backKeyForDispatcherOnly
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.model.SubtitleBackground
 import com.androbito.tilfaz.core.model.SubtitleColor
@@ -64,28 +67,34 @@ class PlayerOptionsPanelTest {
     private var chosenAspect: AspectMode? = null
     private var closed = false
 
-    private fun show(subtitles: List<TrackOption> = listOf(french, englishSubs), initial: OptionsPage = OptionsPage.Root) {
+    private fun show(
+        subtitles: List<TrackOption> = listOf(french, englishSubs),
+        initial: OptionsPage = OptionsPage.Root,
+        rootHandler: Boolean = false
+    ) {
         compose.setContent {
             var page by remember { mutableStateOf(initial) }
             TilfazTheme {
-                PlayerOptionsPanel(
-                    page = page,
-                    onPage = { page = it },
-                    onClose = { closed = true },
-                    audio = listOf(arabic, english),
-                    subtitles = subtitles,
-                    onSelectAudio = { chosenAudio = it },
-                    onSelectSubtitle = {
-                        subtitleChosen = true
-                        chosenSubtitle = it
-                    },
-                    style = SubtitleStyle(),
-                    onStyle = { chosenStyle = it },
-                    speed = 1f,
-                    onSpeed = { chosenSpeed = it },
-                    aspect = AspectMode.FIT,
-                    onAspect = { chosenAspect = it }
-                )
+                Box(if (rootHandler) Modifier.backKeyForDispatcherOnly() else Modifier) {
+                    PlayerOptionsPanel(
+                        page = page,
+                        onPage = { page = it },
+                        onClose = { closed = true },
+                        audio = listOf(arabic, english),
+                        subtitles = subtitles,
+                        onSelectAudio = { chosenAudio = it },
+                        onSelectSubtitle = {
+                            subtitleChosen = true
+                            chosenSubtitle = it
+                        },
+                        style = SubtitleStyle(),
+                        onStyle = { chosenStyle = it },
+                        speed = 1f,
+                        onSpeed = { chosenSpeed = it },
+                        aspect = AspectMode.FIT,
+                        onAspect = { chosenAspect = it }
+                    )
+                }
             }
         }
         compose.waitForIdle()
@@ -182,8 +191,9 @@ class PlayerOptionsPanelTest {
     }
 
     @Test
+    @Config(sdk = [32])
     fun theBackKeyOnAFocusedRowWorksOnTheFirstPress() {
-        show(initial = OptionsPage.Audio)
+        show(initial = OptionsPage.Audio, rootHandler = true)
 
         compose.onNode(row("Arabic")).performKeyInput { pressKey(Key.Back) }
         compose.waitForIdle()

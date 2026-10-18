@@ -10,3 +10,4 @@
 | [0006](0006-credentials-storage-and-cleartext.md) | Credentials in DataStore encrypted via Keystore; cleartext HTTP allowed | Accepted | 2026-10-16 |
 | [0007](0007-lenient-json-parsing.md) | Lenient DTO parsing for Xtream panels | Accepted | 2026-10-16 |
 | [0008](0008-hilt-for-di.md) | Hilt for dependency injection | Accepted | 2026-10-16 |
+| [0009](0009-back-handled-by-the-dispatcher-only.md) | Back is handled by the back dispatcher only | Accepted | 2026-10-18 |

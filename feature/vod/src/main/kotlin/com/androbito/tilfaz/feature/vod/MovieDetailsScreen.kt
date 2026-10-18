@@ -49,7 +49,6 @@ import com.androbito.tilfaz.core.designsystem.component.RatingBadge
 import com.androbito.tilfaz.core.designsystem.component.ScoreLine
 import com.androbito.tilfaz.core.designsystem.component.TilfazButton
 import com.androbito.tilfaz.core.designsystem.component.TopBar
-import com.androbito.tilfaz.core.designsystem.component.backKeyAsBackPress
 import com.androbito.tilfaz.core.designsystem.component.formatDuration
 import com.androbito.tilfaz.core.designsystem.component.formatPlayerTime
 import com.androbito.tilfaz.core.designsystem.theme.Dimens
@@ -92,7 +91,7 @@ fun MovieDetailsScreen(
     }
     val details = state.details
     ProvideMinimalBringIntoView {
-        Box(Modifier.fillMaxSize().backKeyAsBackPress()) {
+        Box(Modifier.fillMaxSize()) {
             details?.backdropUrls?.firstOrNull()?.let { backdrop ->
                 AsyncImage(model = backdrop, contentDescription = null, contentScale = ContentScale.Crop, alpha = 0.18f, modifier = Modifier.fillMaxSize())
             }

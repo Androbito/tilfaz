@@ -1,6 +1,7 @@
 package com.androbito.tilfaz.core.designsystem
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.androbito.tilfaz.core.designsystem.component.PlotRow
+import com.androbito.tilfaz.core.designsystem.component.backKeyForDispatcherOnly
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import org.junit.Rule
 import org.junit.Test
@@ -33,7 +35,7 @@ class PlotRowTest {
     private val expanded = SemanticsMatcher.keyIsDefined(SemanticsActions.Collapse)
 
     private fun show(text: String? = "A long synopsis") = compose.setContent {
-        TilfazTheme { Column { PlotRow(label = "Plot", text = text, collapsedLines = 2) } }
+        TilfazTheme { Column(Modifier.backKeyForDispatcherOnly()) { PlotRow(label = "Plot", text = text, collapsedLines = 2) } }
     }
 
     private fun pressOnRow(key: Key) {
@@ -63,6 +65,7 @@ class PlotRowTest {
     }
 
     @Test
+    @Config(sdk = [32])
     fun backFoldsAnExpandedSynopsisOnTheFirstPress() {
         show()
         pressOnRow(Key.DirectionCenter)

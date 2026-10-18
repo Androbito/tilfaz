@@ -3,9 +3,11 @@ package com.androbito.tilfaz.feature.library
 import android.content.Context
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
@@ -26,6 +28,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import com.androbito.tilfaz.core.designsystem.component.backKeyForDispatcherOnly
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
@@ -257,5 +260,24 @@ class FavoritesScreenTest {
         pressKey(card(string(R.string.favorites_remove_cancel)), Key.DirectionCenter)
 
         assertThat(events.last()).isEqualTo(FavoritesEvent.CancelRemoval)
+    }
+
+    @Test
+    fun theBackKeyDoesNotTakeFocusOffTheTile() {
+        // Under the same root handler the app has: without it Back moves focus out of the tile instead of going back.
+        compose.setContent {
+            TilfazTheme {
+                Box(Modifier.backKeyForDispatcherOnly()) { FavoritesScreen(state = full, onEvent = { events += it }, navigation = navigation) }
+            }
+        }
+        compose.waitForIdle()
+        val movie = card(Fixtures.movie.name)
+        compose.onNode(movie).requestFocus()
+        compose.onNode(movie).assertIsFocused()
+
+        compose.onNode(movie).performKeyInput { pressKey(Key.Back) }
+        compose.waitForIdle()
+
+        compose.onNode(movie).assertIsFocused()
     }
 }
