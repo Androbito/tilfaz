@@ -61,6 +61,6 @@ the tested build yourself in the Play Console, with a staged rollout.
 
 ## Still open before the listing is complete
 
-- TV screenshots 1920x1080 of the real app, taken on the emulator against the mock server so that no provider channel or logo appears.
+- TV screenshots: done, `store/screenshots/1-home.png` to `4-series.png` (1920x1080, drawn from the real screens with invented data, no provider content). Rebuild with `STORE_SCREENSHOTS=1 ./gradlew :app:testDebugUnitTest --tests '*StoreScreenshots*'`.
 - Demo credentials for the reviewers: a mock Xtream server with legal sample streams, hosted publicly, or a provider test account.
 - To change the logo: draw it on a flat green background, cut it out with `java tools/brand/KeyGreen.java <green image> design/brand/logo.png`, then rebuild every image with `java tools/brand/MakeBrandAssets.java . <Roboto-Bold.ttf>` (Roboto Bold is the font of the name on the feature graphic).

@@ -92,6 +92,8 @@ android {
         }
     }
 
+    testOptions.unitTests.isIncludeAndroidResources = true
+
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "META-INF/LICENSE*")
     }
@@ -126,4 +128,12 @@ dependencies {
     implementation(libs.okhttp)
 
     testImplementation(projects.core.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.paging.compose)
+    testImplementation(libs.androidx.paging.common)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.androidx.test.ext.junit)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
