@@ -56,7 +56,9 @@ fun HeroTile(
     isSyncing: Boolean,
     onClick: () -> Unit,
     onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Applied to the big clickable area only, e.g. a focus requester so other items can send focus to it. */
+    bodyModifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(Dimens.CornerL)
     var hasFocus by remember { mutableStateOf(false) }
@@ -75,7 +77,7 @@ fun HeroTile(
         // The whole tile draws the focus ring and scale, so this area adds none of its own.
         Surface(
             onClick = onClick,
-            modifier = Modifier.weight(1f).fillMaxWidth().semantics { contentDescription = title },
+            modifier = bodyModifier.weight(1f).fillMaxWidth().semantics { contentDescription = title },
             colors = ClickableSurfaceDefaults.colors(
                 containerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,

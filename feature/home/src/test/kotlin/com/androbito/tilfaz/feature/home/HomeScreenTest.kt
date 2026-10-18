@@ -79,4 +79,23 @@ class HomeScreenTest {
         compose.onAllNodesWithText(string(R.string.home_settings)).assertCountEquals(0) // Settings stays in the top bar
         compose.onAllNodes(hasContentDescription(string(R.string.home_settings))).assertCountEquals(1)
     }
+
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun upFromTheBottomRowLandsOnTheBigTileAboveNotOnItsRefreshButton() {
+        compose.setContent { TilfazTheme { HomeScreen(state = HomeUiState(), onEvent = {}, navigation = navigation) } }
+
+        listOf(
+            R.string.home_favorites to R.string.home_live_tv,
+            R.string.home_continue to R.string.home_movies,
+            R.string.home_watchlist to R.string.home_series
+        ).forEach { (pill, tile) ->
+            val pillNode = hasText(string(pill)) and hasClickAction()
+            compose.onNode(pillNode).requestFocus()
+            compose.onNode(pillNode).performKeyInput { pressKey(Key.DirectionUp) }
+            compose.waitForIdle()
+
+            compose.onNode(hasContentDescription(string(tile))).assertIsFocused()
+        }
+    }
 }

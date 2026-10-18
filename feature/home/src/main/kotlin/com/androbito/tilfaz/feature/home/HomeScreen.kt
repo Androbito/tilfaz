@@ -19,8 +19,12 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Theaters
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -79,6 +83,10 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
     val now by rememberCurrentTime()
     // Tiles are numbered in reading order; the LIVE tile (0) takes focus on a fresh start.
     val focusMemory = rememberListFocusMemory(initialIndex = 0)
+    // Up from the bottom row would otherwise stop at the small refresh button of the tile above; these send it to the big tile.
+    val liveTileFocus = remember { FocusRequester() }
+    val moviesTileFocus = remember { FocusRequester() }
+    val seriesTileFocus = remember { FocusRequester() }
     Column(Modifier.fillMaxSize()) {
         TopBar {
             IconButton(onClick = navigation.onOpenSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.home_settings)) }
@@ -105,7 +113,8 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.LIVE).isSyncing,
                 onClick = navigation.onOpenLive,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.LIVE)) },
-                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 0)
+                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 0),
+                bodyModifier = Modifier.focusRequester(liveTileFocus)
             )
             HeroTile(
                 title = stringResource(R.string.home_movies),
@@ -115,7 +124,8 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.VOD).isSyncing,
                 onClick = navigation.onOpenMovies,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.VOD)) },
-                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 1)
+                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 1),
+                bodyModifier = Modifier.focusRequester(moviesTileFocus)
             )
             HeroTile(
                 title = stringResource(R.string.home_series),
@@ -125,7 +135,8 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 isSyncing = state.status(ContentType.SERIES).isSyncing,
                 onClick = navigation.onOpenSeries,
                 onRefresh = { onEvent(HomeEvent.Refresh(ContentType.SERIES)) },
-                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 2)
+                modifier = Modifier.weight(1f).fillMaxSize().rememberFocus(focusMemory, 2),
+                bodyModifier = Modifier.focusRequester(seriesTileFocus)
             )
         }
 
@@ -137,19 +148,19 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 stringResource(R.string.home_favorites),
                 Icons.Default.Favorite,
                 navigation.onOpenFavorites,
-                Modifier.weight(1f).rememberFocus(focusMemory, 3)
+                Modifier.weight(1f).rememberFocus(focusMemory, 3).focusProperties { up = liveTileFocus }
             )
             PillTile(
                 stringResource(R.string.home_continue),
                 Icons.Default.History,
                 navigation.onOpenContinueWatching,
-                Modifier.weight(1f).rememberFocus(focusMemory, 4)
+                Modifier.weight(1f).rememberFocus(focusMemory, 4).focusProperties { up = moviesTileFocus }
             )
             PillTile(
                 stringResource(R.string.home_watchlist),
                 Icons.Default.Bookmark,
                 navigation.onOpenWatchlist,
-                Modifier.weight(1f).rememberFocus(focusMemory, 5)
+                Modifier.weight(1f).rememberFocus(focusMemory, 5).focusProperties { up = seriesTileFocus }
             )
         }
 
