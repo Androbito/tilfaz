@@ -11,3 +11,4 @@
 | [0007](0007-lenient-json-parsing.md) | Lenient DTO parsing for Xtream panels | Accepted | 2026-10-16 |
 | [0008](0008-hilt-for-di.md) | Hilt for dependency injection | Accepted | 2026-10-16 |
 | [0009](0009-back-handled-by-the-dispatcher-only.md) | Back is handled by the back dispatcher only | Accepted | 2026-10-18 |
+| [0010](0010-play-app-signing-and-upload-key.md) | Play App Signing with an upload key in GitHub secrets | Accepted | 2026-10-18 |
