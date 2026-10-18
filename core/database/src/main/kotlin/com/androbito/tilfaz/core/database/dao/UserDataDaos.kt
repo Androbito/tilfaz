@@ -8,6 +8,7 @@ import androidx.room.Upsert
 import com.androbito.tilfaz.core.database.entity.FavoriteEntity
 import com.androbito.tilfaz.core.database.entity.RecentChannelEntity
 import com.androbito.tilfaz.core.database.entity.WatchProgressEntity
+import com.androbito.tilfaz.core.database.entity.WatchlistEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,6 +23,21 @@ interface FavoriteDao {
     suspend fun insert(favorite: FavoriteEntity)
 
     @Query("DELETE FROM favorites WHERE `key` = :key")
+    suspend fun delete(key: String)
+}
+
+@Dao
+interface WatchlistDao {
+    @Query("SELECT `key` FROM watchlist WHERE type = :type ORDER BY addedAtMillis DESC")
+    fun observeKeys(type: String): Flow<List<String>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM watchlist WHERE `key` = :key)")
+    suspend fun exists(key: String): Boolean
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(item: WatchlistEntity)
+
+    @Query("DELETE FROM watchlist WHERE `key` = :key")
     suspend fun delete(key: String)
 }
 

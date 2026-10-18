@@ -4,6 +4,7 @@ import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.PlaybackSettingsRepository
 import com.androbito.tilfaz.core.domain.repository.RecentChannelsRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.repository.WatchlistRepository
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.PlaybackSettings
@@ -23,6 +24,23 @@ class FakeFavoritesRepository : FavoritesRepository {
             val current = map[type].orEmpty()
             map + (type to if (key in current) current - key else current + key)
         }
+    }
+}
+
+class FakeWatchlistRepository : WatchlistRepository {
+    val keys = MutableStateFlow<Map<ContentType, Set<String>>>(emptyMap())
+
+    override fun observeKeys(type: ContentType): Flow<Set<String>> = keys.map { it[type].orEmpty() }
+
+    override suspend fun toggle(key: String, type: ContentType) {
+        keys.update { map ->
+            val current = map[type].orEmpty()
+            map + (type to if (key in current) current - key else current + key)
+        }
+    }
+
+    override suspend fun remove(key: String) {
+        keys.update { map -> map.mapValues { (_, current) -> current - key } }
     }
 }
 

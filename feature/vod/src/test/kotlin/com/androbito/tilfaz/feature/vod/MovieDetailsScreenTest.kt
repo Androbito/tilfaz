@@ -1,5 +1,6 @@
 package com.androbito.tilfaz.feature.vod
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
@@ -13,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -65,5 +67,30 @@ class MovieDetailsScreenTest {
         compose.waitForIdle()
 
         compose.onNode(plot).assert(SemanticsMatcher.keyIsDefined(SemanticsActions.Collapse))
+    }
+
+    private fun string(id: Int) = ApplicationProvider.getApplicationContext<Context>().getString(id)
+
+    private fun show(state: MovieDetailsUiState, onEvent: (MovieDetailsEvent) -> Unit) = compose.setContent {
+        TilfazTheme { MovieDetailsScreen(state = state, onEvent = onEvent, onPlay = {}, onOpenMovie = {}) }
+    }
+
+    @Test
+    fun theWatchListButtonAsksToToggle() {
+        var event: MovieDetailsEvent? = null
+        show(MovieDetailsUiState(movie = Fixtures.movie)) { event = it }
+        val button = hasText(string(R.string.vod_add_watchlist)) and hasClickAction()
+        compose.onNode(button).requestFocus()
+
+        compose.onNode(button).performKeyInput { pressKey(Key.DirectionCenter) }
+
+        assertThat(event).isEqualTo(MovieDetailsEvent.ToggleWatchlist)
+    }
+
+    @Test
+    fun aMovieOnTheWatchListOffersToTakeItOff() {
+        show(MovieDetailsUiState(movie = Fixtures.movie, isInWatchlist = true)) {}
+
+        compose.onNode(hasText(string(R.string.vod_remove_watchlist)) and hasClickAction()).assertExists()
     }
 }

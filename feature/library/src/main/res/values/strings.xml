@@ -12,6 +12,16 @@
     <string name="favorites_remove_confirm">Remove</string>
     <string name="favorites_remove_cancel">Keep</string>
     <string name="favorites_hint">Hold OK or press Menu on an item to remove it</string>
+    <string name="watchlist_title">Watch list</string>
+    <string name="watchlist_movies">Movies</string>
+    <string name="watchlist_series">TV shows</string>
+    <string name="watchlist_empty_movies">No movie to watch later yet. Add one from its page.</string>
+    <string name="watchlist_empty_series">No TV show to watch later yet. Add one from its page.</string>
+    <string name="watchlist_remove_title">Remove from watch list?</string>
+    <string name="watchlist_remove_message">\"%1$s\" will leave your watch list.</string>
+    <string name="watchlist_remove_confirm">Remove</string>
+    <string name="watchlist_remove_cancel">Keep</string>
+    <string name="watchlist_hint">Hold OK or press Menu on an item to remove it</string>
     <string name="continue_title">Continue watching</string>
     <string name="continue_movies">Movies</string>
     <string name="continue_series">TV shows</string>

@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.SeriesRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.repository.WatchlistRepository
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
+import com.androbito.tilfaz.core.domain.usecase.ToggleWatchlistUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Episode
 import com.androbito.tilfaz.core.model.Series
@@ -34,6 +36,7 @@ data class SeriesDetailsUiState(
     val isLoading: Boolean = true,
     val failed: Boolean = false,
     val isFavorite: Boolean = false,
+    val isInWatchlist: Boolean = false,
     val selectedSeason: Int? = null,
     val progressByEpisodeId: Map<String, WatchProgress> = emptyMap(),
     /** "More like this": other series from the same provider category, the only grouping Xtream guarantees. */
@@ -58,6 +61,7 @@ data class SeriesDetailsUiState(
 sealed interface SeriesDetailsEvent {
     data class SelectSeason(val number: Int) : SeriesDetailsEvent
     data object ToggleFavorite : SeriesDetailsEvent
+    data object ToggleWatchlist : SeriesDetailsEvent
     data object Retry : SeriesDetailsEvent
 }
 
@@ -66,8 +70,10 @@ class SeriesDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val seriesRepository: SeriesRepository,
     favoritesRepository: FavoritesRepository,
+    watchlistRepository: WatchlistRepository,
     progressRepository: WatchProgressRepository,
-    private val toggleFavorite: ToggleFavoriteUseCase
+    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val toggleWatchlist: ToggleWatchlistUseCase
 ) : ViewModel() {
 
     private val seriesId: Int = checkNotNull(savedStateHandle[SeriesDetailsRoute.ARG_SERIES_ID])
@@ -92,17 +98,19 @@ class SeriesDetailsViewModel @Inject constructor(
     val state: StateFlow<SeriesDetailsUiState> = combine(
         loaded,
         favoritesRepository.observeKeys(ContentType.SERIES).map { ToggleFavoriteUseCase.seriesKey(seriesId) in it },
+        watchlistRepository.observeKeys(ContentType.SERIES).map { ToggleFavoriteUseCase.seriesKey(seriesId) in it },
         progressRepository.observeByKeyPrefix("series:$seriesId:").map { list ->
             list.associateBy { it.playableKey.substringAfterLast(':') }
         },
         related
-    ) { loaded, favorite, progress, related ->
+    ) { loaded, favorite, inWatchlist, progress, related ->
         SeriesDetailsUiState(
             series = loaded.details?.series ?: loaded.series,
             details = loaded.details,
             isLoading = loaded.loading,
             failed = loaded.failed,
             isFavorite = favorite,
+            isInWatchlist = inWatchlist,
             selectedSeason = loaded.season ?: loaded.details?.seasons?.firstOrNull()?.number,
             progressByEpisodeId = progress,
             related = related
@@ -117,6 +125,7 @@ class SeriesDetailsViewModel @Inject constructor(
         when (event) {
             is SeriesDetailsEvent.SelectSeason -> loaded.update { it.copy(season = event.number) }
             SeriesDetailsEvent.ToggleFavorite -> viewModelScope.launch { toggleFavorite.series(seriesId) }
+            SeriesDetailsEvent.ToggleWatchlist -> viewModelScope.launch { toggleWatchlist.series(seriesId) }
             SeriesDetailsEvent.Retry -> load()
         }
     }

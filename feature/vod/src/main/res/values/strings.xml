@@ -14,6 +14,8 @@
     <string name="vod_trailer">Trailer</string>
     <string name="vod_add_favorite">Add to favourites</string>
     <string name="vod_remove_favorite">Remove from favourites</string>
+    <string name="vod_add_watchlist">Add to watch list</string>
+    <string name="vod_remove_watchlist">Remove from watch list</string>
     <string name="vod_directed_by">Directed by</string>
     <string name="vod_release_date">Release date</string>
     <string name="vod_genre">Genre</string>

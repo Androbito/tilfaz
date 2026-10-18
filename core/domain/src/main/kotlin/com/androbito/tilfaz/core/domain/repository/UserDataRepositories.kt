@@ -12,6 +12,16 @@ interface FavoritesRepository {
     suspend fun toggle(key: String, type: ContentType)
 }
 
+/** Movies and series the user plans to watch: neither a favourite nor in progress. */
+interface WatchlistRepository {
+    /** Keys for one content type, e.g. "vod:340" or "series:77". */
+    fun observeKeys(type: ContentType): Flow<Set<String>>
+    suspend fun toggle(key: String, type: ContentType)
+
+    /** Takes the item off the list; nothing happens when it is not on it. */
+    suspend fun remove(key: String)
+}
+
 interface WatchProgressRepository {
     fun observeContinueWatching(type: ContentType): Flow<List<WatchProgress>>
 

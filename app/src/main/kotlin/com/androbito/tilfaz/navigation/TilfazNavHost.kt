@@ -10,8 +10,11 @@ import com.androbito.tilfaz.feature.library.ContinueWatchingNavigation
 import com.androbito.tilfaz.feature.library.ContinueWatchingRoute
 import com.androbito.tilfaz.feature.library.FavoritesNavigation
 import com.androbito.tilfaz.feature.library.FavoritesRoute
+import com.androbito.tilfaz.feature.library.WatchlistNavigation
+import com.androbito.tilfaz.feature.library.WatchlistRoute
 import com.androbito.tilfaz.feature.library.continueWatchingScreen
 import com.androbito.tilfaz.feature.library.favoritesScreen
+import com.androbito.tilfaz.feature.library.watchlistScreen
 import com.androbito.tilfaz.feature.live.LiveRoute
 import com.androbito.tilfaz.feature.live.liveScreen
 import com.androbito.tilfaz.feature.onboarding.SignInRoute
@@ -52,7 +55,8 @@ fun TilfazNavHost(startSignedIn: Boolean) {
                 onOpenSeries = { navController.navigate(SeriesRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenFavorites = { navController.navigate(FavoritesRoute) },
-                onOpenContinueWatching = { navController.navigate(ContinueWatchingRoute) }
+                onOpenContinueWatching = { navController.navigate(ContinueWatchingRoute) },
+                onOpenWatchlist = { navController.navigate(WatchlistRoute) }
             )
         )
 
@@ -76,6 +80,13 @@ fun TilfazNavHost(startSignedIn: Boolean) {
         favoritesScreen(
             FavoritesNavigation(
                 onPlayChannel = { navController.navigate(PlayerRoute.live(it, categoryId = null)) },
+                onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
+                onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
+            )
+        )
+
+        watchlistScreen(
+            WatchlistNavigation(
                 onOpenMovie = { navController.navigate(MovieDetailsRoute(it)) },
                 onOpenSeries = { navController.navigate(SeriesDetailsRoute(it)) }
             )

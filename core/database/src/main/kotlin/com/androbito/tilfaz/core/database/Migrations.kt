@@ -23,7 +23,17 @@ object Migrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2)
+    /** Adds the watch list; nothing existing is touched. */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `watchlist` (`key` TEXT NOT NULL, `type` TEXT NOT NULL, `addedAtMillis` INTEGER NOT NULL, PRIMARY KEY(`key`))"
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_watchlist_type` ON `watchlist` (`type`)")
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 
     private val CATALOG_TABLES = listOf("live_channels", "movies", "series")
     private const val BATCH = 2_000

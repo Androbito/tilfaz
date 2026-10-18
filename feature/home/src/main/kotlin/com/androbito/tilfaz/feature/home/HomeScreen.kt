@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LiveTv
@@ -57,7 +58,8 @@ class HomeNavigation(
     val onOpenSeries: () -> Unit,
     val onOpenSettings: () -> Unit,
     val onOpenFavorites: () -> Unit,
-    val onOpenContinueWatching: () -> Unit
+    val onOpenContinueWatching: () -> Unit,
+    val onOpenWatchlist: () -> Unit
 )
 
 fun NavGraphBuilder.homeScreen(navigation: HomeNavigation) {
@@ -144,9 +146,9 @@ fun HomeScreen(state: HomeUiState, onEvent: (HomeEvent) -> Unit, navigation: Hom
                 Modifier.weight(1f).rememberFocus(focusMemory, 4)
             )
             PillTile(
-                stringResource(R.string.home_settings),
-                Icons.Default.Settings,
-                navigation.onOpenSettings,
+                stringResource(R.string.home_watchlist),
+                Icons.Default.Bookmark,
+                navigation.onOpenWatchlist,
                 Modifier.weight(1f).rememberFocus(focusMemory, 5)
             )
         }

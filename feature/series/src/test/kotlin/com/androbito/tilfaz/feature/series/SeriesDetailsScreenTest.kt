@@ -148,6 +148,23 @@ class SeriesDetailsScreenTest {
         compose.onNode(episodesButton).assertIsFocused()
     }
 
+    @Test
+    fun theWatchListButtonAsksToToggle() {
+        var event: SeriesDetailsEvent? = null
+        show(onEvent = { event = it })
+
+        pressOk(hasText(string(R.string.series_add_watchlist)) and hasClickAction())
+
+        assertThat(event).isEqualTo(SeriesDetailsEvent.ToggleWatchlist)
+    }
+
+    @Test
+    fun aSeriesOnTheWatchListOffersToTakeItOff() {
+        show(state().copy(isInWatchlist = true))
+
+        compose.onNode(hasText(string(R.string.series_remove_watchlist)) and hasClickAction()).assertExists()
+    }
+
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun theSynopsisTakesFocusAndOkOpensItInFull() {

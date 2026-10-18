@@ -8,6 +8,7 @@ import com.androbito.tilfaz.core.data.repository.DefaultVodRepository
 import com.androbito.tilfaz.core.data.repository.RoomFavoritesRepository
 import com.androbito.tilfaz.core.data.repository.RoomRecentChannelsRepository
 import com.androbito.tilfaz.core.data.repository.RoomWatchProgressRepository
+import com.androbito.tilfaz.core.data.repository.RoomWatchlistRepository
 import com.androbito.tilfaz.core.data.store.ActiveAccountHolder
 import com.androbito.tilfaz.core.data.store.KeystoreSecretCodec
 import com.androbito.tilfaz.core.data.store.SecretCodec
@@ -19,6 +20,7 @@ import com.androbito.tilfaz.core.domain.repository.RecentChannelsRepository
 import com.androbito.tilfaz.core.domain.repository.SeriesRepository
 import com.androbito.tilfaz.core.domain.repository.VodRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.repository.WatchlistRepository
 import com.androbito.tilfaz.core.network.ActiveAccountProvider
 import com.androbito.tilfaz.core.network.UserAgentProvider
 import dagger.Binds
@@ -38,6 +40,8 @@ abstract class DataModule {
     @Binds abstract fun bindSeriesRepository(impl: DefaultSeriesRepository): SeriesRepository
 
     @Binds abstract fun bindFavoritesRepository(impl: RoomFavoritesRepository): FavoritesRepository
+
+    @Binds abstract fun bindWatchlistRepository(impl: RoomWatchlistRepository): WatchlistRepository
 
     @Binds abstract fun bindWatchProgressRepository(impl: RoomWatchProgressRepository): WatchProgressRepository
 

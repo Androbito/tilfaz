@@ -3,6 +3,8 @@ package com.androbito.tilfaz.feature.vod
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
@@ -76,6 +80,7 @@ fun MovieDetailsRoute(onPlayMovie: (Int, Long) -> Unit, onOpenMovie: (Int) -> Un
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MovieDetailsScreen(
     state: MovieDetailsUiState,
@@ -109,7 +114,12 @@ fun MovieDetailsScreen(
                             Text(movie.name, style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2)
                             movie.rating?.let { ScoreLine(it) }
 
-                            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+                            // Wraps onto a second line: four buttons with these labels are wider than the column.
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+                                itemVerticalAlignment = Alignment.CenterVertically
+                            ) {
                                 TilfazButton(onClick = { onPlay(if (state.canResume) state.progress!!.positionMs else 0L) }) {
                                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                                     Text(
@@ -138,6 +148,13 @@ fun MovieDetailsScreen(
                                     )
                                     Text(
                                         stringResource(if (state.isFavorite) R.string.vod_remove_favorite else R.string.vod_add_favorite),
+                                        modifier = Modifier.padding(start = Dimens.SpaceS)
+                                    )
+                                }
+                                OutlinedButton(onClick = { onEvent(MovieDetailsEvent.ToggleWatchlist) }) {
+                                    Icon(if (state.isInWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder, contentDescription = null)
+                                    Text(
+                                        stringResource(if (state.isInWatchlist) R.string.vod_remove_watchlist else R.string.vod_add_watchlist),
                                         modifier = Modifier.padding(start = Dimens.SpaceS)
                                     )
                                 }

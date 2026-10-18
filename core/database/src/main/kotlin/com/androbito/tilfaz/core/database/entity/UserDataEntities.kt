@@ -11,6 +11,13 @@ data class FavoriteEntity(
     val addedAtMillis: Long
 )
 
+@Entity(tableName = "watchlist", indices = [Index("type")])
+data class WatchlistEntity(
+    @PrimaryKey val key: String,
+    val type: String,
+    val addedAtMillis: Long
+)
+
 @Entity(tableName = "watch_progress", indices = [Index("type"), Index("updatedAtMillis")])
 data class WatchProgressEntity(
     @PrimaryKey val playableKey: String,

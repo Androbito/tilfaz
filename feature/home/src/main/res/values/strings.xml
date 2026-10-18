@@ -6,6 +6,7 @@
     <string name="home_settings">Settings</string>
     <string name="home_favorites">Favourites</string>
     <string name="home_continue">Continue watching</string>
+    <string name="home_watchlist">Watch list</string>
     <string name="home_expiration">Expiration: %1$s</string>
     <string name="home_expiration_unlimited">Expiration: unlimited</string>
     <string name="home_trial">Trial</string>

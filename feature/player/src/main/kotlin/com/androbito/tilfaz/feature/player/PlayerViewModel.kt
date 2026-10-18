@@ -8,9 +8,11 @@ import com.androbito.tilfaz.core.domain.repository.PlaybackSettingsRepository
 import com.androbito.tilfaz.core.domain.repository.SeriesRepository
 import com.androbito.tilfaz.core.domain.repository.VodRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.repository.WatchlistRepository
 import com.androbito.tilfaz.core.domain.usecase.BuildStreamSourceUseCase
 import com.androbito.tilfaz.core.domain.usecase.NowNextResolver
 import com.androbito.tilfaz.core.domain.usecase.ResumePositionPolicy
+import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.NowNext
@@ -71,6 +73,7 @@ class PlayerViewModel @Inject constructor(
     private val vodRepository: VodRepository,
     private val seriesRepository: SeriesRepository,
     private val progressRepository: WatchProgressRepository,
+    private val watchlistRepository: WatchlistRepository,
     private val settingsRepository: PlaybackSettingsRepository,
     private val buildStreamSource: BuildStreamSourceUseCase,
     private val clock: Clock
@@ -86,6 +89,7 @@ class PlayerViewModel @Inject constructor(
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
     private var lastSavedPositionMs = -1L
+    private var leftWatchlist = false
 
     init {
         viewModelScope.launch { load() }
@@ -180,7 +184,16 @@ class PlayerViewModel @Inject constructor(
             is Playable.SeriesEpisode -> Triple(ContentType.SERIES, playable.episode.thumbnailUrl, "${playable.episode.seriesId}:${playable.episode.id}")
             is Playable.Live -> return
         }
+        val watchlistKey = when (playable) {
+            is Playable.Film -> ToggleFavoriteUseCase.vodKey(playable.movie.id)
+            is Playable.SeriesEpisode -> ToggleFavoriteUseCase.seriesKey(playable.episode.seriesId)
+            is Playable.Live -> return
+        }
+        // Watching it is what takes a title off the watch list; one removal per session is enough.
+        val leaveWatchlist = !leftWatchlist
+        leftWatchlist = true
         viewModelScope.launch {
+            if (leaveWatchlist) watchlistRepository.remove(watchlistKey)
             progressRepository.save(
                 WatchProgress(
                     playableKey = playable.key,

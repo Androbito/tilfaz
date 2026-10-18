@@ -1,14 +1,23 @@
 package com.androbito.tilfaz.feature.home
 
 import android.content.Context
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.androbito.tilfaz.core.designsystem.theme.TilfazTheme
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +32,9 @@ class HomeScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private val navigation = HomeNavigation({}, {}, {}, {}, {}, {})
+    private var watchlistOpened = false
+
+    private val navigation = HomeNavigation({}, {}, {}, {}, {}, {}, onOpenWatchlist = { watchlistOpened = true })
 
     private fun string(id: Int) = ApplicationProvider.getApplicationContext<Context>().getString(id)
 
@@ -53,5 +64,19 @@ class HomeScreenTest {
         compose.setContent { TilfazTheme { HomeScreen(state = HomeUiState(), onEvent = {}, navigation = navigation) } }
 
         compose.onAllNodes(hasContentDescription("Search")).assertCountEquals(0)
+    }
+
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun theBottomRowHasAWatchListTileInsteadOfSettings() {
+        compose.setContent { TilfazTheme { HomeScreen(state = HomeUiState(), onEvent = {}, navigation = navigation) } }
+        val watchlist = hasText(string(R.string.home_watchlist)) and hasClickAction()
+
+        compose.onNode(watchlist).requestFocus()
+        compose.onNode(watchlist).performKeyInput { pressKey(Key.DirectionCenter) }
+
+        assertThat(watchlistOpened).isEqualTo(true)
+        compose.onAllNodesWithText(string(R.string.home_settings)).assertCountEquals(0) // Settings stays in the top bar
+        compose.onAllNodes(hasContentDescription(string(R.string.home_settings))).assertCountEquals(1)
     }
 }

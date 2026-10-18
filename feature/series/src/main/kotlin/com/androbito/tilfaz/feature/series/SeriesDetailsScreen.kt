@@ -11,6 +11,8 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +30,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
@@ -133,6 +137,7 @@ fun SeriesDetailsRoute(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEvent) -> Unit, onPlay: (Episode) -> Unit, onOpenSeries: (Int) -> Unit) {
     val series = state.series
@@ -216,7 +221,12 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                     InfoRow(stringResource(R.string.series_cast), details.cast)
                                     PlotRow(stringResource(R.string.series_plot), details.plot)
                                 }
-                                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM), verticalAlignment = Alignment.CenterVertically) {
+                                // Wraps onto a second line: four buttons with these labels are wider than the column.
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceM),
+                                    verticalArrangement = Arrangement.spacedBy(Dimens.SpaceS),
+                                    itemVerticalAlignment = Alignment.CenterVertically
+                                ) {
                                     state.nextEpisode?.let { next ->
                                         TilfazButton(onClick = { onPlay(next) }, modifier = Modifier.focusRequester(playFocus)) {
                                             Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -244,6 +254,13 @@ fun SeriesDetailsScreen(state: SeriesDetailsUiState, onEvent: (SeriesDetailsEven
                                         )
                                         Text(
                                             stringResource(if (state.isFavorite) R.string.series_remove_favorite else R.string.series_add_favorite),
+                                            modifier = Modifier.padding(start = Dimens.SpaceS)
+                                        )
+                                    }
+                                    OutlinedButton(onClick = { onEvent(SeriesDetailsEvent.ToggleWatchlist) }) {
+                                        Icon(if (state.isInWatchlist) Icons.Default.Bookmark else Icons.Default.BookmarkBorder, contentDescription = null)
+                                        Text(
+                                            stringResource(if (state.isInWatchlist) R.string.series_remove_watchlist else R.string.series_add_watchlist),
                                             modifier = Modifier.padding(start = Dimens.SpaceS)
                                         )
                                     }

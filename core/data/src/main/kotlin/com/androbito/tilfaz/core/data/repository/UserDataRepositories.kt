@@ -7,13 +7,16 @@ import com.androbito.tilfaz.core.database.dao.FavoriteDao
 import com.androbito.tilfaz.core.database.dao.LiveChannelDao
 import com.androbito.tilfaz.core.database.dao.RecentChannelDao
 import com.androbito.tilfaz.core.database.dao.WatchProgressDao
+import com.androbito.tilfaz.core.database.dao.WatchlistDao
 import com.androbito.tilfaz.core.database.entity.FavoriteEntity
 import com.androbito.tilfaz.core.database.entity.RecentChannelEntity
 import com.androbito.tilfaz.core.database.entity.WatchProgressEntity
+import com.androbito.tilfaz.core.database.entity.WatchlistEntity
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.PlaybackSettingsRepository
 import com.androbito.tilfaz.core.domain.repository.RecentChannelsRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.repository.WatchlistRepository
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.LiveChannel
 import com.androbito.tilfaz.core.model.PlaybackSettings
@@ -41,6 +44,21 @@ class RoomFavoritesRepository @Inject constructor(
     override suspend fun toggle(key: String, type: ContentType) = withContext(io) {
         if (dao.exists(key)) dao.delete(key) else dao.insert(FavoriteEntity(key, type.name, clock.millis()))
     }
+}
+
+@Singleton
+class RoomWatchlistRepository @Inject constructor(
+    private val dao: WatchlistDao,
+    private val clock: Clock,
+    @IoDispatcher private val io: CoroutineDispatcher
+) : WatchlistRepository {
+    override fun observeKeys(type: ContentType): Flow<Set<String>> = dao.observeKeys(type.name).map { it.toSet() }
+
+    override suspend fun toggle(key: String, type: ContentType) = withContext(io) {
+        if (dao.exists(key)) dao.delete(key) else dao.insert(WatchlistEntity(key, type.name, clock.millis()))
+    }
+
+    override suspend fun remove(key: String) = withContext(io) { dao.delete(key) }
 }
 
 @Singleton

@@ -3,6 +3,7 @@ package com.androbito.tilfaz.feature.player
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -19,6 +20,7 @@ import com.androbito.tilfaz.core.testing.fake.FakePlaybackSettingsRepository
 import com.androbito.tilfaz.core.testing.fake.FakeSeriesRepository
 import com.androbito.tilfaz.core.testing.fake.FakeVodRepository
 import com.androbito.tilfaz.core.testing.fake.FakeWatchProgressRepository
+import com.androbito.tilfaz.core.testing.fake.FakeWatchlistRepository
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import com.androbito.tilfaz.core.testing.rule.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
@@ -34,6 +36,7 @@ class PlayerViewModelTest {
     private val vod = FakeVodRepository().apply { items.value = listOf(Fixtures.movie) }
     private val series = FakeSeriesRepository().apply { items.value = listOf(Fixtures.series); detailsResult = { Result.success(Fixtures.seriesDetails) } }
     private val progress = FakeWatchProgressRepository()
+    private val watchlist = FakeWatchlistRepository()
 
     private fun viewModel(route: PlayerRoute) = PlayerViewModel(
         SavedStateHandle(
@@ -49,6 +52,7 @@ class PlayerViewModelTest {
         vod,
         series,
         progress,
+        watchlist,
         settings,
         BuildStreamSourceUseCase(account, settings),
         Fixtures.fixedClock
@@ -120,6 +124,28 @@ class PlayerViewModelTest {
         }
         vm.onEvent(PlayerEvent.ProgressTick(1_500_000, 6_000_000))
         assertThat(progress.saved.value.getValue("vod:501").positionMs).isEqualTo(1_500_000L)
+    }
+
+    @Test
+    fun `a movie leaves the watch list once it starts playing`() = runTest {
+        watchlist.toggle("vod:501", ContentType.VOD)
+        val vm = viewModel(PlayerRoute.movie(Fixtures.movie.id, startPositionMs = 0))
+        vm.state.test { expectMostRecentItem() }
+
+        vm.onEvent(PlayerEvent.ProgressTick(30_000, 6_000_000))
+
+        assertThat(watchlist.keys.value.getValue(ContentType.VOD)).isEmpty()
+    }
+
+    @Test
+    fun `a series leaves the watch list once one of its episodes plays`() = runTest {
+        watchlist.toggle("series:${Fixtures.series.id}", ContentType.SERIES)
+        val vm = viewModel(PlayerRoute.episode(Fixtures.series.id, "90102", 0))
+        vm.state.test { expectMostRecentItem() }
+
+        vm.onEvent(PlayerEvent.ProgressTick(30_000, 2_580_000))
+
+        assertThat(watchlist.keys.value.getValue(ContentType.SERIES)).isEmpty()
     }
 
     @Test

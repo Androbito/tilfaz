@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.androbito.tilfaz.core.domain.repository.FavoritesRepository
 import com.androbito.tilfaz.core.domain.repository.VodRepository
 import com.androbito.tilfaz.core.domain.repository.WatchProgressRepository
+import com.androbito.tilfaz.core.domain.repository.WatchlistRepository
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
+import com.androbito.tilfaz.core.domain.usecase.ToggleWatchlistUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.Movie
 import com.androbito.tilfaz.core.model.MovieDetails
@@ -32,6 +34,7 @@ data class MovieDetailsUiState(
     val details: MovieDetails? = null,
     val detailsFailed: Boolean = false,
     val isFavorite: Boolean = false,
+    val isInWatchlist: Boolean = false,
     val progress: WatchProgress? = null,
     /** "More like this": other movies from the same provider category, the only grouping Xtream guarantees. */
     val related: List<Movie> = emptyList()
@@ -42,6 +45,7 @@ data class MovieDetailsUiState(
 
 sealed interface MovieDetailsEvent {
     data object ToggleFavorite : MovieDetailsEvent
+    data object ToggleWatchlist : MovieDetailsEvent
     data object Retry : MovieDetailsEvent
     data object StartOver : MovieDetailsEvent
 }
@@ -51,8 +55,10 @@ class MovieDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vodRepository: VodRepository,
     favoritesRepository: FavoritesRepository,
+    watchlistRepository: WatchlistRepository,
     private val progressRepository: WatchProgressRepository,
-    private val toggleFavorite: ToggleFavoriteUseCase
+    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val toggleWatchlist: ToggleWatchlistUseCase
 ) : ViewModel() {
 
     // Type-safe navigation stores route fields under their names, which keeps this testable with a plain SavedStateHandle.
@@ -76,14 +82,16 @@ class MovieDetailsViewModel @Inject constructor(
     val state: StateFlow<MovieDetailsUiState> = combine(
         loaded,
         favoritesRepository.observeKeys(ContentType.VOD).map { ToggleFavoriteUseCase.vodKey(movieId) in it },
+        watchlistRepository.observeKeys(ContentType.VOD).map { ToggleFavoriteUseCase.vodKey(movieId) in it },
         progress,
         related
-    ) { loaded, favorite, progress, related ->
+    ) { loaded, favorite, inWatchlist, progress, related ->
         MovieDetailsUiState(
             movie = loaded.details?.movie ?: loaded.movie,
             details = loaded.details,
             detailsFailed = loaded.failed,
             isFavorite = favorite,
+            isInWatchlist = inWatchlist,
             progress = progress,
             related = related
         )
@@ -96,6 +104,7 @@ class MovieDetailsViewModel @Inject constructor(
     fun onEvent(event: MovieDetailsEvent) {
         when (event) {
             MovieDetailsEvent.ToggleFavorite -> viewModelScope.launch { toggleFavorite.movie(movieId) }
+            MovieDetailsEvent.ToggleWatchlist -> viewModelScope.launch { toggleWatchlist.movie(movieId) }
             MovieDetailsEvent.Retry -> load()
             MovieDetailsEvent.StartOver -> viewModelScope.launch { progressRepository.clear(ToggleFavoriteUseCase.vodKey(movieId)) }
         }

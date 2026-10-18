@@ -17,6 +17,8 @@
     <string name="series_episodes">Episodes (%1$d)</string>
     <string name="series_add_favorite">Add to favourites</string>
     <string name="series_remove_favorite">Remove from favourites</string>
+    <string name="series_add_watchlist">Add to watch list</string>
+    <string name="series_remove_watchlist">Remove from watch list</string>
     <string name="series_directed_by">Directed by</string>
     <string name="series_release_date">Release date</string>
     <string name="series_genre">Genre</string>

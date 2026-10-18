@@ -9,6 +9,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
+import com.androbito.tilfaz.core.domain.usecase.ToggleWatchlistUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.DomainException
@@ -17,6 +18,7 @@ import com.androbito.tilfaz.core.model.WatchProgress
 import com.androbito.tilfaz.core.testing.fake.FakeFavoritesRepository
 import com.androbito.tilfaz.core.testing.fake.FakeVodRepository
 import com.androbito.tilfaz.core.testing.fake.FakeWatchProgressRepository
+import com.androbito.tilfaz.core.testing.fake.FakeWatchlistRepository
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import com.androbito.tilfaz.core.testing.rule.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
@@ -28,6 +30,7 @@ class MovieDetailsViewModelTest {
 
     private val vod = FakeVodRepository().apply { items.value = listOf(Fixtures.movie) }
     private val favorites = FakeFavoritesRepository()
+    private val watchlist = FakeWatchlistRepository()
     private val progress = FakeWatchProgressRepository()
     private val details =
         MovieDetails(Fixtures.movie.copy(containerExtension = "mp4"), "Plot", "Cast", "Director", "Drama", "2026-01-01", 6000, emptyList(), null)
@@ -36,8 +39,10 @@ class MovieDetailsViewModelTest {
         SavedStateHandle(mapOf("movieId" to Fixtures.movie.id)),
         vod,
         favorites,
+        watchlist,
         progress,
-        ToggleFavoriteUseCase(favorites)
+        ToggleFavoriteUseCase(favorites),
+        ToggleWatchlistUseCase(watchlist)
     )
 
     @Test
@@ -105,6 +110,19 @@ class MovieDetailsViewModelTest {
             assertThat(expectMostRecentItem().isFavorite).isFalse()
             vm.onEvent(MovieDetailsEvent.ToggleFavorite)
             assertThat(expectMostRecentItem().isFavorite).isTrue()
+        }
+    }
+
+    @Test
+    fun `watch list toggles are reflected and are not favourites`() = runTest {
+        vod.detailsResult = { Result.success(details) }
+        val vm = viewModel()
+        vm.state.test {
+            assertThat(expectMostRecentItem().isInWatchlist).isFalse()
+            vm.onEvent(MovieDetailsEvent.ToggleWatchlist)
+            val state = expectMostRecentItem()
+            assertThat(state.isInWatchlist).isTrue()
+            assertThat(state.isFavorite).isFalse()
         }
     }
 }

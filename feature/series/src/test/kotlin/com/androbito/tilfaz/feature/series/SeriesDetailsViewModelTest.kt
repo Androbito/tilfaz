@@ -7,6 +7,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import com.androbito.tilfaz.core.domain.usecase.ToggleFavoriteUseCase
+import com.androbito.tilfaz.core.domain.usecase.ToggleWatchlistUseCase
 import com.androbito.tilfaz.core.model.ContentType
 import com.androbito.tilfaz.core.model.DomainError
 import com.androbito.tilfaz.core.model.DomainException
@@ -14,6 +15,7 @@ import com.androbito.tilfaz.core.model.WatchProgress
 import com.androbito.tilfaz.core.testing.fake.FakeFavoritesRepository
 import com.androbito.tilfaz.core.testing.fake.FakeSeriesRepository
 import com.androbito.tilfaz.core.testing.fake.FakeWatchProgressRepository
+import com.androbito.tilfaz.core.testing.fake.FakeWatchlistRepository
 import com.androbito.tilfaz.core.testing.fixture.Fixtures
 import com.androbito.tilfaz.core.testing.rule.MainDispatcherRule
 import kotlinx.coroutines.test.runTest
@@ -25,14 +27,17 @@ class SeriesDetailsViewModelTest {
 
     private val repository = FakeSeriesRepository().apply { items.value = listOf(Fixtures.series) }
     private val favorites = FakeFavoritesRepository()
+    private val watchlist = FakeWatchlistRepository()
     private val progress = FakeWatchProgressRepository()
 
     private fun viewModel() = SeriesDetailsViewModel(
         SavedStateHandle(mapOf("seriesId" to Fixtures.series.id)),
         repository,
         favorites,
+        watchlist,
         progress,
-        ToggleFavoriteUseCase(favorites)
+        ToggleFavoriteUseCase(favorites),
+        ToggleWatchlistUseCase(watchlist)
     )
 
     private fun episodeProgress(episodeId: String, positionMs: Long, durationMs: Long = 2_580_000, updatedSecondsAfterNow: Long = 0) = WatchProgress(
@@ -123,6 +128,18 @@ class SeriesDetailsViewModelTest {
             val recovered = expectMostRecentItem()
             assertThat(recovered.failed).isFalse()
             assertThat(recovered.details).isEqualTo(Fixtures.seriesDetails)
+        }
+    }
+
+    @Test
+    fun `watch list toggles are reflected and are not favourites`() = runTest {
+        val vm = viewModel()
+        vm.state.test {
+            assertThat(expectMostRecentItem().isInWatchlist).isFalse()
+            vm.onEvent(SeriesDetailsEvent.ToggleWatchlist)
+            val state = expectMostRecentItem()
+            assertThat(state.isInWatchlist).isTrue()
+            assertThat(state.isFavorite).isFalse()
         }
     }
 }

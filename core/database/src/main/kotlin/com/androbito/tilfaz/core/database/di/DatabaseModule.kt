@@ -35,6 +35,8 @@ object DatabaseModule {
 
     @Provides fun provideFavoriteDao(db: TilfazDatabase) = db.favoriteDao()
 
+    @Provides fun provideWatchlistDao(db: TilfazDatabase) = db.watchlistDao()
+
     @Provides fun provideWatchProgressDao(db: TilfazDatabase) = db.watchProgressDao()
 
     @Provides fun provideRecentChannelDao(db: TilfazDatabase) = db.recentChannelDao()
