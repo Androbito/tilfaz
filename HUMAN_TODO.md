@@ -29,7 +29,7 @@ Progress (2026-10-18): the app **Tilfaz** is created (app id `497569154079934850
 
 - [x] Create the app: name Tilfaz, default language, "App", "Free".
 - [ ] Add the **Android TV** form factor and answer its questions (D-pad only, banner, TV screenshots).
-- [ ] Declarations: ads (none), content rating questionnaire, target audience (not for children), data safety.
+- [ ] Declarations. Done: ads (none), health, financial, government, content rating (IARC, everyone), data safety (draft saved: nothing collected or shared), category (Video players) and public contact e-mail. Left: **App access** (you type the provider credentials, the instructions text is ready) then target audience (adults, not for children), which stays locked until app access is saved; once it is, save the data safety form again.
 - [ ] Privacy policy URL: `https://androbito.github.io/tilfaz-privacy/` (published, French and English; its source is `store/privacy-policy/index.html`, push changes to the `tilfaz-privacy` repository).
 - [ ] App access: the app needs a login to a provider, so give the reviewers demo credentials (see "Still open" below).
 - [ ] Store listing: icon 512x512, feature graphic 1024x500 and TV banner 1280x720 (all three in `store/`), TV screenshots 1920x1080, short and full description.
